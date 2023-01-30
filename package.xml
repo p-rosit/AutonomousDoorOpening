@@ -1,14 +1,13 @@
 <?xml version="1.0"?>
 <package>
-  <name>skiros2_template_lib</name>
+  <name>jp-exjobb</name>
   <version>0.0.1</version>
-  <description>Template of a library for skiros2</description>
+  <description>Thesis by Pontus and Josefin</description>
 
-  <maintainer email="author@domain.org">Author</maintainer>
+  <maintainer email="pontus.rosqvist@gmail.com">Author</maintainer>
   <license>BSD</license>
-  <author email="author@domain.org">Author</author>
-  <author>Author</author>
-
+  <author email="pontus.rosqvist@gmail.com">Author</author>
+  <author>Pontus and Josefin</author>
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>rospy</build_depend>
