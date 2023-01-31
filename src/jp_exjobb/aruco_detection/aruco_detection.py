@@ -162,7 +162,7 @@ def aruco_detection(rgb, calib, distortion, aruco_ids:dict):
             if id not in aruco_size_ids[size]:
                 continue
 
-            print("ID = %s" % id)
+            # print("ID = %s" % id)
             coords = np.zeros((c.shape[1], 2))
             for j in range(coords.shape[0]):
                 coords[j] = undistort(c[0, j, 0], c[0, j, 1], calib, distortion)
@@ -175,15 +175,15 @@ def aruco_detection(rgb, calib, distortion, aruco_ids:dict):
                         [0, 0, 0]], dtype=float)
 
             _, r, t = cv.solvePnP(obj_points, coords, K, None)
-            print("=" * 10 + "SolvePnP" + "=" * 10)
-            divider = '-' * 10
-            print("Axis angle:\n%s\n%sTranslation Vector:\n%s\n%s" % (r,divider,t, divider))
+            # print("=" * 10 + "SolvePnP" + "=" * 10)
+            # divider = '-' * 10
+            # print("Axis angle:\n%s\n%sTranslation Vector:\n%s\n%s" % (r,divider,t, divider))
 
             # Get rotation matrix
             rotation_matrix = cv.Rodrigues(r)
-            print("Rotation vector (Rodrigues):\n%s\n%s" % (rotation_matrix[0], divider))
+            # print("Rotation vector (Rodrigues):\n%s\n%s" % (rotation_matrix[0], divider))
             quaternion = R.from_matrix(rotation_matrix[0]).as_quat()
-            print("Quaternion vector:\n%s\n%s" % (quaternion, divider))
+            # print("Quaternion vector:\n%s\n%s" % (quaternion, divider))
 
             detected_ids[(id, size)] = (t, quaternion)
             # cv.drawFrameAxes(rgb, K, distortion, r, t, 0.1)
