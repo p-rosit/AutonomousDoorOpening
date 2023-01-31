@@ -30,16 +30,14 @@ class RGBListener:
     def image_callback(self, data):
         if self.image is not None: return
 
-        """
-        TASK:
-            The variable 'data' is a ROS message containing a RGB image.
-            Transform it into an OpenCV image using self.bridge.
+        # TASK:
+        #     The variable 'data' is a ROS message containing a RGB image.
+        #     Transform it into an OpenCV image using self.bridge.
 
-            The result should be stored in self.image.
+        #     The result should be stored in self.image.
 
-        HINTS:
-            The resulting image should be an 8-bit image in BGR color space.
-        """
+        # HINTS:
+        #     The resulting image should be an 8-bit image in BGR color space.
 
         self.image = self.bridge.imgmsg_to_cv2(data)
 
@@ -120,7 +118,7 @@ def set_object_pose(object, position:list, orientation:list):
     # object.setProperty('skiros:OrientationW', orientation[3])
 
 
-class PoseEstimation(SkillDescription):
+class ArucoEstimation(SkillDescription):
     def createDescription(self):
         self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Required)
         self.addParam('Object', Element("skiros:Product"), ParamTypes.Required)
@@ -137,7 +135,7 @@ class aruco_marker(PrimitiveBase):
         super(aruco_marker, self).__init__(*args, **kwargs)
 
     def createDescription(self):
-        self.setDescription(PoseEstimation(), self.__class__.__name__)
+        self.setDescription(ArucoEstimation(), self.__class__.__name__)
 
     def onInit(self):
         return True
@@ -166,7 +164,7 @@ class aruco_marker(PrimitiveBase):
             if relation['type'] == "skiros:hasA" and "scalable:Marker" in relation['dst']:
                 marker = self.wmi.get_element(relation['dst'])
                 id = marker.getProperty("skiros:Value").value
-                dict = marker.getProperty("skiros:Dictionary").value
+                dict = marker.getProperty("scalable:Dictionary").value
                 size = marker.getProperty("skiros:Size").value
 
                 if dict == "4x4":
@@ -282,7 +280,7 @@ class aruco_marker_backwards(PrimitiveBase):
         super(aruco_marker_backwards, self).__init__(*args, **kwargs)
 
     def createDescription(self):
-        self.setDescription(PoseEstimation(), self.__class__.__name__)
+        self.setDescription(ArucoEstimation(), self.__class__.__name__)
 
     def onInit(self):
         return True
@@ -295,8 +293,9 @@ class aruco_marker_backwards(PrimitiveBase):
 
     def execute(self):
         object = self.params['Object'].value
+        
         relations = object.getRelations()
-
+       
         # ob_pose = make_pose_stamped('map', np.array([0, 0, 0]), np.array([1, 0, 0, 0]))
         # ob_pose = self.buffer.transform(ob_pose, object.getProperty('skiros:BaseFrameId').value, rospy.Duration(1))
 
@@ -311,7 +310,7 @@ class aruco_marker_backwards(PrimitiveBase):
             if relation['type'] == "skiros:hasA" and "scalable:Marker" in relation['dst']:
                 marker = self.wmi.get_element(relation['dst'])
                 id = marker.getProperty("skiros:Value").value
-                dict = marker.getProperty("skiros:Dictionary").value
+                dict = marker.getProperty("scalable:Dictionary").value
                 size = marker.getProperty("skiros:Size").value
 
                 if dict == "4x4":
@@ -427,4 +426,3 @@ class aruco_marker_backwards(PrimitiveBase):
 
     def onEnd(self):
         return True
-
