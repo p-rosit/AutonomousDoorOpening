@@ -1,4 +1,3 @@
-"""
 from skiros2_skill.core.skill import SkillDescription, ParamOptions, SkillBase, Sequential
 from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.world_element import Element
@@ -162,4 +161,3 @@ class action_skill(PrimitiveActionClient):
         
         # Message shown in SkiROS if there is nothing to report
         return self.step("running")
-"""

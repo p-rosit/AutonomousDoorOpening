@@ -1,4 +1,3 @@
-"""
 #! /usr/bin/env python
 
 import actionlib
@@ -6,8 +5,6 @@ from std_msgs.msg import Int32
 # from actionlib.msg import TestAction, TestGoal, TestFeedback, TestResult
 from jp_exjobb.msg import TestMsgAction, TestMsgGoal, TestMsgFeedback, TestMsgResult
 import rospy
-nd>
-  <run_depend>actionlib_msgs</run
 
 class ActionSkillServer:
     def __init__(self):
@@ -77,4 +74,3 @@ if __name__ == '__main__':
     rospy.init_node('action_skill_server')
     asss = ActionSkillServer()
     rospy.spin()
-"""

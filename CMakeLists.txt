@@ -7,24 +7,24 @@ project(jp_exjobb)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   skiros2_msgs
-  # genmsg
-  # actionlib_msgs
-  # actionlib
+  genmsg
+  actionlib_msgs
+  actionlib
 )
 
 catkin_python_setup()
 
-# add_action_files(
-#   DIRECTORY
-#   action
-#   FILES
-#   TestMsg.action
-# )
+add_action_files(
+  DIRECTORY
+  action
+  FILES
+  TestMsg.action
+)
 
-# generate_messages(
-#   DEPENDENCIES
-#   actionlib_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  actionlib_msgs
+)
 
 catkin_package(
 #  INCLUDE_DIRS 
