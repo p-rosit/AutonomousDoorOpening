@@ -148,7 +148,7 @@ class aruco_marker(PrimitiveBase):
 
     def execute(self):
         object = self.params['Object'].value
-        relations = object.getRelations()
+        relations = object.getRelations(pred=['skiros:hasA'])
 
         # ob_pose = make_pose_stamped('map', np.array([0, 0, 0]), np.array([1, 0, 0, 0]))
         # ob_pose = self.buffer.transform(ob_pose, object.getProperty('skiros:BaseFrameId').value, rospy.Duration(1))
@@ -161,8 +161,8 @@ class aruco_marker(PrimitiveBase):
         aruco_ids = {}
         markers = {}
         for relation in relations:
-            if relation['type'] == "skiros:hasA" and "scalable:Marker" in relation['dst']:
-                marker = self.wmi.get_element(relation['dst'])
+            marker = self.wmi.get_element(relation['dst'])
+            if marker.type == 'scalable:Marker':
                 id = marker.getProperty("skiros:Value").value
                 dict = marker.getProperty("scalable:Dictionary").value
                 size = marker.getProperty("skiros:Size").value

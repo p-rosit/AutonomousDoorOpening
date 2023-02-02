@@ -11,112 +11,12 @@ from skiros2_std_skills.action_client_primitive import PrimitiveActionClient
 import rospy
 import actionlib
 from jp_exjobb.msg import EmptyAction, EmptyGoal, EmptyResult, CameraCalibrationMsg
-from std_msgs.msg import Int32, String
+from std_msgs.msg import Int32, String, Float64MultiArray
 
-# from enum import Enum
-
-
-# # Values from ros (rosmsg show actionlib/TestActionResult)
-# class Status(Enum):
-#     PENDING     = 0
-#     ACTIVE      = 1
-#     PREEMPTED   = 2
-#     SUCCEEDED   = 3
-#     ABORTED     = 4
-#     REJECTED    = 5
-#     PREEMPTING  = 6
-#     RECALLING   = 7
-#     RECALLED    = 8
-#     LOST        = 9
-
-
-# class ListenActionServer:
-#     def __init__(self, topic):
-#         print(topic)
-#         # Set up action server on topic counter_as which takes uses the TestAction action messages
-#         self._as = actionlib.SimpleActionServer("camera_calibration/action_server", EmptyAction, execute_cb=self.execute_callback, auto_start=False)
-#         self._as.start()
-
-#         self.topic = topic
-#         self.pub = rospy.Publisher(self.topic, Empty, queue_size=1)
-#         self.sub = rospy.Subscriber('/camera_calibration/response', String, callback=self.response_callback)
-
-#         self.time_limit = 2
-#         self.hz = 10
-
-#     def response_callback(self, msg):
-#         if msg.data == self.topic:
-#             self.response = True
-
-#     def execute_callback(self, goal):
-#         r = rospy.Rate(self.hz)
-#         count = 0
-#         self.response = False
-#         preempted = False
-
-#         self.pub.publish(Empty())
-
-#         while not self.response and count < self.time_limit * self.hz:
-#             # If the action has been preempted break the loop
-#             if self._as.is_preempt_requested():
-#                 preempted = True
-#                 break
-
-#             r.sleep()
-#             count += 1
-
-#         if self.response:
-#             # If the action succeeded set the corresponding state of the action server
-#             self._as.set_succeeded(EmptyResult())
-#         else:
-#             if preempted:
-#                 # If action preempted set the corresponding state of the action server
-#                 self._as.set_preempted(EmptyResult())
-#             else:
-#                 # If action was aborted set the corresponding state of the action server
-#                 self._as.set_aborted(EmptyResult())
-
-# class camera_calibration_topic(PrimitiveActionClient):
-
-#     def createDescription(self):
-#         self.setDescription(CameraCalibration(), self.__class__.__name__)
-
-#     def onStart(self):
-#         # Runs each time the skill is started
-#         self._as = ListenActionServer(self.topic)
-#         return super().onStart()
-
-#     def buildClient(self):
-#         # Builds the action client which listens to the action server (the superclass saves
-#         # this result to self.client in the background)
-#         return actionlib.SimpleActionClient("camera_calibration/action_server", EmptyAction)
-    
-#     def buildGoal(self):
-#         return EmptyGoal()
-    
-#     def restart(self, goal, text="Restarting action"):
-#         # Restart server and the text is shown in SkiROS
-#         self.client.send_goal(goal, done_cb=self._doneCb, feedback_cb=self._feedbackCb)
-#         return self.step(text)
-    
-#     def onDone(self, status, msg):
-#         # Called from execute, message is shown in SkiROS
-#         if status == Status.SUCCEEDED.value:
-#             return self.success(self.message)
-#         else:
-#             return self.fail("Camera calibration action server did not respond.", -1)
-
-#     def execute(self):
-#         if not self.res.empty():
-#             # self.res is a result queue of size 1 (made by the superclass in the background)
-#             # if the queue is nonempty we extract the message
-#             result, status = self.res.get(False)
-
-#             # Return the result which is shown in the SkiROS gui
-#             return self.onDone(status, result)
-        
-#         # Message shown in SkiROS if there is nothing to report
-#         return self.step("Publishing")
+ok_status = "Ok"
+nostart_status = "NoStart"
+warning_status = "Warning"
+clearing_status = "Clearing"
 
 class CameraCalibration(SkillDescription):
     def createDescription(self):
@@ -133,14 +33,16 @@ class camera_calibration_topic(PrimitiveBase):
         self.time_limit = 2
         self.hz = 10
         self.rate = rospy.Rate(self.hz)
-        self.pub = rospy.Publisher(self.topic, Empty, queue_size=1)
-        self.sub = rospy.Subscriber('/camera_calibration/response', CameraCalibrationMsg, callback=self.reponse_callback)
+        self.pub = rospy.Publisher(self.topic, String, queue_size=1)
+        self.sub = rospy.Subscriber('/camera_calibration/response', String, callback=self.reponse_callback)
         return True
     
     def reponse_callback(self, msg):
         if self.running:
-            if msg.data == self.topic:
+            topic, status = msg.data.split(':')
+            if topic == self.topic:
                 self.response = True
+                self.status = status
             else:
                 rospy.logwarn('Incorrect response received, are several camera calibration skills running?')
 
@@ -154,8 +56,8 @@ class camera_calibration_topic(PrimitiveBase):
 
     def execute(self):
         camera = self.params['Camera'].value
-        msg = CameraCalibrationMsg()
-        msg.camera_name = camera.get_property('skiros:')
+        msg = String()
+        msg.data = camera.getProperty('skiros:DriverAddress').value + "/rgb/image_raw"
         self.pub.publish(msg)
 
         count = 0
@@ -176,19 +78,94 @@ class start_camera_calibration(camera_calibration_topic):
     def onInit(self):
         self.topic = '/camera_calibration/start'
         self.message = 'Camera calibration action server started.'
+        self.camera_pub = rospy.Publisher('/camera_calibration/camera_name', String, queue_size=1)
         return super().onInit()
+    
+    def execute(self):
+        camera = self.params['Camera'].value
+        msg = String()
+        msg.data = camera.id
+        self.camera_pub.publish(msg)
+
+        return super().execute()
+
+    def reponse_callback(self, msg):
+        status = super().reponse_callback(msg)
 
 class take_picture(camera_calibration_topic):
     def onInit(self):
         self.topic = '/camera_calibration/take_picture'
         self.message = 'Picture taken.'
+        
+        ok_status = "Ok"
+        nostart_status = "NoStart"
+        warning_status = "Warning"
+        clearing_status = "Clearing"
+        
+        
+        self.warn_message = 'kiss'
+        self.ok_message = 'bajs'
         return super().onInit()
 
 class compute_intrinsic_camera_parameters(camera_calibration_topic):
     def onInit(self):
+        self.started = True
+        self.camera_name = None
+        self.parameters = None
+        
         self.topic = '/camera_calibration/compute_calibration'
         self.message = 'Intrinsic camera parameters computed.'
+
+        self.start_sub = rospy.Subscriber('/camera_calibration/start', String, callback=self.start_callback)
+        self.camera_sub = rospy.Subscriber('/camera_calibration/camera_name', String, callback=self.name_callback)
+        self.calibration_sub = rospy.Subscriber('/camera_calibration/calibration_parameters', Float64MultiArray, callback=self.calibration_callback)
         return super().onInit()
+
+    def start_callback(self, _):
+        self.started = True
+
+    def name_callback(self, msg):
+        if not self.started:
+            if self.camera_name != msg.data:
+                rospy.logwarn('CameraCalibrationServer: Start signal received but camera did not match existing camera. '
+                                'Please complete current calibration before calibrating new camera. Ignoring signal.')
+                return
+        else:
+            self.camera_name = msg.data
+
+    def calibration_callback(self, msg):
+        self.parameters = msg.data
+    
+    def execute(self):
+        self.started = False
+        super().execute()
+        if self.response:
+            camera = self.wmi.get_element(self.camera_name)
+
+            camera_relations = camera.getRelations(pred=["skiros:hasA"])
+            for relation in camera_relations:
+                object = self.wmi.get_element(relation['dst'])
+                if object.type == 'scalable:CalibrationParameters':
+                    calibration_params = object
+                    break
+
+            fx, fy, cx, cy, k1, k2, p1, p2, k3 = self.parameters
+
+            calibration_params.setProperty('scalable:FocalLengthX', fx)
+            calibration_params.setProperty('scalable:FocalLengthY', fy)
+            calibration_params.setProperty('scalable:PixelCenterX', cx)
+            calibration_params.setProperty('scalable:PixelCenterY', cy)
+            calibration_params.setProperty('scalable:Distortionk1', k1)
+            calibration_params.setProperty('scalable:Distortionk2', k2)
+            calibration_params.setProperty('scalable:Distortionp1', p1)
+            calibration_params.setProperty('scalable:Distortionp2', p2)
+            calibration_params.setProperty('scalable:Distortionk3', k3)
+
+            self.wmi.update_element(calibration_params)
+
+            return self.success('bajs2')
+        else:
+            return self.fail('Camera calibration action server did not respond.', -1)
 
 class delete_previous_image(camera_calibration_topic):
     def onInit(self):
