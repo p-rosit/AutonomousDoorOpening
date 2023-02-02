@@ -19,6 +19,7 @@ add_action_files(
   action
   FILES
   TestMsg.action
+  Empty.action
 )
 
 generate_messages(
