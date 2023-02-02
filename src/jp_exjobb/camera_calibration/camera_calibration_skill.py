@@ -1,5 +1,6 @@
 from skiros2_skill.core.skill import SkillDescription
 from skiros2_common.core.primitive import PrimitiveBase
+from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 import rospy
 from std_msgs.msg import Empty, String
@@ -119,7 +120,7 @@ from std_msgs.msg import Int32, String
 
 class CameraCalibration(SkillDescription):
     def createDescription(self):
-        self.addParam('Camera', Element('skiros:'), ParamTypes.Required)
+        self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Required)
 
 class camera_calibration_topic(PrimitiveBase):
 
@@ -152,10 +153,12 @@ class camera_calibration_topic(PrimitiveBase):
         return True
 
     def execute(self):
-        count = 0
+        camera = self.params['Camera'].value
         msg = CameraCalibrationMsg()
+        msg.camera_name = camera.get_property('skiros:')
         self.pub.publish(msg)
 
+        count = 0
         while not self.response and count < self.time_limit * self.hz:
             self.rate.sleep()
             count += 1
