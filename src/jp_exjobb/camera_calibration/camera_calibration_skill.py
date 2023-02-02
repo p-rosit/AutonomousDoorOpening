@@ -9,7 +9,7 @@ from skiros2_common.core.primitive import PrimitiveBase
 from skiros2_std_skills.action_client_primitive import PrimitiveActionClient
 import rospy
 import actionlib
-from jp_exjobb.msg import EmptyAction, EmptyGoal, EmptyResult
+from jp_exjobb.msg import EmptyAction, EmptyGoal, EmptyResult, CameraCalibrationMsg
 from std_msgs.msg import Int32, String
 
 # from enum import Enum
@@ -75,11 +75,6 @@ from std_msgs.msg import Int32, String
 #                 # If action was aborted set the corresponding state of the action server
 #                 self._as.set_aborted(EmptyResult())
 
-
-class CameraCalibration(SkillDescription):
-    def createDescription(self):
-        pass
-
 # class camera_calibration_topic(PrimitiveActionClient):
 
 #     def createDescription(self):
@@ -122,6 +117,10 @@ class CameraCalibration(SkillDescription):
 #         # Message shown in SkiROS if there is nothing to report
 #         return self.step("Publishing")
 
+class CameraCalibration(SkillDescription):
+    def createDescription(self):
+        self.addParam('Camera', Element('skiros:'), ParamTypes.Required)
+
 class camera_calibration_topic(PrimitiveBase):
 
     def createDescription(self):
@@ -129,27 +128,33 @@ class camera_calibration_topic(PrimitiveBase):
     
     # self.topic and self.message need to be set in onInit by class extending this
     def onInit(self):
+        self.running = False
         self.time_limit = 2
         self.hz = 10
         self.rate = rospy.Rate(self.hz)
         self.pub = rospy.Publisher(self.topic, Empty, queue_size=1)
-        self.sub = rospy.Subscriber('/camera_calibration/response', String, callback=self.reponse_callback)
+        self.sub = rospy.Subscriber('/camera_calibration/response', CameraCalibrationMsg, callback=self.reponse_callback)
         return True
     
     def reponse_callback(self, msg):
-        if msg.data == self.topic:
-            self.response = True
+        if self.running:
+            if msg.data == self.topic:
+                self.response = True
+            else:
+                rospy.logwarn('Incorrect response received, are several camera calibration skills running?')
 
     def onPreempt(self):
         return True
     
     def onStart(self):
+        self.running = True
         self.response = False
         return True
-    
+
     def execute(self):
         count = 0
-        self.pub.publish(Empty())
+        msg = CameraCalibrationMsg()
+        self.pub.publish(msg)
 
         while not self.response and count < self.time_limit * self.hz:
             self.rate.sleep()
@@ -159,6 +164,10 @@ class camera_calibration_topic(PrimitiveBase):
             return self.success(self.message)
         else:
             return self.fail('Camera calibration action server did not respond.', -1)
+    
+    def onEnd(self):
+        self.running = False
+        return True
 
 class start_camera_calibration(camera_calibration_topic):
     def onInit(self):
@@ -176,4 +185,10 @@ class compute_intrinsic_camera_parameters(camera_calibration_topic):
     def onInit(self):
         self.topic = '/camera_calibration/compute_calibration'
         self.message = 'Intrinsic camera parameters computed.'
+        return super().onInit()
+
+class delete_previous_image(camera_calibration_topic):
+    def onInit(self):
+        self.topic = '/camera_calibration/delete'
+        self.message = 'Deleted most recent image.'
         return super().onInit()

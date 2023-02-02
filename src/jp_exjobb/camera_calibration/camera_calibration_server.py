@@ -11,12 +11,14 @@ class CameraCalibrationServer:
         # Publisher which responds to requests
         self.response_pub = rospy.Publisher('/camera_calibration/response', String, queue_size=1)
 
-        # Topics that control the state of the server
+        # Topics and subscribers that control the state of the server
         self.start_topic = '/camera_calibration/start'
         self.picture_topic = '/camera_calibration/take_picture'
+        self.delete_topic = '/camera_calibration/delete'
         self.compute_topic = '/camera_calibration/compute_calibration'
         self.start_sub = rospy.Subscriber(self.start_topic, Empty, callback=self.start_callback)
         self.picture_sub = rospy.Subscriber(self.picture_topic, Empty, callback=self.picture_callback)
+        self.delete_sub = rospy.Subscriber(self.delete_topic, Empty, callback=self.delete_callback)
         self.compute_sub = rospy.Subscriber(self.compute_topic, Empty, callback=self.compute_callback)
 
         rospy.loginfo(self.name + 'Server started, waiting for signals.')
@@ -34,9 +36,9 @@ class CameraCalibrationServer:
         self.respond(self.start_topic)
 
         if self.started:
-            rospy.loginfo(self.name + 'Start signal recieved but not finish signal was recieved. Clearing image list.')
+            rospy.loginfo(self.name + 'Start signal received but no finish signal was received. Clearing image list.')
         else:
-            rospy.loginfo(self.name + 'Start signal recieved.')
+            rospy.loginfo(self.name + 'Start signal received.')
 
         self.images = []
         self.started = True
@@ -46,25 +48,39 @@ class CameraCalibrationServer:
         self.respond(self.picture_topic)
             
         if not self.taking_pictures:
-            rospy.loginfo(self.name + 'Picture signal recieved but no start signal was recieved, ignoring signal.')
+            rospy.loginfo(self.name + 'Picture signal received but no start signal was received, ignoring signal.')
             return
         
-        rospy.loginfo(self.name + 'Picture signal recieved.')
+        rospy.loginfo(self.name + 'Picture signal received.')
 
         # add image to self.images
         self.images.append(1)
-     
+    
+    def delete_callback(self, _):
+        self.respond(self.delete_topic)
+
+        if not self.taking_pictures:
+            rospy.loginfo(self.name + 'Delete signal received but no start signal was received, ignoring signal.')
+            return
+        
+        if not self.images:
+            rospy.loginfo(self.name + 'Delete signal reveived but image list is empty, ignoring signal.')
+            return
+        
+        rospy.loginfo(self.name + 'Delete signal received, deleting most recent image.')
+        self.images.pop()
+
     def compute_callback(self, _):
         self.respond(self.compute_topic)
         
         if not self.started:
-            rospy.loginfo(self.name + 'Compute calibration parameters signal recieved but no start signal was recieved, ignoring signal.')
+            rospy.loginfo(self.name + 'Compute calibration parameters signal received but no start signal was received, ignoring signal.')
             return
         elif not self.images:
-            rospy.loginfo(self.name + 'Compute calibration parameters signal recieved but no pictures have been taken, ignoring signal.')
+            rospy.loginfo(self.name + 'Compute calibration parameters signal received but no pictures have been taken, ignoring signal.')
             return
 
-        rospy.loginfo(self.name + 'Compute calibration parameters signal recieved, computing calibration parameters and publishing.')
+        rospy.loginfo(self.name + 'Compute calibration parameters signal received, computing calibration parameters and publishing.')
 
         # Compute calibration parameters with opencv
 

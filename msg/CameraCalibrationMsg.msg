@@ -1,0 +1,2 @@
+string camera_name
+string camera_topic

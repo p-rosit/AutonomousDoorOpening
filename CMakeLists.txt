@@ -10,9 +10,15 @@ find_package(catkin REQUIRED COMPONENTS
   genmsg
   actionlib_msgs
   actionlib
+  message_generation
 )
 
 catkin_python_setup()
+
+add_message_files(
+  FILES
+  CameraCalibrationMsg.msg
+)
 
 add_action_files(
   DIRECTORY
@@ -25,11 +31,12 @@ add_action_files(
 generate_messages(
   DEPENDENCIES
   actionlib_msgs
+  std_msgs
 )
 
 catkin_package(
 #  INCLUDE_DIRS 
 #  LIBRARIES 
- CATKIN_DEPENDS rospy skiros2_msgs
+ CATKIN_DEPENDS rospy skiros2_msgs message_runtime
 #  DEPENDS 
 )
