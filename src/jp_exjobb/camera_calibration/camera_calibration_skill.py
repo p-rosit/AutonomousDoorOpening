@@ -7,20 +7,23 @@ from std_msgs.msg import Empty, String
 
 from skiros2_skill.core.skill import SkillDescription
 from skiros2_common.core.primitive import PrimitiveBase
-from skiros2_std_skills.action_client_primitive import PrimitiveActionClient
 import rospy
-import actionlib
-from jp_exjobb.msg import EmptyAction, EmptyGoal, EmptyResult, CameraCalibrationMsg
-from std_msgs.msg import Int32, String, Float64MultiArray
+from std_msgs.msg import String, Float64MultiArray, Int32MultiArray
 
 ok_status = "Ok"
 nostart_status = "NoStart"
 warning_status = "Warning"
 clearing_status = "Clearing"
 
-class CameraCalibration(SkillDescription):
+class StartCalibration(SkillDescription):
     def createDescription(self):
         self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Required)
+        self.addParam('Height', 5, ParamTypes.Required)
+        self.addParam('Width', 6, ParamTypes.Required)
+
+class CameraCalibration(SkillDescription):
+    def createDescription(self):
+        pass
 
 class camera_calibration_topic(PrimitiveBase):
 
@@ -29,6 +32,7 @@ class camera_calibration_topic(PrimitiveBase):
     
     # self.topic and self.message need to be set in onInit by class extending this
     def onInit(self):
+        self.is_start_skill = False
         self.running = False
         self.time_limit = 2
         self.hz = 10
@@ -55,9 +59,12 @@ class camera_calibration_topic(PrimitiveBase):
         return True
 
     def execute(self):
-        camera = self.params['Camera'].value
         msg = String()
-        msg.data = camera.getProperty('skiros:DriverAddress').value + "/rgb/image_raw"
+        if self.is_start_skill:
+            camera = self.params['Camera'].value
+            msg.data = camera.getProperty('skiros:DriverAddress').value + "/rgb/image_raw"
+        else:
+            msg.data = ""
         self.pub.publish(msg)
 
         count = 0
@@ -75,17 +82,28 @@ class camera_calibration_topic(PrimitiveBase):
         return True
 
 class start_camera_calibration(camera_calibration_topic):
+    
+    def createDescription(self):
+        self.setDescription(StartCalibration(), self.__class__.__name__)
+    
     def onInit(self):
         self.topic = '/camera_calibration/start'
         self.message = 'Camera calibration action server started.'
         self.camera_pub = rospy.Publisher('/camera_calibration/camera_name', String, queue_size=1)
-        return super().onInit()
+        self.dimension_pub = rospy.Publisher('/camera_calibration/dimensions', Int32MultiArray, queue_size=1)
+        super().onInit()
+        self.is_start_skill = True
+        return True
     
     def execute(self):
         camera = self.params['Camera'].value
         msg = String()
         msg.data = camera.id
         self.camera_pub.publish(msg)
+
+        msg = Int32MultiArray()
+        msg.data = [self.params['Height'].value, self.params['Width'].value]
+        self.dimension_pub.publish(msg)
 
         return super().execute()
 
@@ -101,7 +119,6 @@ class take_picture(camera_calibration_topic):
         nostart_status = "NoStart"
         warning_status = "Warning"
         clearing_status = "Clearing"
-        
         
         self.warn_message = 'kiss'
         self.ok_message = 'bajs'
@@ -139,7 +156,7 @@ class compute_intrinsic_camera_parameters(camera_calibration_topic):
     def execute(self):
         self.started = False
         super().execute()
-        if self.response:
+        if self.response and self.camera_name:
             camera = self.wmi.get_element(self.camera_name)
 
             camera_relations = camera.getRelations(pred=["skiros:hasA"])

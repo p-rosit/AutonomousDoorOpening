@@ -7,6 +7,9 @@ project(jp_exjobb)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   skiros2_msgs
+  cv_bridge
+  image_transport
+  sensor_msgs
   genmsg
   actionlib_msgs
   actionlib

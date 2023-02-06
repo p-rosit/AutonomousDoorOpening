@@ -1,32 +1,63 @@
 #! /usr/bin/env python
 
 import rospy
-from std_msgs.msg import  String, Float64MultiArray
+from cv_bridge import CvBridge
+from std_msgs.msg import  Empty, String, Float64MultiArray, Int32MultiArray
+from sensor_msgs.msg import Image
 
 ok_status = "Ok"
 nostart_status = "NoStart"
 warning_status = "Warning"
 
+class RGBListener:
+    def __init__(self, topic='/realsense/rgb/image_raw'):
+        self.time_limit = 1
+        self.hz = 10
+        self.bridge = CvBridge()
+        self.rate = rospy.Rate(self.hz)
+        self.image = 0.0
+
+        self.sub = rospy.Subscriber(topic, Image, callback=self.image_callback)
+
+    def unregister(self):
+        self.sub.unregister()
+
+    def image_callback(self, data):
+        if self.image is not None: return
+
+        self.image = self.bridge.imgmsg_to_cv2(data)
+
+    def get(self):
+        count = 0
+        self.image = None
+
+        while self.image is None and count < self.time_limit * self.hz:
+            self.rate.sleep()
+            count += 1
+        
+        return self.image
+
 class CameraCalibrationServer:
     def __init__(self):
         self.name = 'CameraCalibrationServer: '
         self.camera_topic = None
+        self.camera_subscriber = None
+        self.height, self.width = None, None
 
         # Publisher which responds to requests
         self.response_pub = rospy.Publisher('/camera_calibration/response', String, queue_size=1)
-        self.camera_pub = rospy.Publisher('/camera_calibration/camera_name', String, queue_size=1)
         self.calibration_pub = rospy.Publisher('/camera_calibration/calibration_parameters', Float64MultiArray, queue_size=1)
 
         # Topics and subscribers that control the state of the server
-        self.start_topic = '/camera_calibration/start'
-        self.picture_topic = '/camera_calibration/take_picture'
-        self.delete_topic = '/camera_calibration/delete'
-        self.compute_topic = '/camera_calibration/compute_calibration'
-        self.start_sub = rospy.Subscriber(self.start_topic, String, callback=self.start_callback)
-        self.picture_sub = rospy.Subscriber(self.picture_topic, String, callback=self.picture_callback)
-        self.delete_sub = rospy.Subscriber(self.delete_topic, String, callback=self.delete_callback)
-        self.compute_sub = rospy.Subscriber(self.compute_topic, String, callback=self.compute_callback)
-
+        self.start_topic    = '/camera_calibration/start'
+        self.picture_topic  = '/camera_calibration/take_picture'
+        self.delete_topic   = '/camera_calibration/delete'
+        self.compute_topic  = '/camera_calibration/compute_calibration'
+        self.start_sub      = rospy.Subscriber(self.start_topic,    String, callback=self.start_callback)
+        self.picture_sub    = rospy.Subscriber(self.picture_topic,  String, callback=self.picture_callback)
+        self.delete_sub     = rospy.Subscriber(self.delete_topic,   String, callback=self.delete_callback)
+        self.compute_sub    = rospy.Subscriber(self.compute_topic,  String, callback=self.compute_callback)
+        self.dimension_sub  = rospy.Subscriber('/camera_calibration/dimensions', Int32MultiArray, callback=self.dimension_callback)
         rospy.loginfo(self.name + 'Server started, waiting for signals.')
 
         self.started = False
@@ -37,6 +68,9 @@ class CameraCalibrationServer:
         msg.data = responding_to_topic + ":" + status
 
         self.response_pub.publish(msg)
+
+    def dimension_callback(self, msg):
+        self.height, self.width = msg.data
 
     def start_callback(self, msg):
         if self.started:
@@ -53,6 +87,7 @@ class CameraCalibrationServer:
             status = ok_status
 
         self.camera_topic = msg.data
+        self.camera_subscriber = RGBListener(topic=self.camera_topic)
 
         self.respond(self.start_topic, status)
 
@@ -67,17 +102,16 @@ class CameraCalibrationServer:
             self.respond(self.picture_topic, nostart_status)
             return
         
-        rospy.loginfo(self.name + 'Picture signal received.')   
+        rospy.loginfo(self.name + 'Picture signal received.')
+
         self.respond(self.picture_topic, ok_status)
-        # add image to self.images
-        self.images.append(1)
+        self.images.append(self.camera_subscriber.get())
     
     def delete_callback(self, _):
         if not self.taking_pictures:
             rospy.loginfo(self.name + 'Delete signal received but no start signal was received, ignoring signal.')
             self.respond(self.delete_topic, nostart_status)
             return
-        
         if not self.images:
             rospy.loginfo(self.name + 'Delete signal received but image list is empty, ignoring signal.')
             self.respond(self.delete_topic, warning_status)
@@ -88,17 +122,28 @@ class CameraCalibrationServer:
         self.images.pop()
 
     def compute_callback(self, _):
+        status = None
         if not self.started:
             rospy.loginfo(self.name + 'Compute calibration parameters signal received but no start signal was received, ignoring signal.')
-            self.respond(self.compute_topic, nostart_status)
-            return
+            status = nostart_status
         elif not self.images:
             rospy.loginfo(self.name + 'Compute calibration parameters signal received but no pictures have been taken, ignoring signal.')
-            self.respond(self.compute_topic, warning_status)
+            status = warning_status
+        elif not self.height or not self.width:
+            rospy.loginfo(self.name + 'Compute calibration parameters signal received but heigth and width of checkerboard has not been set, ignoring signal.')
+            status = warning_status
+
+        if status is not None:
+            self.respond(self.compute_topic, status)
             return
+
+        self.camera_subscriber.unregister()
+        self.camera_subscriber = None
 
         rospy.loginfo(self.name + 'Compute calibration parameters signal received, computing calibration parameters and publishing.')
         
+        print(self.height, self.width)
+
         # Compute calibration parameters with opencv
         
         fx, fy, cx, cy, k1, k2, p1, p2, k3 = 1, 2, 3, 4, 5, 6, 7, 8, 9
@@ -111,6 +156,7 @@ class CameraCalibrationServer:
         self.respond(self.compute_topic, ok_status)
         self.started = False
         self.taking_pictures = False
+        self.height, self.width = False, False
 
 
 if __name__ == '__main__':
