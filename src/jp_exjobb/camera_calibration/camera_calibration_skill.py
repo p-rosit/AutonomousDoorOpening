@@ -81,7 +81,7 @@ class camera_calibration_topic(PrimitiveBase):
         self.running = False
         return True
 
-class start_camera_calibration(camera_calibration_topic):
+class start_calibration(camera_calibration_topic):
     
     def createDescription(self):
         self.setDescription(StartCalibration(), self.__class__.__name__)
@@ -124,7 +124,7 @@ class take_picture(camera_calibration_topic):
         self.ok_message = 'bajs'
         return super().onInit()
 
-class compute_intrinsic_camera_parameters(camera_calibration_topic):
+class calibrate(camera_calibration_topic):
     def onInit(self):
         self.started = True
         self.camera_name = None
@@ -184,7 +184,7 @@ class compute_intrinsic_camera_parameters(camera_calibration_topic):
         else:
             return self.fail('Camera calibration action server did not respond.', -1)
 
-class delete_previous_image(camera_calibration_topic):
+class delete_previous(camera_calibration_topic):
     def onInit(self):
         self.topic = '/camera_calibration/delete'
         self.message = 'Deleted most recent image.'
