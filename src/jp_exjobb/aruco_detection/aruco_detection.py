@@ -185,7 +185,7 @@ def aruco_detection(rgb, calib, distortion, aruco_ids:dict):
             quaternion = R.from_matrix(rotation_matrix[0]).as_quat()
             # print("Quaternion vector:\n%s\n%s" % (quaternion, divider))
 
-            detected_ids[(id, size)] = (t, quaternion)
+            detected_ids[(id, size)] = (t.reshape(-1), quaternion)
             # cv.drawFrameAxes(rgb, K, distortion, r, t, 0.1)
 
     return detected_ids
