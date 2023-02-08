@@ -3,8 +3,6 @@ from skiros2_common.core.primitive import PrimitiveBase
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 
-import numpy as np
-
 import rospy
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import TransformStamped
@@ -14,6 +12,7 @@ from tf.transformations import quaternion_multiply as qm, quaternion_inverse as 
 from cv_bridge import CvBridge
 import PyKDL as pk
 
+import numpy as np
 from scipy.spatial.transform import Rotation
 
 from .aruco_detection import aruco_detection
