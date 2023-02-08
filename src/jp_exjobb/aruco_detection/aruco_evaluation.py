@@ -1,3 +1,5 @@
+import os
+
 from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential
 from skiros2_common.core.primitive import PrimitiveBase
 from skiros2_common.core.world_element import Element
@@ -24,7 +26,7 @@ class aruco_evaluation(SkillBase):
         # Change this to Serial(?)
         skill.setProcessor(Sequential())
         skill(
-            self.skill('ArucoEstimation', 'aruco_marker')
+            self.skill('ArucoEstimation', 'aruco_marker', remap={'Object': 'ArUco marker'}),
             self.skill('ArucoEvaluation','coordinate_comparison')
         )
 
@@ -67,7 +69,11 @@ class coordinate_comparison(PrimitiveBase):
         delta_t = np.linalg.norm(t - t_hat)
         print('Delta quaternion: ', delta_quat)
         print('Delta translation:', delta_t)
-
+        print(os.getcwd())
+        with open('./dinlillaskit', 'a', encoding='utf-8') as f:
+            f.write('Delta quaternion: %f \n' % delta_quat)
+            f.write('Delta translation: %f \n' % delta_t)
+            f.write('penis \n')
 
         return self.success('Done')
 
