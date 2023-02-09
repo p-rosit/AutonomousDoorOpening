@@ -144,7 +144,7 @@ class aruco_marker(PrimitiveBase):
     def onInit(self):
         self.hz = 5
         self.rate = rospy.Rate(self.hz)
-        self.sub = RGBListener()
+        self.sub = RGBListener(topic='/img')
         self.buffer = tf2_ros.Buffer()  # type: any
         self.tf_listener = tf2_ros.TransformListener(self.buffer)
         return True
@@ -158,7 +158,7 @@ class aruco_marker(PrimitiveBase):
     def execute(self):
         object = self.params['Object'].value
         # test_vis = self.params['TestVis'].value
-        relations = object.getRelations(pred=['skiros:hasA'])
+        relations = object.getRelations()
 
         # ob_pose = make_pose_stamped('map', np.array([0, 0, 0]), np.array([1, 0, 0, 0]))
         # ob_pose = self.buffer.transform(ob_pose, object.getProperty('skiros:BaseFrameId').value, rospy.Duration(1))
@@ -171,6 +171,8 @@ class aruco_marker(PrimitiveBase):
         aruco_ids = {}
         markers = {}
         for relation in relations:
+            if relation['dst'] == '-1':
+                continue
             marker = self.wmi.get_element(relation['dst'])
             if marker.type == 'scalable:Marker':
                 id = marker.getProperty("skiros:Value").value
@@ -210,7 +212,7 @@ class aruco_marker(PrimitiveBase):
                 # quattt /= np.linalg.norm(quattt)
 
                 # ids = {(20, 4): (np.array([self.params['x'].value, self.params['y'].value, self.params['z'].value]), quattt)}
-                ids = {(20, 4): (np.array([41.15, 4.2098, 0.0]), np.array([0, 0, 0, 1.0]))}
+                # ids = {(20, 4): (np.array([41.15, 4.2098, 0.0]), np.array([0, 0, 0, 1.0]))}
 
                 # print(ids)
                 if ids:
@@ -300,7 +302,7 @@ class aruco_marker(PrimitiveBase):
         return True
 
 
-class aruco_marker_backwards(PrimitiveBase):
+""" class aruco_marker_backwards(PrimitiveBase):
     def __init__(self, *args, **kwargs):
         self.hz = 5
         self.rate = rospy.Rate(self.hz)
@@ -467,3 +469,5 @@ class aruco_marker_backwards(PrimitiveBase):
 
     def onEnd(self):
         return True
+
+"""
