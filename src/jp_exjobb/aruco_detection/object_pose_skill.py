@@ -106,9 +106,9 @@ def rot2quat(R):
 
 
 def set_object_pose(object, position:list, orientation:list):
-    print(object)
-    print('position', position)
-    print('orientation', orientation)
+    # print(object)
+    # print('position', position)
+    # print('orientation', orientation)
     object.setData(':Position', position)
     object.setData(':Orientation', orientation)
     # object.setProperty('skiros:PositionX', position[0])
@@ -124,7 +124,7 @@ class ArucoEstimation(SkillDescription):
     def createDescription(self):
         self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Required)
         self.addParam('Object', Element("skiros:Product"), ParamTypes.Required)
-        self.addParam('TestVis', Element("skiros:Product"), ParamTypes.Required)
+        # self.addParam('TestVis', Element("skiros:Product"), ParamTypes.Required)
         self.addParam('x', 0.015, ParamTypes.Required)
         self.addParam('y', 0.01, ParamTypes.Required)
         self.addParam('z', -0.04, ParamTypes.Required)
@@ -135,19 +135,18 @@ class ArucoEstimation(SkillDescription):
 
 
 class aruco_marker(PrimitiveBase):
-    def __init__(self, *args, **kwargs):
-        self.hz = 5
-        self.rate = rospy.Rate(self.hz)
-        self.sub = RGBListener()
-        self.buffer = tf2_ros.Buffer()  # type: any
-        self.tf_listener = tf2_ros.TransformListener(self.buffer)
-
-        super(aruco_marker, self).__init__(*args, **kwargs)
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
 
     def createDescription(self):
         self.setDescription(ArucoEstimation(), self.__class__.__name__)
 
     def onInit(self):
+        self.hz = 5
+        self.rate = rospy.Rate(self.hz)
+        self.sub = RGBListener()
+        self.buffer = tf2_ros.Buffer()  # type: any
+        self.tf_listener = tf2_ros.TransformListener(self.buffer)
         return True
 
     def onPreempt(self):
@@ -158,7 +157,7 @@ class aruco_marker(PrimitiveBase):
 
     def execute(self):
         object = self.params['Object'].value
-        test_vis = self.params['TestVis'].value
+        # test_vis = self.params['TestVis'].value
         relations = object.getRelations(pred=['skiros:hasA'])
 
         # ob_pose = make_pose_stamped('map', np.array([0, 0, 0]), np.array([1, 0, 0, 0]))
@@ -192,28 +191,28 @@ class aruco_marker(PrimitiveBase):
                 aruco_ids[(id, dict)] = size
                 markers[(id, dict)] = marker
 
-        print(aruco_ids)
+        # print(aruco_ids)
 
         if aruco_ids:
             done = False
             trials = 0
             while not done and trials < 5 * self.hz:
-                img = self.sub.get()
-                ids = aruco_detection(img, (672.043304, 670.234373, 488.053352, 281.019651), (0, 0, 0, 0, 0), aruco_ids)
+                # img = self.sub.get()
+                # ids = aruco_detection(img, (672.043304, 670.234373, 488.053352, 281.019651), (0, 0, 0, 0, 0), aruco_ids)
 
-                print(ids)
+                # print(ids)
 
-                posss = np.array([self.params['x'].value, self.params['y'].value, self.params['z'].value], dtype=float)
-                print(posss)
-                ids = {id: (pos + posss, quat) for id, (pos, quat) in ids.items()}
+                # posss = np.array([self.params['x'].value, self.params['y'].value, self.params['z'].value], dtype=float)
+                # print(posss)
+                # ids = {id: (pos + posss, quat) for id, (pos, quat) in ids.items()}
 
                 # quattt = np.array([self.params['ox'].value, self.params['oy'].value, self.params['oz'].value, self.params['ow'].value])
                 # quattt /= np.linalg.norm(quattt)
 
                 # ids = {(20, 4): (np.array([self.params['x'].value, self.params['y'].value, self.params['z'].value]), quattt)}
-                # ids = {(20, 4): (np.array([41.15, 4.2098, 0.0]), np.array([0, 0, 0, 1.0]))}
+                ids = {(20, 4): (np.array([41.15, 4.2098, 0.0]), np.array([0, 0, 0, 1.0]))}
 
-                print(ids)
+                # print(ids)
                 if ids:
                     done = True
                 trials += 1
@@ -223,12 +222,12 @@ class aruco_marker(PrimitiveBase):
                 camera_frame = 'skiros:TransformationPose-49'  # self.params['Camera'].value.getProperty('skiros:FrameId').value
                 object_parent_frame = object.getProperty('skiros:BaseFrameId').value
 
-                test_vis.setProperty('skiros:BaseFrameId', camera_frame)
-                for _, (pos, quat) in ids.items():
-                    set_object_pose(test_vis, list(pos.reshape(-1)), list(quat))
-                    break
-                # self.wmi.update_element(test_vis)
-                self.wmi.update_element_properties(test_vis)
+                # test_vis.setProperty('skiros:BaseFrameId', camera_frame)
+                # for _, (pos, quat) in ids.items():
+                #     set_object_pose(test_vis, list(pos.reshape(-1)), list(quat))
+                #     break
+                # # self.wmi.update_element(test_vis)
+                # self.wmi.update_element_properties(test_vis)
 
                 # for id_dict, (t, q) in ids.items():
                 #     marker = markers[id_dict]
