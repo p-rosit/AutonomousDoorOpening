@@ -7,9 +7,11 @@ from skiros2_common.core.params import ParamTypes
 
 import rospy
 from std_msgs.msg import Int32
+import tf2_ros
 
 import numpy as np
 from scipy.spatial.transform import Rotation
+from .object_pose_skill import make_pose_stamped, unpack_pose_stamped
 
 class ArucoEvaluation(SkillDescription):
     def createDescription(self):
@@ -36,6 +38,8 @@ class coordinate_comparison(PrimitiveBase):
         self.setDescription(ArucoEvaluation(), self.__class__.__name__)
 
     def onInit(self):
+        self.buffer = tf2_ros.Buffer()  # type: any
+        self.tf_listener = tf2_ros.TransformListener(self.buffer)
         return True
 
     def onPreempt(self):
@@ -57,13 +61,20 @@ class coordinate_comparison(PrimitiveBase):
         t_hat = np.array([aruco.getProperty('skiros:PositionX').value, 
                     aruco.getProperty('skiros:PositionY').value, 
                     aruco.getProperty('skiros:PositionZ').value])
-
+        
         # True orientation of object
         eul_ang = self.params['R'].values
-        quat = Rotation.from_euler('xyz', eul_ang, degrees=True)
+        quat = Rotation.from_euler('xyz', eul_ang, degrees=False).as_quat()
         # True position of object
-        t = self.params['t'].values
+        t = self.params['t'].values + np.array([28.1, 7.4, 0.0])
+        print(t)
 
+        # tranfering the measured pose from map to workspace
+        object_parent_frame = aruco.getProperty('skiros:BaseFrameId').value
+        true_pose = make_pose_stamped('map', t, quat)
+        true_pose = self.buffer.transform(true_pose, object_parent_frame, rospy.Duration(1))
+        t, quat = unpack_pose_stamped(true_pose)
+        quat = Rotation.from_quat(quat)
         # Compute difference in orientation
         diff_quat = (quat*quat_hat.inv()).as_quat()
         if diff_quat[3] < 0:

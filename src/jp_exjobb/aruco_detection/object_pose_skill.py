@@ -123,6 +123,9 @@ def set_object_pose(object, position:list, orientation:list):
 class ArucoEstimation(SkillDescription):
     def createDescription(self):
         self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Required)
+        self.addParam('View Frame', Element('skiros:TransformationPose'), ParamTypes.Inferred)
+        self.addPreCondition(self.getRelationCond('HasTransformationPose', 'skiros:hasA', 'Camera', 'View Frame', True))
+
         self.addParam('Object', Element("skiros:Product"), ParamTypes.Required)
         # self.addParam('TestVis', Element("skiros:Product"), ParamTypes.Required)
         self.addParam('x', 0.015, ParamTypes.Required)
@@ -144,7 +147,7 @@ class aruco_marker(PrimitiveBase):
     def onInit(self):
         self.hz = 5
         self.rate = rospy.Rate(self.hz)
-        self.sub = RGBListener(topic='/img')
+        self.sub = RGBListener()
         self.buffer = tf2_ros.Buffer()  # type: any
         self.tf_listener = tf2_ros.TransformListener(self.buffer)
         return True
@@ -199,8 +202,9 @@ class aruco_marker(PrimitiveBase):
             done = False
             trials = 0
             while not done and trials < 5 * self.hz:
-                # img = self.sub.get()
+                img = self.sub.get()
                 # ids = aruco_detection(img, (672.043304, 670.234373, 488.053352, 281.019651), (0, 0, 0, 0, 0), aruco_ids)
+                ids = aruco_detection(img, (585.756070948, 579.430235849, 319.5, 239.5), (0, 0, 0, 0, 0), aruco_ids)
 
                 # print(ids)
 
@@ -220,8 +224,8 @@ class aruco_marker(PrimitiveBase):
                 trials += 1
                 self.rate.sleep()
             if done:
-                # remove hard-coding
-                camera_frame = 'skiros:TransformationPose-49'  # self.params['Camera'].value.getProperty('skiros:FrameId').value
+                view_frame = self.params['View Frame'].value
+                camera_frame = view_frame.getProperty('skiros:FrameId').value
                 object_parent_frame = object.getProperty('skiros:BaseFrameId').value
 
                 # test_vis.setProperty('skiros:BaseFrameId', camera_frame)
