@@ -198,6 +198,24 @@ class aruco_marker(PrimitiveBase):
 
         # print(aruco_ids)
 
+
+        # <arg name="delta_x" value="-28.1" />
+        # <arg name="delta_y" value="-7.4" />
+        # <arg name="delta_yaw" value="0" />
+
+        # t: [28.02358311  6.95336713 -0.18431497]
+        # q: [0.15365474 0.15718119 0.16969783 0.96067005]
+
+
+        # realsense_simulation:
+        #   [[589.3875369282958,  0, 320.5],
+        #    [ 0, 589.3875369282958, 240.5],
+        #    [ 0,  0,  1]]
+        # primesense_simulation:
+        #   [[585.756070948,  0, 319.5],
+        #    [ 0, 579.430235849, 239.5],
+        #    [ 0,  0,  1]]
+
         if aruco_ids:
             done = False
             trials = 0

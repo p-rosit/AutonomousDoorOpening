@@ -67,7 +67,6 @@ class coordinate_comparison(PrimitiveBase):
         quat = Rotation.from_euler('xyz', eul_ang, degrees=False).as_quat()
         # True position of object
         t = self.params['t'].values + np.array([28.1, 7.4, 0.0])
-        print(t)
 
         # tranfering the measured pose from map to workspace
         object_parent_frame = aruco.getProperty('skiros:BaseFrameId').value
