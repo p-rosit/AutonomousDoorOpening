@@ -165,8 +165,8 @@ def aruco_detection(rgb, calib, distortion, aruco_ids:dict):
             # print("ID = %s" % id)
             coords = np.zeros((c.shape[1], 2))
             for j in range(coords.shape[0]):
-                # coords[j] = undistort(c[0, j, 0], c[0, j, 1], calib, distortion)
-                coords[j] = c[0, j]
+                coords[j] = undistort(c[0, j, 0], c[0, j, 1], calib, distortion)
+                # coords[j] = c[0, j]
 
             length_of_id = aruco_length_ids[size][id]
             l = length_of_id / 10**3 #  Convert length from (mm) to SI-unit (m).

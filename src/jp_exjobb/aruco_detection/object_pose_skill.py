@@ -128,9 +128,12 @@ class ArucoEstimation(SkillDescription):
 
         self.addParam('Object', Element("skiros:Product"), ParamTypes.Required)
         # self.addParam('TestVis', Element("skiros:Product"), ParamTypes.Required)
-        self.addParam('x', 0.015, ParamTypes.Required)
-        self.addParam('y', 0.01, ParamTypes.Required)
-        self.addParam('z', -0.04, ParamTypes.Required)
+        # self.addParam('x', 0.015, ParamTypes.Required)
+        # self.addParam('y', 0.01, ParamTypes.Required)
+        # self.addParam('z', -0.04, ParamTypes.Required)
+        self.addParam('x', 0.0, ParamTypes.Required)
+        self.addParam('y', 0.0, ParamTypes.Required)
+        self.addParam('z', 0.0, ParamTypes.Required)
         self.addParam('ox', 0.0, ParamTypes.Required)
         self.addParam('oy', 0.0, ParamTypes.Required)
         self.addParam('oz', 0.0, ParamTypes.Required)
@@ -138,13 +141,12 @@ class ArucoEstimation(SkillDescription):
 
 
 class aruco_marker(PrimitiveBase):
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
 
     def createDescription(self):
         self.setDescription(ArucoEstimation(), self.__class__.__name__)
 
     def onInit(self):
+        self.poses = []
         self.hz = 5
         self.rate = rospy.Rate(self.hz)
         self.sub = RGBListener()
@@ -159,6 +161,15 @@ class aruco_marker(PrimitiveBase):
         return True
 
     def execute(self):
+        if self.poses:
+            ts = np.array([t for t, _ in self.poses])
+            qs = np.array([q for _, q in self.poses])
+            qs[qs[:, -1] < 0] *= -1
+
+            print('Std of %d poses:' % len(self.poses))
+            print('Position std:   ', ts.std(axis=0))
+            print('Orientation std:', qs.std(axis=0))
+
         object = self.params['Object'].value
         # test_vis = self.params['TestVis'].value
         relations = object.getRelations()
@@ -198,14 +209,12 @@ class aruco_marker(PrimitiveBase):
 
         # print(aruco_ids)
 
-
         # <arg name="delta_x" value="-28.1" />
         # <arg name="delta_y" value="-7.4" />
         # <arg name="delta_yaw" value="0" />
 
         # t: [28.02358311  6.95336713 -0.18431497]
         # q: [0.15365474 0.15718119 0.16969783 0.96067005]
-
 
         # realsense_simulation:
         #   [[589.3875369282958,  0, 320.5],
@@ -221,14 +230,14 @@ class aruco_marker(PrimitiveBase):
             trials = 0
             while not done and trials < 5 * self.hz:
                 img = self.sub.get()
-                # ids = aruco_detection(img, (672.043304, 670.234373, 488.053352, 281.019651), (0, 0, 0, 0, 0), aruco_ids)
-                ids = aruco_detection(img, (585.756070948, 579.430235849, 319.5, 239.5), (0, 0, 0, 0, 0), aruco_ids)
+                ids = aruco_detection(img, (672.043304, 670.234373, 488.053352, 281.019651), (0, 0, 0, 0, 0), aruco_ids)
+                # ids = aruco_detection(img, (585.756070948, 579.430235849, 319.5, 239.5), (0, 0, 0, 0, 0), aruco_ids)
 
                 # print(ids)
 
-                # posss = np.array([self.params['x'].value, self.params['y'].value, self.params['z'].value], dtype=float)
+                posss = np.array([self.params['x'].value, self.params['y'].value, self.params['z'].value], dtype=float)
                 # print(posss)
-                # ids = {id: (pos + posss, quat) for id, (pos, quat) in ids.items()}
+                ids = {id: (pos + posss, quat) for id, (pos, quat) in ids.items()}
 
                 # quattt = np.array([self.params['ox'].value, self.params['oy'].value, self.params['oz'].value, self.params['ow'].value])
                 # quattt /= np.linalg.norm(quattt)
@@ -296,6 +305,8 @@ class aruco_marker(PrimitiveBase):
 
                 total_position /= len(ids)
                 total_quaternion /= np.linalg.norm(total_quaternion)
+
+                self.poses.append((total_position, total_quaternion))
 
                 # object.setProperty('skiros:BaseFrameId', workspace_frame)
                 # print(workspace_frame)
