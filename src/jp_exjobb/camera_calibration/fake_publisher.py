@@ -11,7 +11,8 @@ from sensor_msgs.msg import Image
 from time import sleep
 
 if __name__ == '__main__':
-    topic = '/real_sense/rgb/image_raw'
+    # topic = '/real_sense/rgb/image_raw'
+    topic = '/img'
 
     bridge = CvBridge()
 

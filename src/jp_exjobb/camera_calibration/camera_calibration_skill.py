@@ -19,7 +19,7 @@ class StartCalibration(SkillDescription):
     def createDescription(self):
         self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Required)
         self.addParam('Height', 5, ParamTypes.Required)
-        self.addParam('Width', 6, ParamTypes.Required)
+        self.addParam('Width', 8, ParamTypes.Required)
 
 class CameraCalibration(SkillDescription):
     def createDescription(self):
@@ -62,7 +62,8 @@ class camera_calibration_topic(PrimitiveBase):
         msg = String()
         if self.is_start_skill:
             camera = self.params['Camera'].value
-            msg.data = camera.getProperty('skiros:DriverAddress').value + "/rgb/image_raw"
+            # msg.data = camera.getProperty('skiros:DriverAddress').value + "/rgb/image_raw"
+            msg.data = "/img"
         else:
             msg.data = ""
         self.pub.publish(msg)
@@ -180,7 +181,7 @@ class calibrate(camera_calibration_topic):
 
             self.wmi.update_element(calibration_params)
 
-            return self.success('bajs2')
+            return self.success('Camera calibration successfully performed.')
         else:
             return self.fail('Camera calibration action server did not respond.', -1)
 

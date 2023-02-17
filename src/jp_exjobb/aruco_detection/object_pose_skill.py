@@ -131,6 +131,12 @@ class ArucoEstimation(SkillDescription):
         # self.addParam('x', 0.015, ParamTypes.Required)
         # self.addParam('y', 0.01, ParamTypes.Required)
         # self.addParam('z', -0.04, ParamTypes.Required)
+
+        # new
+        # self.addParam('x', 0.015, ParamTypes.Required)
+        # self.addParam('y', 0.025, ParamTypes.Required)
+        # self.addParam('z', -0.03, ParamTypes.Required)
+
         self.addParam('x', 0.0, ParamTypes.Required)
         self.addParam('y', 0.0, ParamTypes.Required)
         self.addParam('z', 0.0, ParamTypes.Required)
@@ -167,8 +173,8 @@ class aruco_marker(PrimitiveBase):
             qs[qs[:, -1] < 0] *= -1
 
             print('Std of %d poses:' % len(self.poses))
-            print('Position std:   ', ts.std(axis=0))
-            print('Orientation std:', qs.std(axis=0))
+            print('Position std:   ', ts.std(axis=0), np.linalg.norm(ts.std(axis=0)))
+            print('Orientation std:', qs.std(axis=0), np.linalg.norm(qs.std(axis=0)))
 
         object = self.params['Object'].value
         # test_vis = self.params['TestVis'].value

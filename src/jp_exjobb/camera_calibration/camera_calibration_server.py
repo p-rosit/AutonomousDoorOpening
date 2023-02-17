@@ -5,13 +5,15 @@ from cv_bridge import CvBridge
 from std_msgs.msg import  Empty, String, Float64MultiArray, Int32MultiArray
 from sensor_msgs.msg import Image
 
+from calibration import calibrate_camera
+
 ok_status = "Ok"
 nostart_status = "NoStart"
 warning_status = "Warning"
 
 class RGBListener:
     def __init__(self, topic='/realsense/rgb/image_raw'):
-        self.time_limit = 1
+        self.time_limit = 2.0
         self.hz = 10
         self.bridge = CvBridge()
         self.rate = rospy.Rate(self.hz)
@@ -34,6 +36,9 @@ class RGBListener:
         while self.image is None and count < self.time_limit * self.hz:
             self.rate.sleep()
             count += 1
+        
+        if self.image is None:
+            raise RuntimeError('No image recieved within %.2f seconds.' % self.time_limit)
         
         return self.image
 
@@ -141,14 +146,11 @@ class CameraCalibrationServer:
         self.camera_subscriber = None
 
         rospy.loginfo(self.name + 'Compute calibration parameters signal received, computing calibration parameters and publishing.')
-        
-        print(self.height, self.width)
 
         # Compute calibration parameters with opencv
-        
-        fx, fy, cx, cy, k1, k2, p1, p2, k3 = 1, 2, 3, 4, 5, 6, 7, 8, 9
+        ret, calib, dist = calibrate_camera(self.images, 0.01, (self.height, self.width))
 
-        calibration_parameters = [fx, fy, cx, cy, k1, k2, p1, p2, k3]
+        calibration_parameters = [*calib, *dist]
         calibration_msg = Float64MultiArray()
         calibration_msg.data = calibration_parameters
         self.calibration_pub.publish(calibration_msg)
