@@ -16,7 +16,6 @@ from tf2_geometry_msgs import PoseStamped
 
 import threading
 
-# in nav: acutally navigating heron, poses etc
 class Navigation:
     def __init__(self):
         self.PENDING = 0
@@ -52,7 +51,7 @@ class Navigation:
             rospy.loginfo('Sending goal')
             self.client.send_goal(goal, feedback_cb=self.feedback)
             
-            while self.client.get_state() == self.ACTIVE:
+            while self.client.get_state() in [self.ACTIVE, self.PENDING]:
                 if self.preempt_navigation:
                     self.client.cancel_goal()
                 self.rate.sleep()
@@ -71,7 +70,6 @@ class Navigation:
             rospy.sleep(time_between_trials)
         
         return False
-
 
     def navigate(self, pose_stamped, max_trials=5, max_recovery=2, time_between_trials=5.0):
         self.done = False

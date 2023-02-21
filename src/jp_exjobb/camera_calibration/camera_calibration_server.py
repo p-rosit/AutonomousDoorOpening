@@ -101,7 +101,6 @@ class CameraCalibrationServer:
         self.taking_pictures = True
 
     def picture_callback(self, _):
-            
         if not self.taking_pictures:
             rospy.loginfo(self.name + 'Picture signal received but no start signal was received, ignoring signal.')
             self.respond(self.picture_topic, nostart_status)
