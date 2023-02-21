@@ -52,15 +52,17 @@ class Navigation:
             rospy.loginfo('Sending goal')
             self.client.send_goal(goal, feedback_cb=self.feedback)
             
-            while self.client.get_state() == self.ACTIVE:
+            while self.client.get_state() in (self.ACTIVE, self.PENDING):
+                print (self.client.get_state())
                 if self.preempt_navigation:
                     self.client.cancel_goal()
+                    return True
                 self.rate.sleep()
 
             print(self.client.get_state())
 
             self.status = self.client.get_state()
-
+            print(self.done)
             if self.status == self.SUCCEEDED or self.status == self.PREEMPTED:
                 self.done = True
                 return True
@@ -86,8 +88,9 @@ class Navigation:
         self.client.wait_for_server()
 
         for _ in range(max_recovery):
+            print('entering navto', pose_stamped.pose.position.x)
             status = self.navigate_to(goal, max_trials, time_between_trials)
-
+            print(self.done)
             if self.done:
                 break
             
