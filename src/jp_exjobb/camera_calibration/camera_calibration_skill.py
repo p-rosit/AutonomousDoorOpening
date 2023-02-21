@@ -3,7 +3,7 @@ from skiros2_common.core.primitive import PrimitiveBase
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 import rospy
-from std_msgs.msg import Empty, String
+from std_msgs.msg import String
 
 from skiros2_skill.core.skill import SkillDescription
 from skiros2_common.core.primitive import PrimitiveBase
