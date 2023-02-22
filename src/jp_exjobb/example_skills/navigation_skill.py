@@ -1,22 +1,18 @@
 #!/usr/bin/env python3
 
-from skiros2_skill.core.skill import SkillDescription, ParamOptions, SkillBase, Sequential
+from skiros2_skill.core.skill import SkillDescription
 from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.primitive import PrimitiveBase
-from skiros2_std_skills.action_client_primitive import PrimitiveActionClient
-import skiros2_common.tools.logger as log
 
 import rospy
 import actionlib
-from move_base_msgs.msg import MoveBaseAction, MoveBaseActionGoal, MoveBaseActionResult, MoveBaseGoal
-from actionlib_msgs.msg import GoalStatusArray
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 import tf2_ros
 from tf2_geometry_msgs import PoseStamped
 
 import threading
 
-# in nav: acutally navigating heron, poses etc
 class Navigation:
     def __init__(self):
         self.PENDING = 0
@@ -73,7 +69,6 @@ class Navigation:
             rospy.sleep(time_between_trials)
         
         return False
-
 
     def navigate(self, pose_stamped, max_trials=5, max_recovery=2, time_between_trials=5.0):
         self.done = False
