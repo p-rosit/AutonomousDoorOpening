@@ -139,6 +139,8 @@ def aruco_detection(rgb, calib, distortion, aruco_ids:dict):
     #            0  fy  cy
     #            0  0   1
     fx, fy, cx, cy = calib
+    print(calib)
+    print(distortion)
     K[0, 0] = fx
     K[1, 1] = fy
     K[0, 2] = cx
