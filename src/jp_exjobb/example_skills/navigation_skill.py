@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 
-from skiros2_skill.core.skill import SkillDescription, ParamOptions, SkillBase, Sequential
+from skiros2_skill.core.skill import SkillDescription
 from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.primitive import PrimitiveBase
-from skiros2_std_skills.action_client_primitive import PrimitiveActionClient
-import skiros2_common.tools.logger as log
 
 import rospy
 import actionlib
-from move_base_msgs.msg import MoveBaseAction, MoveBaseActionGoal, MoveBaseActionResult, MoveBaseGoal
-from actionlib_msgs.msg import GoalStatusArray
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 import tf2_ros
 from tf2_geometry_msgs import PoseStamped
 
@@ -51,15 +48,17 @@ class Navigation:
             rospy.loginfo('Sending goal')
             self.client.send_goal(goal, feedback_cb=self.feedback)
             
-            while self.client.get_state() in [self.ACTIVE, self.PENDING]:
+            while self.client.get_state() in (self.ACTIVE, self.PENDING):
+                print (self.client.get_state())
                 if self.preempt_navigation:
                     self.client.cancel_goal()
+                    return True
                 self.rate.sleep()
 
             print(self.client.get_state())
 
             self.status = self.client.get_state()
-
+            print(self.done)
             if self.status == self.SUCCEEDED or self.status == self.PREEMPTED:
                 self.done = True
                 return True
@@ -84,8 +83,9 @@ class Navigation:
         self.client.wait_for_server()
 
         for _ in range(max_recovery):
+            print('entering navto', pose_stamped.pose.position.x)
             status = self.navigate_to(goal, max_trials, time_between_trials)
-
+            print(self.done)
             if self.done:
                 break
             

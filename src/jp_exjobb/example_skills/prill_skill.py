@@ -9,15 +9,12 @@ class PrillSkill(SkillDescription):
         self.addParam('Number', 0, ParamTypes.Required)
 
 class prill_skill(PrimitiveBase):
-    def __init__(self, *args, **kwargs):
-        self.msg = Int32()
-        self.pub = rospy.Publisher('/print_test', Int32, queue_size=1)
-        super(prill_skill, self).__init__(*args, **kwargs)
-
     def createDescription(self):
         self.setDescription(PrillSkill(), self.__class__.__name__)
 
     def onInit(self):
+        self.msg = Int32()
+        self.pub = rospy.Publisher('/print_test', Int32, queue_size=1)
         return True
 
     def onPreempt(self):
@@ -27,7 +24,7 @@ class prill_skill(PrimitiveBase):
         return True
 
     def execute(self):
-        print('Lördag 4/2-2023')
+        print('Fredag 17/2-2023')
 
         self.msg.data = int(self.params['Number'].value)
         self.pub.publish(self.msg)
