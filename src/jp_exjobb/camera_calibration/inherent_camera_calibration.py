@@ -82,6 +82,9 @@ class camera_calibration_skill(PrimitiveBase):
         self.no_dim_msg = 'Unreachable error ¯\_(ツ)_/¯'
         self.no_size_msg = 'Unreachable error ¯\_(ツ)_/¯'
 
+        self.wait_msg = 'Waiting for reply.'
+        self.no_response_msg = 'Calibration server did not respond within %.1f seconds.' % self.time_limit
+
         return True
 
     def response_callback(self, msg):
@@ -94,34 +97,30 @@ class camera_calibration_skill(PrimitiveBase):
                 rospy.logwarn('Incorrect response received, are several camera calibration skills running?')
 
     def onStart(self):
-        self.running = False
+        self.running = True
         self.response = False
+        self.start_time = rospy.Time.now()
+        self.pub.publish(Empty())
         return True
 
     def execute(self):
-        if not self.running:
-            self.running = True
-            self.start_time = rospy.Time.now()
-            self.pub.publish(Empty())
-            return self.step('Message sent.')
-        else:
-            if self.response:
-                if self.status == ok_status:
-                    return self.success(self.ok_msg)
-                elif self.status == nostart_status:
-                    return self.fail(self.no_start_msg, -1)
-                elif self.status == warning_status:
-                    return self.fail(self.warning_msg, -1)
-                elif self.status == nodim_status:
-                    return self.fail(self.no_dim_msg, -1)
-                elif self.status == nosize_status:
-                    return self.fail(self.no_size_msg, -1)
-                else:
-                    return self.fail('Unknown status "%s", unreachable error ¯\_(ツ)_/¯' % self.status, -1)
-            elif rospy.Duration(self.time_limit) < rospy.Time.now() - self.start_time:
-                return self.fail('Calibration server did not respond within %.1f seconds.' % self.time_limit, -1)
+        if self.response:
+            if self.status == ok_status:
+                return self.success(self.ok_msg)
+            elif self.status == nostart_status:
+                return self.fail(self.no_start_msg, -1)
+            elif self.status == warning_status:
+                return self.fail(self.warning_msg, -1)
+            elif self.status == nodim_status:
+                return self.fail(self.no_dim_msg, -1)
+            elif self.status == nosize_status:
+                return self.fail(self.no_size_msg, -1)
             else:
-                return self.step('Waiting for reply.')
+                return self.fail('Unknown status "%s", unreachable error ¯\_(ツ)_/¯' % self.status, -1)
+        elif rospy.Duration(self.time_limit) < rospy.Time.now() - self.start_time:
+            return self.fail(self.no_response_msg, -1)
+        else:
+            return self.step(self.wait_msg)
     
     def onEnd(self):
         self.running = False
@@ -149,48 +148,48 @@ class start_calibration(camera_calibration_skill):
 
         return True
     
+    def onStart(self):
+        self.running = True
+        self.response = False
+        self.start_time = rospy.Time.now()
+
+        camera = self.params['Camera'].value
+        self.msg.data = camera.getProperty('skiros:DriverAddress').value + "/rgb/image_raw"
+        # self.msg.data = '/img'
+        self.pub.publish(self.msg)
+
+        self.msg.data = camera.id
+        self.camera_pub.publish(self.msg)
+
+        msg = Int32MultiArray()
+        msg.data = [self.params['Height'].value, self.params['Width'].value]
+        self.dimension_pub.publish(msg)
+
+        msg = Float64()
+        msg.data = self.params['Square size (m)'].value
+        self.size_pub.publish(msg)
+
+        return True
+
+
     def execute(self):
-        if not self.running:
-            self.running = True
-            self.start_time = rospy.Time.now()
-
-            camera = self.params['Camera'].value
-            self.msg.data = camera.getProperty('skiros:DriverAddress').value + "/rgb/image_raw"
-            # self.msg.data = '/img'
-            self.pub.publish(self.msg)
-
-            self.msg.data = camera.id
-            self.camera_pub.publish(self.msg)
-
-            msg = Int32MultiArray()
-            msg.data = [self.params['Height'].value, self.params['Width'].value]
-            self.dimension_pub.publish(msg)
-
-            msg = Float64()
-            msg.data = self.params['Square size (m)'].value
-            self.size_pub.publish(msg)
-
-            return self.step('Message sent.')
-        else:
-            if self.response:
-                if self.status == ok_status:
-                    return self.success(self.ok_msg)
-                elif self.status == nostart_status:
-                    return self.fail(self.no_start_msg, -1)
-                elif self.status == noend_status:
-                    return self.success(self.no_end_msg)
-                elif self.status == warning_status:
-                    return self.fail(self.warning_msg, -1)
-                elif self.status == nodim_status:
-                    return self.fail(self.no_dim_msg, -1)
-                elif self.status == nosize_status:
-                    return self.fail(self.no_size_msg, -1)
-                else:
-                    return self.fail('Unknown status "%s", unreachable error ¯\_(ツ)_/¯' % self.status, -1)
-            elif rospy.Duration(self.time_limit) < rospy.Time.now() - self.start_time:
-                return self.fail('Calibration server did not respond within %.1f seconds.' % self.time_limit, -1)
+        if self.response:
+            if self.status == ok_status:
+                return self.success(self.ok_msg)
+            elif self.status == nostart_status:
+                return self.success(self.no_start_msg)
+            elif self.status == warning_status:
+                return self.fail(self.warning_msg, -1)
+            elif self.status == nodim_status:
+                return self.fail(self.no_dim_msg, -1)
+            elif self.status == nosize_status:
+                return self.fail(self.no_size_msg, -1)
             else:
-                return self.step('Waiting for reply.')
+                return self.fail('Unknown status "%s", unreachable error ¯\_(ツ)_/¯' % self.status, -1)
+        elif rospy.Duration(self.time_limit) < rospy.Time.now() - self.start_time:
+            return self.fail(self.no_response_msg, -1)
+        else:
+            return self.step(self.wait_msg)
 
 class take_picture(camera_calibration_skill):
     def onInit(self):
@@ -230,6 +229,7 @@ class calibrate(camera_calibration_skill):
     def onInit(self):
         self.sub_topic = '/compute_calibration'
         super().onInit()
+        self.time_limit = 10.0
 
         self.ok_msg = 'Camera parameters computed.'
         self.no_ok_msg = 'Camera could not be calibrated, opencv function failed.'
@@ -238,6 +238,9 @@ class calibrate(camera_calibration_skill):
         self.warning_msg = 'No images have been taken, cannot calibrate.'
         self.no_dim_msg = 'Dimension of calibration pattern not set.'
         self.no_size_msg = 'Size of squares in calibration pattern not set.'
+
+        self.wait_msg = 'Computing parameters.'
+        self.no_response_msg = 'Calibration parameters were not computed within %.1f seconds.' % self.time_limit
 
         self.name = 'CameraCalibrationServer: '
         self.camera_topic = None
@@ -393,23 +396,21 @@ class calibrate(camera_calibration_skill):
         # correct square size
         ret, calib, dist = calibrate_camera(self.images, self.square_size, (self.height, self.width))
 
-        # calib = (1.0, 2.0, 3.0, 4.0)
-        # dist = (1.0, 2.0, 3.0, 4.0, 5.0)
+        if ret:
+            fx, fy, cx, cy = calib
+            k1, k2, p1, p2, k3 = dist
 
-        fx, fy, cx, cy = calib
-        k1, k2, p1, p2, k3 = dist
-
-        calibration_params = self.extract_camera_parameters()
-        calibration_params.setProperty('scalable:FocalLengthX', fx)
-        calibration_params.setProperty('scalable:FocalLengthY', fy)
-        calibration_params.setProperty('scalable:PixelCenterX', cx)
-        calibration_params.setProperty('scalable:PixelCenterY', cy)
-        calibration_params.setProperty('scalable:Distortionk1', k1)
-        calibration_params.setProperty('scalable:Distortionk2', k2)
-        calibration_params.setProperty('scalable:Distortionp1', p1)
-        calibration_params.setProperty('scalable:Distortionp2', p2)
-        calibration_params.setProperty('scalable:Distortionk3', k3)
-        self.wmi.update_element(calibration_params)
+            calibration_params = self.extract_camera_parameters()
+            calibration_params.setProperty('scalable:FocalLengthX', fx)
+            calibration_params.setProperty('scalable:FocalLengthY', fy)
+            calibration_params.setProperty('scalable:PixelCenterX', cx)
+            calibration_params.setProperty('scalable:PixelCenterY', cy)
+            calibration_params.setProperty('scalable:Distortionk1', k1)
+            calibration_params.setProperty('scalable:Distortionk2', k2)
+            calibration_params.setProperty('scalable:Distortionp1', p1)
+            calibration_params.setProperty('scalable:Distortionp2', p2)
+            calibration_params.setProperty('scalable:Distortionk3', k3)
+            self.wmi.update_element(calibration_params)
 
         self.calibration_completed = True
         self.succeeded = ret
@@ -418,19 +419,16 @@ class calibrate(camera_calibration_skill):
         self.clear_camera_info()
 
     def onStart(self):
-        super().onStart()
+        self.running = True
+        self.start_time = rospy.Time.now()
+        self.calibration_completed = False
+
         self.thread = threading.Thread(target=self.compute_parameters)
         self.thread.start()
         return True
 
     def execute(self):
-        if not self.running:
-            self.running = True
-            self.calibration_completed = False
-            return self.step('Computing parameters.')
-        
         if self.calibration_completed:
-            self.thread.join()
             if self.status == ok_status:
                 if self.succeeded:
                     return self.success(self.ok_msg)
@@ -438,8 +436,6 @@ class calibrate(camera_calibration_skill):
                     return self.fail(self.no_ok_msg, -1)
             elif self.status == nostart_status:
                 return self.fail(self.no_start_msg, -1)
-            elif self.status == noend_status:
-                return self.success(self.no_end_msg)
             elif self.status == warning_status:
                 return self.fail(self.warning_msg, -1)
             elif self.status == nodim_status:
@@ -448,5 +444,8 @@ class calibrate(camera_calibration_skill):
                 return self.fail(self.no_size_msg, -1)
             else:
                 return self.fail('Unknown status "%s", unreachable error ¯\_(ツ)_/¯' % self.status, -1)
-        
-        return self.step('Computing parameters.')
+        elif rospy.Duration(self.time_limit) < rospy.Time.now() - self.start_time:
+            return self.fail(self.no_response_msg, -1)
+        else:
+            return self.step(self.wait_msg)
+   
