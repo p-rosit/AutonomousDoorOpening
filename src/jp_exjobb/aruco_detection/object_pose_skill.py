@@ -196,15 +196,15 @@ class aruco_marker(PrimitiveBase):
         #    [ 0,  0,  1]]
 
         cam_params = self.params['Camera Parameters'].value
-        fx = cam_params.getProperty('scalable:FocalLengthX')
-        fy = cam_params.getProperty('scalable:FocalLengthY')
-        cx = cam_params.getProperty('scalable:PixelCenterX')
-        cy = cam_params.getProperty('scalable:PixelCenterY')
-        k1 = cam_params.getProperty('scalable:Distortionk1')
-        k2 = cam_params.getProperty('scalable:Distortionk2')
-        p1 = cam_params.getProperty('scalable:Distortionp1')
-        p2 = cam_params.getProperty('scalable:Distortionp2')
-        k3 = cam_params.getProperty('scalable:Distortionk3')
+        fx = cam_params.getProperty('scalable:FocalLengthX').value
+        fy = cam_params.getProperty('scalable:FocalLengthY').value
+        cx = cam_params.getProperty('scalable:PixelCenterX').value
+        cy = cam_params.getProperty('scalable:PixelCenterY').value
+        k1 = cam_params.getProperty('scalable:Distortionk1').value
+        k2 = cam_params.getProperty('scalable:Distortionk2').value
+        p1 = cam_params.getProperty('scalable:Distortionp1').value
+        p2 = cam_params.getProperty('scalable:Distortionp2').value
+        k3 = cam_params.getProperty('scalable:Distortionk3').value
 
         if aruco_ids:
             done = False
