@@ -41,7 +41,7 @@ class DetectAndSave(SkillDescription):
 class detect_and_save(SkillBase):
 
     def createDescription(self):
-        self.setDescription(CalculateNavigation(), self.__class__.__name__)
+        self.setDescription(DetectAndSave(), self.__class__.__name__)
     
     def expand(self, skill):
         skill.setProcessor(Sequential())
