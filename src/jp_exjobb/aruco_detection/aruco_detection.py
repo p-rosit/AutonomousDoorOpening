@@ -170,7 +170,7 @@ def aruco_detection(rgb, calib, distortion, aruco_ids:dict):
             #     # coords[j] = c[0, j]
             print('----:)')
             print(c)
-            coords = cv.undistortPoints(c, K, distortion)
+            coords = cv.undistortPoints(c, K, distortion, P=K)
             print(coords)
 
             length_of_id = aruco_length_ids[size][id]
