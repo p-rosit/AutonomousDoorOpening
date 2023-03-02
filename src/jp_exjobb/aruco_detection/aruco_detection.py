@@ -168,10 +168,10 @@ def aruco_detection(rgb, calib, distortion, aruco_ids:dict):
             #     cv.undistortPoints(c, K, distortion)
             #     # coords[j] = undistort(c[0, j, 0], c[0, j, 1], calib, distortion)
             #     # coords[j] = c[0, j]
-            print('----:)')
-            print(c)
+            # print('----:)')
+            # print(c)
             coords = cv.undistortPoints(c, K, distortion, P=K)
-            print(coords)
+            # print(coords)
 
             length_of_id = aruco_length_ids[size][id]
             l = length_of_id / 10**3 #  Convert length from (mm) to SI-unit (m).
