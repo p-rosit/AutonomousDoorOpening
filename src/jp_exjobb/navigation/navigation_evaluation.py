@@ -8,12 +8,43 @@ from std_msgs.msg import Empty
 
 import numpy as np
 
+
 class GoToPosition(SkillDescription):
     def createDescription(self):
         self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Required)
         self.addParam('Object', Element('skiros:Product'), ParamTypes.Required)
         self.addParam('InitialLocation', Element('scalable:Workstation'), ParamTypes.Required)
         self.addParam('TargetLocation', Element('scalable:Workstation'), ParamTypes.Required)
+
+class loop_heron(SkillBase):
+    def createDescription(self):
+        self.setDescription(GoToPosition(), self.__class__.__name__)
+    def expand(self, skill):
+        skill.setProcessor(Sequential())
+        skill(
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('GoToPosition', 'go_to_position'),
+            self.skill('CalculateNavigation', 'evaluate_navigation')
+        )
+    
 
 class go_to_position(SkillBase):
 
@@ -25,25 +56,6 @@ class go_to_position(SkillBase):
         skill(
             self.skill('JPDrive', 'jp_drive', remap={'TargetLocation': 'TargetLocation'}),
             # self.skill('Arm', 'aruco_marker', remap={'Object': 'ArUco marker'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
             self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
             self.skill('CalculateNavigation', 'calculate_mean'),
             # self.skill('Arm', 'aruco_marker', remap={'Object': 'ArUco marker'}),
