@@ -162,6 +162,9 @@ class aruco_marker(PrimitiveBase):
         self.sub = RGBListener()
         self.buffer = tf2_ros.Buffer()  # type: any
         self.tf_listener = tf2_ros.TransformListener(self.buffer)
+
+        self.poses = []
+
         return True
 
     def onPreempt(self):
@@ -171,14 +174,14 @@ class aruco_marker(PrimitiveBase):
         return True
 
     def execute(self):
-        # if self.poses:
-        #     ts = np.array([t for t, _ in self.poses])
-        #     qs = np.array([q for _, q in self.poses])
-        #     qs[qs[:, -1] < 0] *= -1
+        if self.poses:
+            ts = np.array([t for t, _ in self.poses])
+            qs = np.array([q for _, q in self.poses])
+            qs[qs[:, -1] < 0] *= -1
 
-        #     print('Std of %d poses:' % len(self.poses))
-        #     print('Position std:   ', ts.std(axis=0), np.linalg.norm(ts.std(axis=0)))
-        #     print('Orientation std:', qs.std(axis=0), np.linalg.norm(qs.std(axis=0)))
+            print('Std of %d poses:' % len(self.poses))
+            print('Position std:   ', ts.std(axis=0), np.linalg.norm(ts.std(axis=0)))
+            print('Orientation std:', qs.std(axis=0), np.linalg.norm(qs.std(axis=0)))
 
         object = self.params['Object'].value
         aruco_ids, markers = extract_object_markers(object, self.wmi)
@@ -255,7 +258,7 @@ class aruco_marker(PrimitiveBase):
                 total_position /= len(ids)
                 total_quaternion /= np.linalg.norm(total_quaternion)
 
-                # self.poses.append((total_position, total_quaternion))
+                self.poses.append((total_position, total_quaternion))
                 set_object_pose(object, list(total_position), list(total_quaternion))
                 self.wmi.update_element_properties(object)
 
