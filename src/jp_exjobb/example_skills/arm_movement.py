@@ -83,6 +83,7 @@ class jp_move_arm(PrimitiveBase):
     def onEnd(self):
         self.group.stop()
         self.group.clear_pose_targets()
+        return True
 
 
 
