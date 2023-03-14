@@ -19,6 +19,7 @@ class GoToPosition(SkillDescription):
 class loop_heron(SkillBase):
     def createDescription(self):
         self.setDescription(GoToPosition(), self.__class__.__name__)
+
     def expand(self, skill):
         skill.setProcessor(Sequential())
         skill(

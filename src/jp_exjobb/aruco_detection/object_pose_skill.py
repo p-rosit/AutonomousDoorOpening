@@ -150,7 +150,7 @@ def extract_object_markers(object, wmi):
     return aruco_ids, markers
 
 
-class aruco_marker(PrimitiveBase):
+class jp_pose_estimation(PrimitiveBase):
 
     def createDescription(self):
         self.setDescription(ArucoEstimation(), self.__class__.__name__)
