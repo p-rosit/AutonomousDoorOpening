@@ -3,17 +3,14 @@ import threading
 from copy import deepcopy
 
 from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential
-from skiros2_std_skills.action_client_primitive import PrimitiveActionClient
 from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.primitive import PrimitiveBase
 import moveit_commander
 
-from jp_exjobb.example_skills.nonblocking_skill import NonBlockingBase
+from jp_exjobb.example_skills.non_blocking_skill import NonBlockingBase
 
 import rospy
-import actionlib
-from actionlib_msgs.msg import GoalStatus
 import tf2_ros
 
 class JPMoveArm(SkillDescription):
@@ -129,10 +126,8 @@ class jp_compliant_arm_movement(NonBlockingBase):
         self.skill_preempted = True
         return self.fail('Motion preempted', -1)
 
-    def onStart(self):
-
-        super().onStart()
-        return True
+    def onPreStart(self):
+        self.succeeded = False
     
     def run(self):
 
