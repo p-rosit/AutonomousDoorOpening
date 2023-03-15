@@ -174,7 +174,7 @@ def aruco_detection(rgb, calib, distortion, aruco_ids:dict):
             # print(coords)
 
             length_of_id = aruco_length_ids[size][id]
-            l = length_of_id / 10**3 #  Convert length from (mm) to SI-unit (m).
+            l = length_of_id #  Length should be in meters.
             obj_points = np.array([	[l, 0, 0],
                         [l, l, 0],
                         [0, l, 0],

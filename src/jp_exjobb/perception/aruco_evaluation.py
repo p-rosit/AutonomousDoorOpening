@@ -11,7 +11,7 @@ import tf2_ros
 
 import numpy as np
 from scipy.spatial.transform import Rotation
-from .object_pose_skill import make_pose_stamped, unpack_pose_stamped
+from .pose_estimation import make_pose_stamped, unpack_pose_stamped
 
 class ArucoEvaluation(SkillDescription):
     def createDescription(self):
