@@ -1,14 +1,11 @@
 import sys
-import threading
 from copy import deepcopy
 
 from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential
 from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.world_element import Element
-from skiros2_common.core.primitive import PrimitiveBase
+from skiros2_common.core.primitive_thread import PrimitiveThreadBase
 import moveit_commander
-
-# from jp_exjobb.example_skills.non_blocking_skill import NonBlockingBase
 
 import rospy
 import tf2_ros
@@ -31,7 +28,7 @@ class jp_move_arm(SkillBase):
             self.skill('JPMoveArm', 'jp_arm_movement')
         )
 
-class jp_arm_movement(NonBlocking):
+class jp_arm_movement(PrimitiveThreadBase):
     def createDescription(self):
         self.setDescription(JPMoveArm(), self.__class__.__name__)
     
@@ -49,9 +46,7 @@ class jp_arm_movement(NonBlocking):
         self.group.stop()
         return self.fail('Motion preempted.', -1)
 
-    def onStart(self):
-        self.complete = False
-        self.succeeded = False
+    def preStart(self):
         self.preempt_motion = False
 
         arm = self.params['Arm'].value
@@ -67,9 +62,6 @@ class jp_arm_movement(NonBlocking):
         self.group.clear_pose_target(arm.getProperty("skiros:MoveItTCPLink").value)
         self.group.clear_pose_targets()
 
-        self.thread = threading.Thread(target=self.run)
-        self.thread.start()
-
         return True
 
     def run(self):
@@ -84,19 +76,10 @@ class jp_arm_movement(NonBlocking):
         goal = self.buffer.transform(goal, arm_frame, rospy.Duration(1))
 
         if self.group.go(goal.pose, wait=True):
-            self.succeeded = True
+            return True, 'Goal Reached'
+        
+        return False, 'Movement Failed'
 
-        self.complete = True
-
-    def execute(self):
-        if not self.complete or self.preempt_motion:
-            return self.step('Running.')
-        else:
-            self.thread.join()
-            if self.succeeded:
-                return self.success('Goal reached.')
-            else:
-                return self.fail('Movement failed.', -1)
     
     def onEnd(self):
         self.group.stop()

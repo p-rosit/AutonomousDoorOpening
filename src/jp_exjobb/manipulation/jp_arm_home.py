@@ -43,7 +43,7 @@ class jp_arm_home(PrimitiveBase):
         self.group.set_end_effector_link(arm.getProperty("skiros:MoveItTCPLink").value)
         self.group.set_max_velocity_scaling_factor(0.1)
         self.group.set_max_acceleration_scaling_factor(0.1)
-        self.group.clear_pose_target(rm.getProperty("skiros:MoveItTCPLink").value)
+        self.group.clear_pose_target(arm.getProperty("skiros:MoveItTCPLink").value)
         self.group.clear_pose_targets()
 
         self.thread = threading.Thread(target=self.run)
