@@ -38,6 +38,7 @@ class jp_arm_home(PrimitiveBase):
         self.group = moveit_commander.move_group.MoveGroupCommander(arm.getProperty("skiros:MoveItGroup").value)
         self.group.set_planner_id("RRTConnect")
         self.group.allow_replanning(True)
+        self.group.set_planning_time(20)
 
         self.group.set_pose_reference_frame(arm.getProperty("skiros:MoveItReferenceFrame").value)
         self.group.set_end_effector_link(arm.getProperty("skiros:MoveItTCPLink").value)

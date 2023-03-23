@@ -1,4 +1,4 @@
-from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential
+from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential, Loop
 from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.primitive import PrimitiveBase
@@ -23,44 +23,13 @@ class loop_heron(SkillBase):
     def expand(self, skill):
         skill.setProcessor(Sequential())
         skill(
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
-            self.skill('GoToPosition', 'go_to_position'),
+            self.skill(Loop(end=20))(
+                self.skill('JPDrive', 'jp_drive', remap={'TargetLocation': 'TargetLocation'}),
+                self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
+                self.skill('CalculateNavigation', 'calculate_mean'),
+                self.skill('JPDrive', 'jp_drive', remap={'TargetLocation': 'InitialLocation'})
+            ),
             self.skill('CalculateNavigation', 'evaluate_navigation')
-        )
-    
-
-class go_to_position(SkillBase):
-
-    def createDescription(self):
-        self.setDescription(GoToPosition(), self.__class__.__name__)
-
-    def expand(self, skill):
-        skill.setProcessor(Sequential())
-        skill(
-            self.skill('JPDrive', 'jp_drive', remap={'TargetLocation': 'TargetLocation'}),
-            # self.skill('Arm', 'aruco_marker', remap={'Object': 'ArUco marker'}),
-            self.skill('DetectAndSave', 'detect_and_save', remap={'Object': 'Object', 'Camera': 'Camera'}),
-            self.skill('CalculateNavigation', 'calculate_mean'),
-            # self.skill('Arm', 'aruco_marker', remap={'Object': 'ArUco marker'}),
-            self.skill('JPDrive', 'jp_drive', remap={'TargetLocation': 'InitialLocation'})
         )
 
 class DetectAndSave(SkillDescription):
