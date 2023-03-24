@@ -27,6 +27,8 @@ class jp_move_arm(SkillBase):
         self.setDescription(JPMoveArm(), self.__class__.__name__)
     
     def expand(self, skill):
+        # TODO: add error handling (joint_config needs joint states while compliant needs a pose)
+        # TODO: reject pose goal if it is too far from the current position
         mode = self.params['Mode'].value.label
 
         self.setProcessor(Sequential())
@@ -120,6 +122,50 @@ class jp_primitive_joint(PrimitiveThreadBase):
         self.group.clear_pose_targets()
         return True
 
+class jp_primitive_compliant(PrimitiveActionClient):
+    """
+    @brief Move arm directly to target (aligns x y z)
+    """
+
+    def createDescription(self):
+        self.setDescription(JPMoveArm(), self.__class__.__name__)
+
+    def buildClient(self):
+        return actionlib.SimpleActionClient("/cartesian_trajectory_generator/goal_action", TrajectoryAction)
+
+    def buildGoal(self):
+        target = self.params["Target"].value
+
+        goal = TrajectoryGoal()
+        if not target.hasProperty("skiros:FrameId", not_none=True):
+            raise Exception("Missing frame_id of goal")
+        
+        goal.header.frame_id = target.getProperty("skiros:BaseFrameId").value
+        goal.header.stamp = rospy.Time.now()
+        goal.goal = target.getData(":PoseStampedMsg")
+        return goal
+
+    def onFeedback(self, msg):
+        # print("=======================\n", msg)
+        return self.step("Progress: {}%. Trans-error: {:.3f} Rot-error: {:.2f}".format(
+            round(100 * msg.time_percentage), msg.trans_goal_error, msg.rot_goal_error))
+
+    def onDone(self, status, msg):
+        # print('Done ================================================= :)')
+        if status == GoalStatus.ABORTED:
+            return self.fail("Failed aborted", -2)
+        elif status == GoalStatus.SUCCEEDED:
+            return self.success("Succeeded")
+        elif status == GoalStatus.REJECTED:
+            rospy.loginfo(status)
+            rospy.loginfo(msg)
+            return self.fail("Goal was rejected by action server.", -2)
+        else:
+            rospy.loginfo(status)
+            rospy.loginfo(msg)
+            return self.fail("Unknown return code.", -100)
+
+
 class dance_skill_smiley(PrimitiveThreadBase):
     def createDescription(self):
         self.setDescription(JPMoveArm(), self.__class__.__name__)
@@ -179,44 +225,3 @@ class dance_skill_smiley(PrimitiveThreadBase):
         self.group.clear_pose_target(self.params['Arm'].value.getProperty("skiros:MoveItTCPLink").value)
         self.group.clear_pose_targets()
         return True
-
-class jp_primitive_compliant(PrimitiveActionClient):
-    """
-    @brief Move arm directly to target (aligns x y z)
-    """
-
-    def createDescription(self):
-        self.setDescription(JPMoveArm(), self.__class__.__name__)
-
-    def buildClient(self):
-        return actionlib.SimpleActionClient("/cartesian_trajectory_generator/goal_action", TrajectoryAction)
-
-    def buildGoal(self):
-        target = self.params["Target"].value
-
-        goal = TrajectoryGoal()
-        if not target.hasProperty("skiros:FrameId", not_none=True):
-            raise Exception("Missing frame_id of goal")
-        
-        goal.header.frame_id = target.getProperty("skiros:BaseFrameId").value
-        goal.header.stamp = rospy.Time.now()
-        goal.goal = target.getData(":PoseStampedMsg")
-        return goal
-
-    def onFeedback(self, msg):
-        return self.step("Progress: {}%. Trans-error: {:.3f} Rot-error: {:.2f}".format(
-            round(100 * msg.time_percentage), msg.trans_goal_error, msg.rot_goal_error))
-
-    def onDone(self, status, msg):
-        if status == GoalStatus.ABORTED:
-            return self.fail("Failed aborted", -2)
-        elif status == GoalStatus.SUCCEEDED:
-            return self.success("Succeeded")
-        elif status == GoalStatus.REJECTED:
-            rospy.loginfo(status)
-            rospy.loginfo(msg)
-            return self.fail("Goal was rejected by action server.", -2)
-        else:
-            rospy.loginfo(status)
-            rospy.loginfo(msg)
-            return self.fail("Unknown return code.", -100)

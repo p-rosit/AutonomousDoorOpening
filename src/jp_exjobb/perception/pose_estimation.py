@@ -1,5 +1,5 @@
 from skiros2_skill.core.skill import SkillDescription
-from skiros2_common.core.primitive import PrimitiveBase
+from skiros2_common.core.primitive_thread import PrimitiveThreadBase
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 
@@ -14,6 +14,133 @@ from scipy.spatial.transform import Rotation
 
 from .aruco_detection import aruco_detection
 
+
+class ArucoEstimation(SkillDescription):
+    def createDescription(self):
+        self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Required)
+        self.addParam('View Frame', Element('skiros:TransformationPose'), ParamTypes.Inferred)
+        self.addParam('Camera Parameters', Element('scalable:CalibrationParameters'), ParamTypes.Inferred)
+        self.addPreCondition(self.getRelationCond('HasTransformationPose', 'skiros:hasA', 'Camera', 'View Frame', True))
+        self.addPreCondition(self.getRelationCond('HasCalibrationParameters', 'skiros:hasA', 'Camera', 'Camera Parameters', True))
+
+        self.addParam('Object', Element("skiros:Product"), ParamTypes.Required)
+        
+        # self.addParam('x', 0.015, ParamTypes.Required)
+        # self.addParam('y', 0.025, ParamTypes.Required)
+        # self.addParam('z', -0.03, ParamTypes.Required)
+
+        self.addParam('x', 0.0, ParamTypes.Required)
+        self.addParam('y', 0.0, ParamTypes.Required)
+        self.addParam('z', 0.0, ParamTypes.Required)
+
+
+class jp_pose_estimation(PrimitiveThreadBase):
+
+    def createDescription(self):
+        self.setDescription(ArucoEstimation(), self.__class__.__name__)
+
+    def onInit(self):
+        self.poses = []
+        self.hz = 5
+        self.rate = rospy.Rate(self.hz)
+        self.sub = RGBListener()
+        self.buffer = tf2_ros.Buffer()  # type: any
+        self.tf_listener = tf2_ros.TransformListener(self.buffer)
+
+        self.poses = []
+
+        return True
+
+    def onPreempt(self):
+        return True
+
+    def preStart(self):
+        return True
+
+    def run(self):
+        if self.poses:
+            ts = np.array([t for t, _ in self.poses])
+            qs = np.array([q for _, q in self.poses])
+            qs[qs[:, -1] < 0] *= -1
+
+            print('Std of %d poses:' % len(self.poses))
+            print('Position std:   ', ts.std(axis=0), np.linalg.norm(ts.std(axis=0)))
+            print('Orientation std:', qs.std(axis=0), np.linalg.norm(qs.std(axis=0)))
+
+        object = self.params['Object'].value
+        aruco_ids, markers = extract_object_markers(object, self.wmi)
+
+        cam_params = self.params['Camera Parameters'].value
+        fx = cam_params.getProperty('scalable:FocalLengthX').value
+        fy = cam_params.getProperty('scalable:FocalLengthY').value
+        cx = cam_params.getProperty('scalable:PixelCenterX').value
+        cy = cam_params.getProperty('scalable:PixelCenterY').value
+        k1 = cam_params.getProperty('scalable:Distortionk1').value
+        k2 = cam_params.getProperty('scalable:Distortionk2').value
+        p1 = cam_params.getProperty('scalable:Distortionp1').value
+        p2 = cam_params.getProperty('scalable:Distortionp2').value
+        k3 = cam_params.getProperty('scalable:Distortionk3').value
+
+        if aruco_ids:
+            done = False
+            trials = 0
+            while not done and trials < 5 * self.hz:
+                img = self.sub.get()
+                ids = aruco_detection(img, (fx, fy, cx, cy), (k1, k2, p1, p2, k3), aruco_ids)
+
+                position_correction = np.array([self.params['x'].value, self.params['y'].value, self.params['z'].value], dtype=float)
+                ids = {id: (pos + position_correction, quat) for id, (pos, quat) in ids.items()}
+
+                if ids:
+                    done = True
+                trials += 1
+                self.rate.sleep()
+            if done:
+                view_frame = self.params['View Frame'].value
+                camera_frame = view_frame.getProperty('skiros:FrameId').value
+                object_parent_frame = object.getProperty('skiros:BaseFrameId').value
+
+                total_position = np.zeros(3, dtype=np.float64)
+                total_quaternion = np.zeros(4, dtype=np.float64)
+                for id_dict, (position, quaternion) in ids.items():
+                    # Get pose of marker in object frame
+                    marker = markers[id_dict]
+                    marker_position, marker_orientation = get_object_pose(marker)
+                    marker_rotation_matrix = quat2rot(marker_orientation)
+
+                    # Get pose of marker in the parent frame of the object by using the
+                    # representation of the pose in the camera frame
+                    estimated_pose = make_pose_stamped(camera_frame, position, quaternion)
+                    estimated_pose = self.buffer.transform(estimated_pose, object_parent_frame, rospy.Duration(1))
+                    estimated_position, estimated_orientation = unpack_pose_stamped(estimated_pose)
+                    estimated_rotation_matrix = quat2rot(estimated_orientation)
+
+                    # Compute transformation between object parent frame and object such that the
+                    # set of transformations is consistent
+                    estimated_object_rotation_matrix = estimated_rotation_matrix @ marker_rotation_matrix.T
+                    estimated_object_position = estimated_position - estimated_object_rotation_matrix @ marker_position
+
+                    estimated_object_quaternion = rot2quat(estimated_object_rotation_matrix)
+
+                    total_position += estimated_object_position
+                    total_quaternion += estimated_object_quaternion
+
+                total_position /= len(ids)
+                total_quaternion /= np.linalg.norm(total_quaternion)
+
+                self.poses.append((total_position, total_quaternion))
+                set_object_pose(object, list(total_position), list(total_quaternion))
+                self.wmi.update_element_properties(object)
+
+                result = "Found AruCo markers with ids: [%s]" % ", ".join([str(id) for id in ids.keys()])
+                return True, result
+            else:
+                return False, 'Could not find AruCo marker within 5 seconds.'
+        else:
+            return False, 'Object does not have markers.'
+
+    def onEnd(self):
+        return True
 
 class RGBListener:
     def __init__(self, topic='/realsense/rgb/image_raw'):
@@ -96,29 +223,6 @@ def set_object_pose(object, position:list, orientation:list):
     object.setData(':Orientation', orientation)
 
 
-class ArucoEstimation(SkillDescription):
-    def createDescription(self):
-        self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Required)
-        self.addParam('View Frame', Element('skiros:TransformationPose'), ParamTypes.Inferred)
-        self.addParam('Camera Parameters', Element('scalable:CalibrationParameters'), ParamTypes.Inferred)
-        self.addPreCondition(self.getRelationCond('HasTransformationPose', 'skiros:hasA', 'Camera', 'View Frame', True))
-        self.addPreCondition(self.getRelationCond('HasCalibrationParameters', 'skiros:hasA', 'Camera', 'Camera Parameters', True))
-
-        self.addParam('Object', Element("skiros:Product"), ParamTypes.Required)
-        # self.addParam('x', 0.015, ParamTypes.Required)
-        # self.addParam('y', 0.01, ParamTypes.Required)
-        # self.addParam('z', -0.04, ParamTypes.Required)
-
-        # new
-        # self.addParam('x', 0.015, ParamTypes.Required)
-        # self.addParam('y', 0.025, ParamTypes.Required)
-        # self.addParam('z', -0.03, ParamTypes.Required)
-
-        self.addParam('x', 0.0, ParamTypes.Required)
-        self.addParam('y', 0.0, ParamTypes.Required)
-        self.addParam('z', 0.0, ParamTypes.Required)
-
-
 def extract_object_markers(object, wmi):
     relations = object.getRelations()
 
@@ -149,125 +253,3 @@ def extract_object_markers(object, wmi):
     
     return aruco_ids, markers
 
-
-class jp_pose_estimation(PrimitiveBase):
-
-    def createDescription(self):
-        self.setDescription(ArucoEstimation(), self.__class__.__name__)
-
-    def onInit(self):
-        self.poses = []
-        self.hz = 5
-        self.rate = rospy.Rate(self.hz)
-        self.sub = RGBListener()
-        self.buffer = tf2_ros.Buffer()  # type: any
-        self.tf_listener = tf2_ros.TransformListener(self.buffer)
-
-        self.poses = []
-
-        return True
-
-    def onPreempt(self):
-        return True
-
-    def onStart(self):
-        return True
-
-    def execute(self):
-        if self.poses:
-            ts = np.array([t for t, _ in self.poses])
-            qs = np.array([q for _, q in self.poses])
-            qs[qs[:, -1] < 0] *= -1
-
-            print('Std of %d poses:' % len(self.poses))
-            print('Position std:   ', ts.std(axis=0), np.linalg.norm(ts.std(axis=0)))
-            print('Orientation std:', qs.std(axis=0), np.linalg.norm(qs.std(axis=0)))
-
-        object = self.params['Object'].value
-        aruco_ids, markers = extract_object_markers(object, self.wmi)
-
-        # <arg name="delta_x" value="-28.1" />
-        # <arg name="delta_y" value="-7.4" />
-        # <arg name="delta_yaw" value="0" />
-        # realsense_simulation:
-        #   [[589.3875369282958,  0, 320.5],
-        #    [ 0, 589.3875369282958, 240.5],
-        #    [ 0,  0,  1]]
-        # primesense_simulation:
-        #   [[585.756070948,  0, 319.5],
-        #    [ 0, 579.430235849, 239.5],
-        #    [ 0,  0,  1]]
-
-        cam_params = self.params['Camera Parameters'].value
-        fx = cam_params.getProperty('scalable:FocalLengthX').value
-        fy = cam_params.getProperty('scalable:FocalLengthY').value
-        cx = cam_params.getProperty('scalable:PixelCenterX').value
-        cy = cam_params.getProperty('scalable:PixelCenterY').value
-        k1 = cam_params.getProperty('scalable:Distortionk1').value
-        k2 = cam_params.getProperty('scalable:Distortionk2').value
-        p1 = cam_params.getProperty('scalable:Distortionp1').value
-        p2 = cam_params.getProperty('scalable:Distortionp2').value
-        k3 = cam_params.getProperty('scalable:Distortionk3').value
-
-        if aruco_ids:
-            done = False
-            trials = 0
-            while not done and trials < 5 * self.hz:
-                img = self.sub.get()
-                ids = aruco_detection(img, (fx, fy, cx, cy), (k1, k2, p1, p2, k3), aruco_ids)
-                # ids = aruco_detection(img, (672.043304, 670.234373, 488.053352, 281.019651), (0, 0, 0, 0, 0), aruco_ids)  # Real
-                # ids = aruco_detection(img, (585.756070948, 579.430235849, 319.5, 239.5), (0, 0, 0, 0, 0), aruco_ids)  # Simulation
-
-                position_correction = np.array([self.params['x'].value, self.params['y'].value, self.params['z'].value], dtype=float)
-                ids = {id: (pos + position_correction, quat) for id, (pos, quat) in ids.items()}
-
-                if ids:
-                    done = True
-                trials += 1
-                self.rate.sleep()
-            if done:
-                view_frame = self.params['View Frame'].value
-                camera_frame = view_frame.getProperty('skiros:FrameId').value
-                object_parent_frame = object.getProperty('skiros:BaseFrameId').value
-
-                total_position = np.zeros(3, dtype=np.float64)
-                total_quaternion = np.zeros(4, dtype=np.float64)
-                for id_dict, (position, quaternion) in ids.items():
-                    # Get pose of marker in object frame
-                    marker = markers[id_dict]
-                    marker_position, marker_orientation = get_object_pose(marker)
-                    marker_rotation_matrix = quat2rot(marker_orientation)
-
-                    # Get pose of marker in the parent frame of the object by using the
-                    # representation of the pose in the camera frame
-                    estimated_pose = make_pose_stamped(camera_frame, position, quaternion)
-                    estimated_pose = self.buffer.transform(estimated_pose, object_parent_frame, rospy.Duration(1))
-                    estimated_position, estimated_orientation = unpack_pose_stamped(estimated_pose)
-                    estimated_rotation_matrix = quat2rot(estimated_orientation)
-
-                    # Compute transformation between object parent frame and object such that the
-                    # set of transformations is consistent
-                    estimated_object_rotation_matrix = estimated_rotation_matrix @ marker_rotation_matrix.T
-                    estimated_object_position = estimated_position - estimated_object_rotation_matrix @ marker_position
-
-                    estimated_object_quaternion = rot2quat(estimated_object_rotation_matrix)
-
-                    total_position += estimated_object_position
-                    total_quaternion += estimated_object_quaternion
-
-                total_position /= len(ids)
-                total_quaternion /= np.linalg.norm(total_quaternion)
-
-                self.poses.append((total_position, total_quaternion))
-                set_object_pose(object, list(total_position), list(total_quaternion))
-                self.wmi.update_element_properties(object)
-
-                result = "Found AruCo markers with ids: [%s]" % ", ".join([str(id) for id in ids.keys()])
-                return self.success(result)
-            else:
-                return self.fail('Could not find AruCo marker within 5 seconds.', -1)
-        else:
-            return self.fail('Object does not have markers.', -1)
-
-    def onEnd(self):
-        return True

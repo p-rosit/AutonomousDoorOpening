@@ -47,7 +47,7 @@ class detect_and_save(SkillBase):
     def expand(self, skill):
         skill.setProcessor(Sequential())
         skill(
-            self.skill('ArucoEstimation', 'aruco_marker', remap={'Object': 'Object', 'Camera': 'Camera'}),
+            self.skill('ArucoEstimation', 'jp_pose_estimation', remap={'Object': 'Object', 'Camera': 'Camera'}),
             self.skill('SaveCoordinates', 'save_coordinates', remap={'Object': 'Object'}),
         )
 
