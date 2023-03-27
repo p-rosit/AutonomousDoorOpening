@@ -134,6 +134,7 @@ class jp_primitive_compliant(PrimitiveActionClient):
             round(100 * msg.time_percentage), msg.trans_goal_error, msg.rot_goal_error))
 
     def onDone(self, status, msg):
+        rospy.sleep(2)
         if status == GoalStatus.ABORTED:
             return self.fail("Failed aborted", -2)
         elif status == GoalStatus.SUCCEEDED:
