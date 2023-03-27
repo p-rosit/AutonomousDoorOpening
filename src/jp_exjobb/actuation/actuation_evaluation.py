@@ -6,6 +6,7 @@ class JPEvaluateArm(SkillDescription):
     def createDescription(self):
         self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Required)
         self.addParam("Target", Element("skiros:TransformationPose"), ParamTypes.Required)
+        self.addParam('Home', Element('skiros:TransformationPose'), ParamTypes.Required)
         self.addParam('Mode', Element('scalable:ControllerState'), ParamTypes.Required)
         self.addParam('Object', Element('skiros:Product'), ParamTypes.Required)
         self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Required)
@@ -22,7 +23,7 @@ class jp_actuation_evaluation(SkillBase):
                 self.skill('DetectAndSave', 'detect_and_save', specify={'Object': self.params['Object'], 'Camera': self.params['Camera']}),
                 self.skill('CalculateNavigation', 'calculate_mean'),
                 self.skill('SwitchController', 'switch_controller', specify={'Controller': 'joint_config'}),
-                self.skill('JPArm', 'jp_arm_home')
+                self.skill('JPMoveArm', 'jp_move_arm', specify={'Mode': self.wmi.get_element('scalable:ControllerState-1'), 'Target': self.params['Home'].value})
             ),
             self.skill('CalculateNavigation', 'evaluate_navigation')
         )
