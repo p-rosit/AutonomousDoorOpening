@@ -46,23 +46,6 @@ class jp_move_arm(SkillBase):
             )
         )
 
-class SelectString(SkillDescription):
-    def createDescription(self):
-        self.addParam('Selection', '', ParamTypes.Required)
-        self.addParam('Input', '', ParamTypes.Required)
-
-class select_string(PrimitiveBase):
-    def createDescription(self):
-        self.setDescription(SelectString(), self.__class__.__name__)
-
-    def execute(self):
-        selection = self.params['Selection'].value
-        input =  self.params['Input'].value
-
-        if selection == input:
-            return self.success('%s chosen.' % selection)
-        return self.fail('%s not chosen.' % selection, -1)
-
 class jp_primitive_joint(PrimitiveThreadBase):
     def createDescription(self):
         self.setDescription(JPMoveArm(), self.__class__.__name__)
@@ -146,12 +129,10 @@ class jp_primitive_compliant(PrimitiveActionClient):
         return goal
 
     def onFeedback(self, msg):
-        # print("=======================\n", msg)
         return self.step("Progress: {}%. Trans-error: {:.3f} Rot-error: {:.2f}".format(
             round(100 * msg.time_percentage), msg.trans_goal_error, msg.rot_goal_error))
 
     def onDone(self, status, msg):
-        # print('Done ================================================= :)')
         if status == GoalStatus.ABORTED:
             return self.fail("Failed aborted", -2)
         elif status == GoalStatus.SUCCEEDED:
@@ -225,3 +206,20 @@ class dance_skill_smiley(PrimitiveThreadBase):
         self.group.clear_pose_target(self.params['Arm'].value.getProperty("skiros:MoveItTCPLink").value)
         self.group.clear_pose_targets()
         return True
+    
+class SelectString(SkillDescription):
+    def createDescription(self):
+        self.addParam('Selection', '', ParamTypes.Required)
+        self.addParam('Input', '', ParamTypes.Required)
+
+class select_string(PrimitiveBase):
+    def createDescription(self):
+        self.setDescription(SelectString(), self.__class__.__name__)
+
+    def execute(self):
+        selection = self.params['Selection'].value
+        input =  self.params['Input'].value
+
+        if selection == input:
+            return self.success('%s chosen.' % selection)
+        return self.fail('%s not chosen.' % selection, -1)
