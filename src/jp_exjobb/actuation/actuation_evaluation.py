@@ -19,7 +19,7 @@ class jp_actuation_evaluation(SkillBase):
         skill.setProcessor(Sequential())
         skill(
             self.skill(Loop(end=20))(
-                self.skill('JPMoveArm', 'jp_move_arm'),
+                self.skill('JPMoveArm', 'jp_move_arm', specify={'Target': self.params['Target'].value}),
                 self.skill('DetectAndSave', 'detect_and_save', specify={'Object': self.params['Object'], 'Camera': self.params['Camera']}),
                 self.skill('CalculateNavigation', 'calculate_mean'),
                 self.skill('SwitchController', 'switch_controller', specify={'Controller': 'joint_config'}),

@@ -118,6 +118,7 @@ class jp_primitive_compliant(PrimitiveActionClient):
 
     def buildGoal(self):
         target = self.params["Target"].value
+        print(target.id)
 
         goal = TrajectoryGoal()
         # if not target.hasProperty("skiros:FrameId", not_none=True):
