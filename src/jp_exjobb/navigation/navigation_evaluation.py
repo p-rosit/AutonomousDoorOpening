@@ -94,8 +94,10 @@ class save_coordinates(PrimitiveBase):
         penis_std = ps.std(axis=0)
         qvinna_std = qs.std(axis=0)
         
+        print('Std of %d poses.' % len(self.badname))
         print(np.linalg.norm(penis_std))
         print(np.linalg.norm(qvinna_std))
+        self.badname = []
 
     def onPreempt(self):
         return True
