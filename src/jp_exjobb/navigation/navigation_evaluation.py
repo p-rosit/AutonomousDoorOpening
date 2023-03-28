@@ -79,6 +79,7 @@ class save_coordinates(PrimitiveBase):
         
         plist /= len(self.currr)
         qlist /= np.linalg.norm(qlist)
+        self.currr = []
 
         self.badname.append((plist, qlist)) 
 
