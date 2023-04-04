@@ -12,6 +12,7 @@ parser = argparse.ArgumentParser(description='')
 parser.add_argument('-file', type=str, help='', default='heron.turtle')
 parser.add_argument('-mode', choices=['verify', 'weak', 'agressive'], help='Mode :)', default="verify")
 parser.add_argument('-sort', choices=['true', 'false', 'True', 'False'], help='Sort', default='False')
+parser.add_argument('-renumber', choices=['true', 'false', 'True', 'False'], help='Renumber', default='True')
 
 def parse_prefix(line):
     line = line[8:-1]
@@ -147,10 +148,15 @@ def dismember_turtle(wm_objects):
 
     return wm_prefix, wm_classes, wm_skills, wm_params, wm_objects
 
+def prefix_dependencies(wm_prefix, wm_classes, wm_skills, wm_params, wm_objects):
+    usage = [False for _ in wm_prefix]
+
+    
+
 def verify_turtle(wm_prefix, wm_classes, wm_skills, wm_params, wm_objects):
     pass
 
-def clean_turtle(turtle)
+def clean_turtle(turtle):
     pass
 
 def reassemble_turtle(turtle):
