@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 class ListenToWrench(SkillDescription):
     def createDescription(self):
         self.addParam('Time (s)', 5.0, ParamTypes.Required)
+        self.addParam('Name', '', ParamTypes.Required)
 
 class listen_to_wrench(PrimitiveThreadBase):
     def createDescription(self):
@@ -52,7 +53,7 @@ class listen_to_wrench(PrimitiveThreadBase):
         plt.plot(force_mag)
         plt.plot(torque_mag)
         plt.legend(['Force', 'Torque'])
-        plt.savefig('/home/duploproject/wrench.png')
+        plt.savefig('/home/duploproject/' + self.params['Name'].value + 'wrench.png')
         plt.cla()
 
         fig, axs = plt.subplots(2)
