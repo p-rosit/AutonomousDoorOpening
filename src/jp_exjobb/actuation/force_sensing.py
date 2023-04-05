@@ -51,9 +51,9 @@ class listen_to_wrench(PrimitiveThreadBase):
         torque_mag = np.array(self.torque)
 
         fig, axs = plt.subplots(1)
-        axs[0].plot(force_mag)
-        axs[0].plot(torque_mag)
-        axs[0].legend(['Force', 'Torque'])
+        axs.plot(force_mag)
+        axs.plot(torque_mag)
+        axs.legend(['Force', 'Torque'])
         plt.savefig('/home/duploproject/' + self.params['Name'].value + '_wrench.png')
         plt.cla()
 
