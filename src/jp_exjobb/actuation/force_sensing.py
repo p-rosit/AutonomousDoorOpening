@@ -64,7 +64,7 @@ class listen_to_wrench(PrimitiveThreadBase):
         axs[1].plot(self.force_coords[1])
         axs[1].plot(self.force_coords[2])
         axs[1].legend(['torque x', 'torque y', 'torque z'])
-        plt.savefig('/home/pontus/coords.png')
+        plt.savefig('/home/duploproject/coords.png')
         plt.cla()
 
         return True, 'Done listening to "/wrench" topic.'
