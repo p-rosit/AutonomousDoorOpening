@@ -53,7 +53,7 @@ class listen_to_wrench(PrimitiveThreadBase):
         plt.plot(force_mag)
         plt.plot(torque_mag)
         plt.legend(['Force', 'Torque'])
-        plt.savefig('/home/duploproject/' + self.params['Name'].value + 'wrench.png')
+        plt.savefig('/home/duploproject/' + self.params['Name'].value + '_wrench.png')
         plt.cla()
 
         fig, axs = plt.subplots(2)
@@ -65,7 +65,7 @@ class listen_to_wrench(PrimitiveThreadBase):
         axs[1].plot(self.torque_coords[1])
         axs[1].plot(self.torque_coords[2])
         axs[1].legend(['torque x', 'torque y', 'torque z'])
-        plt.savefig('/home/duploproject/coords.png')
+        plt.savefig('/home/duploproject/' + self.params['Name'].value + '_coords.png')
         plt.cla()
 
         return True, 'Done listening to "/wrench" topic.'
