@@ -120,8 +120,6 @@ class jp_primitive_compliant(PrimitiveActionClient):
         target = self.params["Target"].value
 
         goal = TrajectoryGoal()
-        # if not target.hasProperty("skiros:FrameId", not_none=True):
-        #     raise Exception("Missing frame_id of goal")
         
         goal.header.frame_id = deepcopy(target.getProperty("skiros:BaseFrameId").value)
         goal.header.stamp = rospy.Time.now()

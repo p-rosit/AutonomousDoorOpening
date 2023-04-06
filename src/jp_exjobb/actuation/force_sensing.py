@@ -4,6 +4,7 @@ from skiros2_common.core.primitive_thread import PrimitiveThreadBase
 
 import rospy
 from geometry_msgs.msg import WrenchStamped
+from std_msgs.msg import Bool
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -88,3 +89,104 @@ class listen_to_wrench(PrimitiveThreadBase):
 
             [force.append(coord) for force, coord in zip(self.force_coords, [fx, fy, fz])]
             [torque.append(coord) for torque, coord in zip(self.torque_coords, [tx, ty, tz])]
+
+
+class ForceSensingOn(SkillDescription):
+    def createDescription(self):
+        self.addParam('Compliant', False, ParamTypes.Required)
+
+
+class force_sensing_on(PrimitiveThreadBase):
+    def createDescription(self):
+        self.setDescription(ForceSensingOn(), self.__class__.__name__)
+
+    def onInit(self):
+        self.hz = 10
+        self.time_limit = 1
+        self.rate = rospy.Rate(self.hz)
+        self.pub = rospy.Publisher('/cartesian_compliance_controller/switch_state', Bool, queue_size=1)
+        self.sub = rospy.Subscriber('/cartesian_compliance_controller/state_reply', Bool, callback=self.reply_callback)
+    
+    def preStart(self):
+        self.reply = False
+        self.state_changed = False
+        self.running = True
+        return True
+
+    def reply_callback(self, msg):
+        if self.running:
+            self.reply = True
+            self.state_changed = msg.data
+
+    def run(self):
+        msg = Bool()
+        msg.data = self.params['Compliant'].value        
+        self.pub.publish(msg)
+
+        count = 0
+        while not self.reply and count < self.time_limit * self.hz:
+            self.rate.sleep()
+            count += 1
+
+        self.running = False
+
+        if self.reply:
+            if self.state_changed:
+                return True, 'Changed state.'
+            else:
+                return True, 'Already in desired state'
+        
+        return False, 'No reply from wrench.'
+
+class ForceZero(SkillDescription):
+    def createDescription(self):
+        self.addParam('Adjust', False, ParamTypes.Required)
+
+class adjust_force(PrimitiveThreadBase):
+    def createDescription(self):
+        self.setDescription(ForceZero(), self.__class__.__name__)
+
+    def onInit(self):
+        self.hz = 10
+        self.time_limit = 1.5
+        self.rate = rospy.Rate(self.hz)
+        self.pub = rospy.Publisher('/cartesian_compliance_controller/adjust_force', Bool, queue_size=1)
+        self.sub = rospy.Subscriber('/cartesian_compliance_controller/force_reply', Bool, callback=self.reply_callback)
+    
+    def preStart(self):
+        self.reply = False
+        self.force_adjusted = False
+        self.running = True
+        return True
+
+    def reply_callback(self, msg):
+        if self.running:
+            self.reply = True
+            self.force_adjusted = msg.data
+
+    def run(self):
+        adjust_force = self.params['Adjust'].value
+        msg = Bool()
+        msg.data = adjust_force
+        self.pub.publish(msg)
+
+        count = 0
+        while not self.reply and count < self.time_limit * self.hz:
+            self.rate.sleep()
+            count += 1
+
+        self.running = False
+
+        if self.reply:
+            if adjust_force:
+                if self.force_adjusted:
+                    return True, 'Force adjusted.'
+                else:
+                    return False, 'Too much movement in signal.'
+            else:
+                if self.force_adjusted:
+                    return True, 'Force offset removed.'
+                else:
+                    return True, 'No force offset to remove.'
+        
+        return False, 'No reply from force_zero.'
