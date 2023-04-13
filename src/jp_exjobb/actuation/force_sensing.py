@@ -193,3 +193,110 @@ class adjust_force(PrimitiveThreadBase):
                     return True, 'No force offset to remove.'
         
         return False, 'No reply from force_zero.'
+
+class EnableSmoothing(SkillDescription):
+    def createDescription(self):
+        self.addParam('Smooth signal', True, ParamTypes.Required)
+
+class enable_smoothing(PrimitiveThreadBase):
+    def createDescription(self):
+        self.setDescription(EnableSmoothing(), self.__class__.__name__)
+
+    def onInit(self):
+        self.hz = 10
+        self.time_limit = 1.5
+        self.rate = rospy.Rate(self.hz)
+        self.pub = rospy.Publisher('/cartesian_compliance_controller/filter', Bool, queue_size=1)
+        self.sub = rospy.Subscriber('/cartesian_compliance_controller/filter_reply', Bool, callback=self.reply_callback)
+    
+    def preStart(self):
+        self.reply = False
+        self.signal_smoothed = False
+        self.running = True
+        return True
+
+    def reply_callback(self, msg):
+        if self.running:
+            self.reply = True
+            self.signal_smoothed = msg.data
+
+    def run(self):
+        smooth = self.params['Smooth signal'].value
+        msg = Bool()
+        msg.data = smooth
+        self.pub.publish(msg)
+
+        count = 0
+        while not self.reply and count < self.time_limit * self.hz:
+            self.rate.sleep()
+            count += 1
+
+        self.running = False
+
+        if self.reply:
+            if smooth:
+                if self.signal_smoothed:
+                    return True, 'Signal smoothed.'
+                else:
+                    return False, 'Signal already being smoothed.'
+            else:
+                if self.signal_smoothed:
+                    return True, 'Smoothing removed.'
+                else:
+                    return True, 'Smoothing already removed.'
+        
+        return False, 'No reply from smooth signal.'
+    
+class ExpSmooth(SkillDescription):
+    def createDescription(self):
+        self.setDescription('Exponential smoothing', False, ParamTypes.Required)
+    
+class exp_smooth(PrimitiveThreadBase):
+    def createDescription(self):
+        self.setDescription(ExpSmooth(), self.__class__.__name__)
+
+    def onInit(self):
+        self.hz = 10
+        self.time_limit = 1.5
+        self.rate = rospy.Rate(self.hz)
+        self.pub = rospy.Publisher('/cartesian_compliance_controller/exp_avg', Bool, queue_size=1)
+        self.sub = rospy.Subscriber('/cartesian_compliance_controller/exp_avg_reply', Bool, callback=self.reply_callback)
+    
+    def preStart(self):
+        self.reply = False
+        self.exp_smoothing = False
+        self.running = True
+        return True
+
+    def reply_callback(self, msg):
+        if self.running:
+            self.reply = True
+            self.exp_smoothing = msg.data
+
+    def run(self):
+        smooth = self.params['Exponential smoothing'].value
+        msg = Bool()
+        msg.data = smooth
+        self.pub.publish(msg)
+
+        count = 0
+        while not self.reply and count < self.time_limit * self.hz:
+            self.rate.sleep()
+            count += 1
+
+        self.running = False
+
+        if self.reply:
+            if smooth:
+                if self.exp_smoothing:
+                    return True, 'Exponential smoothing enabled.'
+                else:
+                    return False, 'Exponential smoothing already enabled.'
+            else:
+                if self.exp_smoothing:
+                    return True, 'Moving average enabled.'
+                else:
+                    return True, 'Moving average already enabled.'
+        
+        return False, 'No reply from exp smooth.'
+    
