@@ -20,7 +20,7 @@ class listen_to_wrench(PrimitiveThreadBase):
 
     def onInit(self):
         self.running = False
-        self.sub = rospy.Subscriber('/wrench', WrenchStamped, callback=self.listen)
+        self.sub = rospy.Subscriber('/cartesian_compliance_controller/ft_sensor_wrench', WrenchStamped, callback=self.listen)
         self.rate = rospy.Rate(10)
 
     def preStart(self):
@@ -38,6 +38,9 @@ class listen_to_wrench(PrimitiveThreadBase):
         return self.fail('Listening preempted.', -1)
 
     def run(self):
+        path = '/home/duploproject/'
+        # path = '/home/pontus/'
+
         time_limit = rospy.Duration(self.params['Time (s)'].value)
         start_time = rospy.Time.now()
 
@@ -55,7 +58,7 @@ class listen_to_wrench(PrimitiveThreadBase):
         axs.plot(force_mag)
         axs.plot(torque_mag)
         axs.legend(['Force', 'Torque'])
-        plt.savefig('/home/duploproject/' + self.params['Name'].value + '_wrench.png')
+        plt.savefig(path + self.params['Name'].value + '_wrench.png')
         plt.cla()
 
         fig, axs = plt.subplots(2)
@@ -67,7 +70,7 @@ class listen_to_wrench(PrimitiveThreadBase):
         axs[1].plot(self.torque_coords[1])
         axs[1].plot(self.torque_coords[2])
         axs[1].legend(['torque x', 'torque y', 'torque z'])
-        plt.savefig('/home/duploproject/' + self.params['Name'].value + '_coords.png')
+        plt.savefig(path + self.params['Name'].value + '_coords.png')
         plt.cla()
 
         return True, 'Done listening to "/wrench" topic.'
