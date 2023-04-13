@@ -249,7 +249,7 @@ class enable_smoothing(PrimitiveThreadBase):
     
 class ExpSmooth(SkillDescription):
     def createDescription(self):
-        self.setDescription('Exponential smoothing', False, ParamTypes.Required)
+        self.addParam('Exponential smoothing', False, ParamTypes.Required)
     
 class exp_smooth(PrimitiveThreadBase):
     def createDescription(self):
