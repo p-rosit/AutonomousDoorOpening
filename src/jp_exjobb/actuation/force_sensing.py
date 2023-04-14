@@ -38,8 +38,8 @@ class listen_to_wrench(PrimitiveThreadBase):
         return self.fail('Listening preempted.', -1)
 
     def run(self):
-        path = '/home/duploproject/'
-        # path = '/home/pontus/'
+        # path = '/home/duploproject/'
+        path = '/home/pontus/'
 
         time_limit = rospy.Duration(self.params['Time (s)'].value)
         start_time = rospy.Time.now()
@@ -238,7 +238,7 @@ class enable_smoothing(PrimitiveThreadBase):
                 if self.signal_smoothed:
                     return True, 'Signal smoothed.'
                 else:
-                    return False, 'Signal already being smoothed.'
+                    return True, 'Signal already being smoothed.'
             else:
                 if self.signal_smoothed:
                     return True, 'Smoothing removed.'
@@ -291,7 +291,7 @@ class exp_smooth(PrimitiveThreadBase):
                 if self.exp_smoothing:
                     return True, 'Exponential smoothing enabled.'
                 else:
-                    return False, 'Exponential smoothing already enabled.'
+                    return True, 'Exponential smoothing already enabled.'
             else:
                 if self.exp_smoothing:
                     return True, 'Moving average enabled.'
