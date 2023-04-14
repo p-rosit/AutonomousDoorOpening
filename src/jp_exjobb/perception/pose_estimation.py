@@ -23,7 +23,7 @@ class ArucoEstimation(SkillDescription):
         self.addPreCondition(self.getRelationCond('HasTransformationPose', 'skiros:hasA', 'Camera', 'View Frame', True))
         self.addPreCondition(self.getRelationCond('HasCalibrationParameters', 'skiros:hasA', 'Camera', 'Camera Parameters', True))
 
-        self.addParam('Object', Element("skiros:Product"), ParamTypes.Required)
+        self.addParam('Object', Element("sumo:Object"), ParamTypes.Required)
         
         # self.addParam('x', 0.015, ParamTypes.Required)
         # self.addParam('y', 0.025, ParamTypes.Required)
