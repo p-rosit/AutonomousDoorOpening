@@ -4,7 +4,7 @@ from skiros2_common.core.primitive_thread import PrimitiveThreadBase
 
 import rospy
 from geometry_msgs.msg import WrenchStamped
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Int32, Float64
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -300,3 +300,96 @@ class exp_smooth(PrimitiveThreadBase):
         
         return False, 'No reply from exp smooth.'
     
+class WeightUpdate(SkillDescription):
+    def createDescription(self):
+        self.addParam('Last weight', 0.1, ParamTypes.Required)
+    
+class weight_update(PrimitiveThreadBase):
+    def createDescription(self):
+        self.setDescription(WeightUpdate(), self.__class__.__name__)
+
+    def onInit(self):
+        self.hz = 10
+        self.time_limit = 1.5
+        self.rate = rospy.Rate(self.hz)
+        self.pub = rospy.Publisher('/cartesian_compliance_controller/weight_update', Float64, queue_size=1)
+        self.sub = rospy.Subscriber('/cartesian_compliance_controller/weight_reply', Bool, callback=self.reply_callback)
+    
+    def preStart(self):
+        self.reply = False
+        self.result = False
+        self.running = True
+        return True
+
+    def reply_callback(self, msg):
+        if self.running:
+            self.reply = True
+            self.result = msg.data
+
+    def run(self):
+        last_weight = self.params['Last weight'].value
+        msg = Bool()
+        msg.data = last_weight
+        self.pub.publish(msg)
+
+        count = 0
+        while not self.reply and count < self.time_limit * self.hz:
+            self.rate.sleep()
+            count += 1
+
+        self.running = False
+
+        if self.reply:
+            if self.result:
+                return True, 'Last weight value set.'
+            else:
+                return False, 'Invalid weight value.'
+        
+        return False, 'No reply from weight update.'
+
+class SizeUpdate(SkillDescription):
+    def createDescription(self):
+        self.addParam('New size', 20, ParamTypes.Required)
+
+class size_update(PrimitiveThreadBase):
+    def createDescription(self):
+        self.setDescription(SizeUpdate(), self.__class__.__name__)
+
+    def onInit(self):
+        self.hz = 10
+        self.time_limit = 1.5
+        self.rate = rospy.Rate(self.hz)
+        self.pub = rospy.Publisher('/cartesian_compliance_controller/size_update', Float64, queue_size=1)
+        self.sub = rospy.Subscriber('/cartesian_compliance_controller/size_reply', Bool, callback=self.reply_callback)
+    
+    def preStart(self):
+        self.reply = False
+        self.result = False
+        self.running = True
+        return True
+
+    def reply_callback(self, msg):
+        if self.running:
+            self.reply = True
+            self.result = msg.data
+
+    def run(self):
+        last_weight = self.params['New size'].value
+        msg = Bool()
+        msg.data = last_weight
+        self.pub.publish(msg)
+
+        count = 0
+        while not self.reply and count < self.time_limit * self.hz:
+            self.rate.sleep()
+            count += 1
+
+        self.running = False
+
+        if self.reply:
+            if self.result:
+                return True, 'Size of smoothing window updated.'
+            else:
+                return False, 'Size of smoothing window needs to be positive.'
+        
+        return False, 'No reply from size update.'
