@@ -328,7 +328,7 @@ class weight_update(PrimitiveThreadBase):
 
     def run(self):
         last_weight = self.params['Last weight'].value
-        msg = Bool()
+        msg = Float64()
         msg.data = last_weight
         self.pub.publish(msg)
 
@@ -359,7 +359,7 @@ class size_update(PrimitiveThreadBase):
         self.hz = 10
         self.time_limit = 1.5
         self.rate = rospy.Rate(self.hz)
-        self.pub = rospy.Publisher('/cartesian_compliance_controller/size_update', Float64, queue_size=1)
+        self.pub = rospy.Publisher('/cartesian_compliance_controller/size_update', Int32, queue_size=1)
         self.sub = rospy.Subscriber('/cartesian_compliance_controller/size_reply', Bool, callback=self.reply_callback)
     
     def preStart(self):
@@ -374,9 +374,9 @@ class size_update(PrimitiveThreadBase):
             self.result = msg.data
 
     def run(self):
-        last_weight = self.params['New size'].value
-        msg = Bool()
-        msg.data = last_weight
+        mean_size = self.params['New size'].value
+        msg = Int32()
+        msg.data = mean_size
         self.pub.publish(msg)
 
         count = 0
