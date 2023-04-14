@@ -38,8 +38,8 @@ class listen_to_wrench(PrimitiveThreadBase):
         return self.fail('Listening preempted.', -1)
 
     def run(self):
-        # path = '/home/duploproject/'
-        path = '/home/pontus/'
+        path = '/home/duploproject/'
+        # path = '/home/pontus/'
 
         time_limit = rospy.Duration(self.params['Time (s)'].value)
         start_time = rospy.Time.now()
