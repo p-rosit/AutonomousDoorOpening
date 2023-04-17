@@ -13,7 +13,7 @@ class ButtonPress(SkillDescription):
     def createDescription(self):
         self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Required)
         self.addParam('Gripper', Element('scalable:WsgGripper'), ParamTypes.Inferred)
-        self.addParam('Button', Element('scalable:DoorButton'), ParamTypes.Required)
+        self.addParam('Button', Element('sumo:Object'), ParamTypes.Required)
         self.addParam('Offset', 0.0, ParamTypes.Required)
         self.addParam('Force', 10.0, ParamTypes.Required)
 
