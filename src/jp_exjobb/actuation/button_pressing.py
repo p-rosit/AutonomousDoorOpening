@@ -74,14 +74,14 @@ class button_press(SkillBase):
         self.setProcessor(Sequential())
         skill(
             self.skill('ForceSensingOn', 'force_sensing_on', specify={'Compliant': True}),
-            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.02}),
+            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.1}),
             self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
             self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': self.params['Offset'].value}),
             self.skill(ParallelFs())(
                 self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
                 self.skill('WaitForForce', 'wait_for_force')
             ),
-            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.02}),
+            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.1}),
             self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}) 
         )
 
@@ -115,10 +115,6 @@ class generate_press_pose(PrimitiveThreadBase):
         pose.setProperty('skiros:PositionX', 0.0)
         pose.setProperty('skiros:PositionY', 0.0)
         pose.setProperty('skiros:PositionZ', offset - gripper_offset)
-        # pose.setProperty('skiros:OrientationX',  0.0)
-        # pose.setProperty('skiros:OrientationY',  0.0)
-        # pose.setProperty('skiros:OrientationZ', -0.7071068)
-        # pose.setProperty('skiros:OrientationW',  0.7071068)
         pose.setProperty('skiros:OrientationX', 0.0)
         pose.setProperty('skiros:OrientationY', 0.0)
         pose.setProperty('skiros:OrientationZ', 1.0)
