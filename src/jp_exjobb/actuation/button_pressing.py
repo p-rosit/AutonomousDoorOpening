@@ -93,6 +93,22 @@ class button_press(SkillBase):
         compliant = Element('scalable:ControllerState')
         compliant.setProperty('rdfs:label', 'compliant')
 
+        gripper = self.params['Gripper'].value
+        button = self.params['Button'].value
+
+        gripper_offset = gripper.getProperty('skiros:SizeZ').value
+        offset = self.params['Offset'].value
+        pre_pose = button.getData(':PoseStampedMsg')
+        press_pose = button.getData(':PoseStampedMsg')
+
+        pre_pose.pose.position.z -= gripper_offset + 0.02
+        press_pose.pose.position.z += offset - gripper_offset
+
+        self.pre_press_pose = Element('skiros:TransformationPose')
+        self.pre_press_pose.setData(':PoseStampedMsg', pre_pose)
+        self.press_pose = Element('skiros:TransformationPose')
+        self.press_pose.setData(':PoseStampedMsg', press_pose)
+
         self.setProcessor(Sequential())
         skill(
             self.skill('ForceSensingOn', 'force_sensing_on', specify={'Compliant': True}),
