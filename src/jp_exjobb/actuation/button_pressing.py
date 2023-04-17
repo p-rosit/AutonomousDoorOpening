@@ -8,12 +8,13 @@ from geometry_msgs.msg import PoseStamped, WrenchStamped
 
 import rospy
 import numpy as np
+from scipy.spatial.transform import Rotation as rot
 
 class ButtonPress(SkillDescription):
     def createDescription(self):
         self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Required)
         self.addParam('Gripper', Element('scalable:WsgGripper'), ParamTypes.Inferred)
-        self.addParam('Pose', Element('scalable:TransformationPose'), ParamTypes.Inferred)
+        self.addParam('Pose', Element('skiros:TransformationPose'), ParamTypes.Inferred)
         self.addParam('Mode', Element('scalable:ControllerState'), ParamTypes.Required)
 
         self.addParam('Button', Element('sumo:Object'), ParamTypes.Required)
@@ -74,20 +75,21 @@ class button_press(SkillBase):
         skill(
             self.skill('ForceSensingOn', 'force_sensing_on', specify={'Compliant': True}),
             self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.02}),
-            self.skill('JPMoveArm','jp_move_arm', remap={'Target', 'Pose'}),
+            self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
             self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': self.params['Offset']}),
             self.skill(ParallelFs())(
-                self.skill('JPMoveArm','jp_move_arm', remap={'Target', 'Pose'}),
+                self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
                 self.skill('WaitForForce', 'wait_for_force')
             ),
-            self.skill('JPMoveArm','jp_move_arm', remap={'Target', 'Pose'}) 
+            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.02}),
+            self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}) 
         )
 
 class GeneratePressPose(SkillDescription):
     def createDescription(self):
         self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Required)
         self.addParam('Gripper', Element('scalable:WsgGripper'), ParamTypes.Inferred)
-        self.addParam('Pose', Element('scalable:TransformationPose'), ParamTypes.Inferred)
+        self.addParam('Pose', Element('skiros:TransformationPose'), ParamTypes.Inferred)
 
         self.addParam('Button', Element('sumo:Object'), ParamTypes.Required)
         self.addParam('Offset', 0.0, ParamTypes.Required)
@@ -106,11 +108,17 @@ class generate_press_pose(PrimitiveThreadBase):
 
         gripper_offset = gripper.getProperty('skiros:SizeZ').value
         offset = self.params['Offset'].value
-        press_pose = button.getData(':PoseStampedMsg')
 
-        press_pose.pose.position.z += offset - gripper_offset
-        press_pose.header.stamp = rospy.Time(0)
-
-        pose.setData(':PoseStampedMsg', press_pose)
+        # pose.setData(':PoseStampedMsg', press_pose)
+        # pose.setData(':Orientation', orientation)
+        pose.setProperty('skiros:BaseFrameId', button.getProperty('skiros:FrameId').value)
+        pose.setProperty('skiros:PositionX', 0.0)
+        pose.setProperty('skiros:PositionY', 0.0)
+        pose.setProperty('skiros:PositionZ', offset - gripper_offset)
+        pose.setProperty('skiros:OrientationX',  0.0)
+        pose.setProperty('skiros:OrientationY',  0.0)
+        pose.setProperty('skiros:OrientationZ', -0.7071068)
+        pose.setProperty('skiros:OrientationW',  0.7071068)
+        self.wmi.update_element_properties(pose)
 
         return True, 'i do not like this solution'
