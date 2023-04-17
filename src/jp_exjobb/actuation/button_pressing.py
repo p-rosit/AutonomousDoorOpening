@@ -67,6 +67,8 @@ class button_press(SkillBase):
         self.setDescription(ButtonPress(), self.__class__.__name__)
     
     def init(self, wmi, instanciator):
+        self.pre_press_pose = None
+        self.press_pose = None
         self.prepresssub = rospy.Subscriber('/ButtonPress/PrePress', PoseStamped, callback=self.set_pre_pose)
         self.presssub = rospy.Subscriber('/ButtonPress/Press', PoseStamped, callback=self.set_press_pose)
         self.pressreplypub = rospy.Publisher('/ButtonPress/Reply', Empty, queue_size=1)
