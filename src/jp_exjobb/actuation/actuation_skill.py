@@ -124,6 +124,8 @@ class jp_primitive_compliant(PrimitiveActionClient):
         goal.header.frame_id = deepcopy(target.getProperty("skiros:BaseFrameId").value)
         goal.header.stamp = rospy.Time.now()
         goal.goal = deepcopy(target.getData(":PoseStampedMsg"))
+
+        print(target.getData(':PoseStampedMsg'))
         return goal
 
     def onFeedback(self, msg):
