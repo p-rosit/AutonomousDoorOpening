@@ -29,7 +29,7 @@ class ArucoEstimation(SkillDescription):
         # self.addParam('y', 0.025, ParamTypes.Required)
         # self.addParam('z', -0.03, ParamTypes.Required)
 
-        self.addParam('x', 0.0, ParamTypes.Required)
+        self.addParam('x', -0.04, ParamTypes.Required)
         self.addParam('y', 0.0, ParamTypes.Required)
         self.addParam('z', 0.0, ParamTypes.Required)
 
@@ -40,7 +40,7 @@ class jp_pose_estimation(PrimitiveThreadBase):
         self.setDescription(ArucoEstimation(), self.__class__.__name__)
 
     def onInit(self):
-        self.poses = []
+        # self.poses = []
         self.hz = 5
         self.rate = rospy.Rate(self.hz)
         self.sub = RGBListener()
@@ -58,14 +58,14 @@ class jp_pose_estimation(PrimitiveThreadBase):
         return True
 
     def run(self):
-        if self.poses:
-            ts = np.array([t for t, _ in self.poses])
-            qs = np.array([q for _, q in self.poses])
-            qs[qs[:, -1] < 0] *= -1
+        # if self.poses:
+        #     ts = np.array([t for t, _ in self.poses])
+        #     qs = np.array([q for _, q in self.poses])
+        #     qs[qs[:, -1] < 0] *= -1
 
-            print('Std of %d poses:' % len(self.poses))
-            print('Position std:   ', ts.std(axis=0), np.linalg.norm(ts.std(axis=0)))
-            print('Orientation std:', qs.std(axis=0), np.linalg.norm(qs.std(axis=0)))
+        #     print('Std of %d poses:' % len(self.poses))
+        #     print('Position std:   ', ts.std(axis=0), np.linalg.norm(ts.std(axis=0)))
+        #     print('Orientation std:', qs.std(axis=0), np.linalg.norm(qs.std(axis=0)))
 
         object = self.params['Object'].value
         aruco_ids, markers = extract_object_markers(object, self.wmi)
@@ -128,7 +128,7 @@ class jp_pose_estimation(PrimitiveThreadBase):
                 total_position /= len(ids)
                 total_quaternion /= np.linalg.norm(total_quaternion)
 
-                self.poses.append((total_position, total_quaternion))
+                # self.poses.append((total_position, total_quaternion))
                 set_object_pose(object, list(total_position), list(total_quaternion))
                 self.wmi.update_element_properties(object)
 
