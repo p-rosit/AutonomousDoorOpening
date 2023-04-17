@@ -74,14 +74,14 @@ class button_press(SkillBase):
         self.setProcessor(Sequential())
         skill(
             self.skill('ForceSensingOn', 'force_sensing_on', specify={'Compliant': True}),
-            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.1}),
+            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.2}),
             self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
             self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': self.params['Offset'].value}),
             self.skill(ParallelFs())(
                 self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
                 self.skill('WaitForForce', 'wait_for_force')
             ),
-            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.1}),
+            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.2}),
             self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}) 
         )
 
