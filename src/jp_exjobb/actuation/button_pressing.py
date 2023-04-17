@@ -96,7 +96,7 @@ class button_press(SkillBase):
         self.setProcessor(Sequential())
         skill(
             self.skill('ForceSensingOn', 'force_sensing_on', specify={'Compliant': True}),
-            self.skill('ButtonPress','generate_press_pose'),
+            self.skill('ButtonPress','generate_press_poses'),
             self.skill('JPMoveArm','jp_move_arm', specify={'Target': self.pre_press_pose, 'Mode': compliant}),
             self.skill(ParallelFs())(
                 self.skill('JPMoveArm','jp_move_arm', specify={'Target': self.press_pose, 'Mode': compliant}),
