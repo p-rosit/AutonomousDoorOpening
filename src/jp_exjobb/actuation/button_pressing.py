@@ -17,7 +17,7 @@ class ButtonPress(SkillDescription):
         self.addParam('Offset', 0.0, ParamTypes.Required)
         self.addParam('Force', 10.0, ParamTypes.Required)
 
-        self.addPreCondition(self.getRelationCond('ArmHasGripper', 'Arm', 'Gripper', 'skiros:hasA', True))
+        self.addPreCondition(self.getRelationCond('ArmHasGripper', 'skiros:hasA', 'Arm', 'Gripper', True))
 
 class WaitForForce(SkillDescription):
     def createDescription(self):
