@@ -115,10 +115,14 @@ class generate_press_pose(PrimitiveThreadBase):
         pose.setProperty('skiros:PositionX', 0.0)
         pose.setProperty('skiros:PositionY', 0.0)
         pose.setProperty('skiros:PositionZ', offset - gripper_offset)
-        pose.setProperty('skiros:OrientationX',  0.0)
-        pose.setProperty('skiros:OrientationY',  0.0)
-        pose.setProperty('skiros:OrientationZ', -0.7071068)
-        pose.setProperty('skiros:OrientationW',  0.7071068)
+        # pose.setProperty('skiros:OrientationX',  0.0)
+        # pose.setProperty('skiros:OrientationY',  0.0)
+        # pose.setProperty('skiros:OrientationZ', -0.7071068)
+        # pose.setProperty('skiros:OrientationW',  0.7071068)
+        pose.setProperty('skiros:OrientationX', 0.0)
+        pose.setProperty('skiros:OrientationY', 0.0)
+        pose.setProperty('skiros:OrientationZ', 1.0)
+        pose.setProperty('skiros:OrientationW', 0.0)
         self.wmi.update_element_properties(pose)
 
         return True, 'i do not like this solution'
