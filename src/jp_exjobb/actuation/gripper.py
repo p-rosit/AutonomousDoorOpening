@@ -27,19 +27,19 @@ class jp_gripper(PrimitiveThreadBase):
         self.grasp_srv = rospy.ServiceProxy(driver_address+'/grasp', Move)
         self.release_srv = rospy.ServiceProxy(driver_address+'/release', Move)
 
-        # self._fixed_delay = 25  # 25 ticks = ~1sec
         return True
     
     def _call(self, service, msg):
         try:
             resp1 = service(msg)
-            return (resp1.error==0, "Error {}".format(resp1.error))
+            if resp1.error == 0:
+                return True, 'Changed gripper state'
+            return False, "Error {}".format(resp1.error)
         except rospy.ServiceException as e:
             log.error("[actuate_wsg_gripper]", "Service call failed: %s"%e)
             return (False, "Service call failed: %s"%e)
 
     def run(self):
-        
         if self.params["Open"].value:
             self._resp = self._call(self.release_srv, MoveRequest(100.0, 400.0))
         else:
