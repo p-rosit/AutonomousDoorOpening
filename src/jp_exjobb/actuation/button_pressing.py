@@ -122,7 +122,7 @@ class button_press(SkillBase):
             self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': self.params['Offset'].value}),
             self.skill(ParallelFs())(
                 self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
-                self.skill('WaitForForce', 'wait_for_force'),
+                self.skill('WaitForForce', 'wait_for_force', specify={'Force': self.params['Force'].value}),
                 self.skill('ListenToWrench', 'listen_to_wrench', specify={'Time (s)': 20.0, 'Name': 'press'})
             ),
             self.skill('ForceCheck', 'force_check'),
