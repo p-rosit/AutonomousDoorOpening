@@ -45,10 +45,3 @@ class jp_gripper(PrimitiveThreadBase):
         else:
             self._resp = self._call(self.grasp_srv, MoveRequest(0.0, 400.0))
         return self._resp
-
-
-    # def execute(self):
-    #     # TODO: find a way to get a feedback when the movement is done. Now hardcoding a fixed delay
-    #     if self._progress_code <= self._fixed_delay:
-    #         return self.step("Progress: {}/{}".format(self._progress_code, self._fixed_delay))
-    #     return self.success("Gripper {}. Code: {}".format("open" if self.params["Open"].value else "close", 0))
