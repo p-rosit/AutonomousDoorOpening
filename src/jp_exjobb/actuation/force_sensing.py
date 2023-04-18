@@ -3,6 +3,8 @@ from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.primitive_thread import PrimitiveThreadBase
 
 import rospy
+import actionlib
+
 from geometry_msgs.msg import WrenchStamped
 from std_msgs.msg import Bool, Int32, Float64
 

@@ -24,7 +24,7 @@ class prill_skill(PrimitiveBase):
         return True
 
     def execute(self):
-        print('Fredag 10/3-2023')
+        print('Måndag 18/4-2023')
 
         self.msg.data = int(self.params['Number'].value)
         self.pub.publish(self.msg)

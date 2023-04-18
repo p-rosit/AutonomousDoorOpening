@@ -3,12 +3,11 @@ from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential, Pa
 from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.world_element import Element
 
-from std_msgs.msg import Empty
-from geometry_msgs.msg import PoseStamped, WrenchStamped
+from geometry_msgs.msg import WrenchStamped
+from std_msgs.msg import Empty, Bool
 
 import rospy
 import numpy as np
-from scipy.spatial.transform import Rotation as rot
 
 class ButtonPress(SkillDescription):
     def createDescription(self):
@@ -38,6 +37,8 @@ class wait_for_force(PrimitiveThreadBase):
         self.hz = 50
         self.rate = rospy.Rate(self.hz)
         self.forcesub = rospy.Subscriber('/cartesian_compliance_controller/ft_sensor_wrench', WrenchStamped, callback=self.earing)
+        self.reset_pub = rospy.Publisher('/wait_for_force/reset', Empty, queue_size=1)
+        self.status_pub = rospy.Publisher('/wait_for_force/status', Bool, queue_size=1)
     
     def earing(self, msg):
         if self.running:
@@ -55,16 +56,57 @@ class wait_for_force(PrimitiveThreadBase):
         return True
 
     def run(self):
+        self.reset_pub.publish(Empty())
+
         ind = 0
         while not self.force_goal_met and ind < self.hz * self.time_limit:
             ind +=1
             self.rate.sleep()
 
         self.running = False
+        self.status_pub.publish(Bool(self.force_goal_met))
 
         if not self.force_goal_met:
-            return False, 'Did not reach force goal, but might still have pressed'
-        return True, 'might have pressed?'
+            return False, 'Did not reach force goal.'
+        return True, 'Force goal met.'
+
+class ForceCheck(SkillDescription):
+    def createDescription(self):
+        pass
+
+class force_check(PrimitiveThreadBase):
+    def createDescription(self):
+        self.setDescription(ForceCheck(), self.__class__.__name__)
+    
+    def onInit(self):
+        self.hz = 20
+        self.time_limit = 1
+        self.rate = rospy.Rate(self.hz)
+
+        self.reply_received = False
+        self.force_goal_met = False
+        self.reset_sub = rospy.Subscriber('/wait_for_force/reset', Empty, callback=self.reset_callback)
+        self.status_sub = rospy.Subscriber('/wait_for_force/status', Bool, callback=self.status_callback)
+        return True
+    
+    def status_callback(self, msg):
+        self.reply_received = True
+        self.force_goal_met = msg.data
+
+    def reset_callback(self, _):
+        self.reply_received = False
+        self.force_goal_met = False
+
+    def run(self):
+        ind = 0
+        while not self.reply_received and ind < self.time_limit * self.hz:
+            ind += 1
+            self.rate.sleep()
+        
+        if not self.force_goal_met:
+            return False, 'Force goal not met.'
+        
+        return True, 'Force goal met.'
 
 class button_press(SkillBase):
     def createDescription(self):
@@ -79,8 +121,10 @@ class button_press(SkillBase):
             self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': self.params['Offset'].value}),
             self.skill(ParallelFs())(
                 self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
-                self.skill('WaitForForce', 'wait_for_force')
+                self.skill('WaitForForce', 'wait_for_force'),
+                self.skill('ListenToWrench', 'listen_to_wrench', specify={'Time (s)': 20.0, 'Name': 'press'})
             ),
+            self.skill('ForceCheck', 'force_check'),
             self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.2}),
             self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}) 
         )
@@ -109,8 +153,6 @@ class generate_press_pose(PrimitiveThreadBase):
         gripper_offset = gripper.getProperty('skiros:SizeZ').value
         offset = self.params['Offset'].value
 
-        # pose.setData(':PoseStampedMsg', press_pose)
-        # pose.setData(':Orientation', orientation)
         pose.setProperty('skiros:BaseFrameId', button.getProperty('skiros:FrameId').value)
         pose.setProperty('skiros:PositionX', 0.0)
         pose.setProperty('skiros:PositionY', 0.0)
@@ -121,4 +163,4 @@ class generate_press_pose(PrimitiveThreadBase):
         pose.setProperty('skiros:OrientationW', 0.0)
         self.wmi.update_element_properties(pose)
 
-        return True, 'i do not like this solution'
+        return True, 'Pose generated.'
