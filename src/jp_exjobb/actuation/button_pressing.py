@@ -1,5 +1,5 @@
 from skiros2_common.core.primitive_thread import PrimitiveThreadBase
-from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential, ParallelFs
+from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential, ParallelFs, ParallelFf
 from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.world_element import Element
 
@@ -46,7 +46,6 @@ class wait_for_force(PrimitiveThreadBase):
             mag = np.sqrt(force.x**2 + force.y**2 + force.z**2)
             
             if self.force_limit < mag:
-                print("Force", mag)
                 self.force_goal_met = True
 
     def preStart(self):
@@ -117,17 +116,22 @@ class button_press(SkillBase):
         self.setProcessor(Sequential())
         skill(
             self.skill('ForceSensingOn', 'force_sensing_on', specify={'Compliant': True}),
-            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.2}),
+            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.1}),
             self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
-            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': self.params['Offset'].value}),
+            self.skill(ParallelFf())(
+                self.skill('ForceZero', 'adjust_force', specify={'Adjust': True}),
+                self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': self.params['Offset'].value})
+            ),
             self.skill(ParallelFs())(
                 self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
-                self.skill('WaitForForce', 'wait_for_force', specify={'Force': self.params['Force'].value}),
-                self.skill('ListenToWrench', 'listen_to_wrench', specify={'Time (s)': 20.0, 'Name': 'press'})
+                self.skill('WaitForForce', 'wait_for_force', specify={'Force': self.params['Force'].value})
             ),
-            self.skill('ForceCheck', 'force_check'),
-            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.2}),
-            self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}) 
+            self.skill(ParallelFf())(
+                self.skill('ForceZero', 'adjust_force', specify={'Adjust': False}),
+                self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.1})
+            ),
+            self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
+            self.skill('ForceCheck', 'force_check')
         )
 
 class GeneratePressPose(SkillDescription):
