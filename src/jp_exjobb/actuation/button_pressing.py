@@ -46,6 +46,7 @@ class wait_for_force(PrimitiveThreadBase):
             mag = np.sqrt(force.x**2 + force.y**2 + force.z**2)
             
             if self.force_limit < mag:
+                print("Force", mag)
                 self.force_goal_met = True
 
     def preStart(self):
