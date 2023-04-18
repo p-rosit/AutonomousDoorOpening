@@ -39,25 +39,16 @@ class jp_gripper(PrimitiveThreadBase):
             return (False, "Service call failed: %s"%e)
 
     def run(self):
+        
         if self.params["Open"].value:
             self._resp = self._call(self.release_srv, MoveRequest(100.0, 400.0))
         else:
             self._resp = self._call(self.grasp_srv, MoveRequest(0.0, 400.0))
         return self._resp
 
-class actuate_wsg_gripper(PrimitiveBase):
-    """
-    @brief Primitive for shunk wsg gripper
-    """
 
-    def onPreempt(self):
-        return self.fail("Canceled", -1)
-
-
-    def execute(self):
-        # TODO: find a way to get a feedback when the movement is done. Now hardcoding a fixed delay
-        if self._progress_code <= self._fixed_delay:
-            return self.step("Progress: {}/{}".format(self._progress_code, self._fixed_delay))
-        return self.success("Gripper {}. Code: {}".format("open" if self.params["Open"].value else "close", 0))
-
-class actuate_wsg_gripper_fake(actuate_fake_gripper): pass
+    # def execute(self):
+    #     # TODO: find a way to get a feedback when the movement is done. Now hardcoding a fixed delay
+    #     if self._progress_code <= self._fixed_delay:
+    #         return self.step("Progress: {}/{}".format(self._progress_code, self._fixed_delay))
+    #     return self.success("Gripper {}. Code: {}".format("open" if self.params["Open"].value else "close", 0))
