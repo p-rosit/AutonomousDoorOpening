@@ -17,8 +17,8 @@ class ButtonPress(SkillDescription):
         self.addParam('Mode', Element('scalable:ControllerState'), ParamTypes.Required)
 
         self.addParam('Button', Element('sumo:Object'), ParamTypes.Required)
-        self.addParam('Offset', 0.0, ParamTypes.Required)
-        self.addParam('Force', 10.0, ParamTypes.Required)
+        self.addParam('Offset', 0.05, ParamTypes.Required)
+        self.addParam('Force', 25.0, ParamTypes.Required)
 
         self.addPreCondition(self.getRelationCond('ArmHasGripper', 'skiros:hasA', 'Arm', 'Gripper', True))
         self.addPreCondition(self.getRelationCond('GripperHasPose', 'skiros:contain', 'Gripper', 'Pose', True))
