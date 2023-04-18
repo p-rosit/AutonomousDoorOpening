@@ -120,7 +120,7 @@ class button_press(SkillBase):
             self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
             # self.skill(ParallelFf())(
                 # self.skill('ForceZero', 'adjust_force', specify={'Adjust': True}),
-                self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': self.params['Offset'].value})
+            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': self.params['Offset'].value})
             # ),
             self.skill(ParallelFs())(
                 self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
@@ -128,7 +128,7 @@ class button_press(SkillBase):
             ),
             # self.skill(ParallelFf())(
                 # self.skill('ForceZero', 'adjust_force', specify={'Adjust': False}),
-                self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.1})
+            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.1})
             # ),
             self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}),
             self.skill('ForceCheck', 'force_check')
