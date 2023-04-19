@@ -2,6 +2,7 @@
 
 import os
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 import rospy
@@ -24,14 +25,21 @@ class LidarPlotter:
     def plot_lidar(self, path, name):
         plot = False
         if name and self.b_scan is not None and self.f_scan is not None:
+            b_scan = np.array(self.b_scan.ranges)
+            b_scan[self.b_scan.range_min < b_scan] = self.b_scan.range_min
+            b_scan[b_scan < self.b_scan.range_max] = self.b_scan.range_max
+            f_scan = np.array(self.b_scan.ranges)
+            f_scan[self.f_scan.range_min < f_scan] = self.f_scan.range_min
+            f_scan[f_scan < self.f_scan.range_max] = self.f_scan.range_max
+
             plot = True
             _, axs = plt.subplots(2)
             ax1, ax2 = axs
             plt.title('Lidar Data')
-            ax1.hist(self.b_scan.ranges)
+            ax1.hist(b_scan)
             ax2.legend(['Back lidar data'])
 
-            ax2.hist(self.f_scan.ranges)
+            ax2.hist(f_scan)
             ax2.legend(['Front lidar data'])
 
             plt.savefig(os.path.join(path, name) + '.png')
