@@ -1,49 +1,13 @@
 #! /usr/bin/env python
 
-import sys
-from select import select
-import termios
-import tty
+import os
+
+import numpy as np
+import matplotlib.pyplot as plt
 
 import rospy
 from geometry_msgs.msg import WrenchStamped
-
-class ReadFromStd:
-    def __call__(self):
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
-
-    def get_float(self):
-        try:
-            num = float(self.get_string())
-        except ValueError:
-            raise ValueError('Expected valid float input, got "%s".' % num)
-        
-        return num
-
-    def get_string(self):
-        string = ""
-        while True:
-            ch = self()
-            if ch == '\r':
-                break
-
-            if ch == '\x7f':
-                if string != "":
-                    string = string[:-1]
-                print('\b \b', end='', flush=True)
-            else:
-                string += ch
-                print(ch, end='', flush=True)
-        
-        print('')
-        return string
+from jp_exjobb.ros_examples.standard_input import ReadFromStd
 
 class WrenchPlotter:
     def __init__(self):
@@ -52,6 +16,8 @@ class WrenchPlotter:
 
         self.wrench = None
         self.filter = None
+        self.wrench_mag = None
+        self.filter_mag = None
         self.time = 0
         self.w = ([], [], [], [], [], [])
         self.f = ([], [], [], [], [], [])
@@ -65,53 +31,169 @@ class WrenchPlotter:
         self.filter = msg.wrench
 
     def record_wrench(self, time):
-        if self.wrench is not None and self.filter is not None:
             self.w = ([], [], [], [], [], [])
             self.f = ([], [], [], [], [], [])
             self.time = time
 
             ind = 0
             while ind < self.hz * self.time:
-                [
-                    ls.append(val) for ls, val in zip(self.w,
-                        (
-                            self.wrench.force.x,
-                            self.wrench.force.y,
-                            self.wrench.force.z,
-                            self.wrench.torque.x,
-                            self.wrench.torque.y,
-                            self.wrench.torque.z,
+                if self.wrench is not None:
+                    [
+                        ls.append(val) for ls, val in zip(self.w,
+                            (
+                                self.wrench.force.x,
+                                self.wrench.force.y,
+                                self.wrench.force.z,
+                                self.wrench.torque.x,
+                                self.wrench.torque.y,
+                                self.wrench.torque.z
+                            )
                         )
-                    )
-                ]
-                [
-                    ls.append(val) for ls, val in zip(self.f,
-                        (
-                            self.filter.force.x,
-                            self.filter.force.y,
-                            self.filter.force.z,
-                            self.filter.torque.x,
-                            self.filter.torque.y,
-                            self.filter.torque.z,
+                    ]
+                if self.filter is not None:
+                    [
+                        ls.append(val) for ls, val in zip(self.f,
+                            (
+                                self.filter.force.x,
+                                self.filter.force.y,
+                                self.filter.force.z,
+                                self.filter.torque.x,
+                                self.filter.torque.y,
+                                self.filter.torque.z
+                            )
                         )
-                    )
-                ]
+                    ]
                 ind += 1
                 self.rate.sleep()
 
-    def plot_wrench_time_domain(name):
-        pass
+    def compute_magnitude(self):
+        fx, fy, fz, tx, ty, tz = self.w
+        self.wrench_mag = (
+            [np.sqrt(x**2 + y**2 + z**2) for x, y, z in zip(fx, fy, fz)],
+            [np.sqrt(x**2 + y**2 + z**2) for x, y, z in zip(tx, ty, tz)]
+        )
+        fx, fy, fz, tx, ty, tz = self.f
+        self.filter_mag = (
+            [np.sqrt(x**2 + y**2 + z**2) for x, y, z in zip(fx, fy, fz)],
+            [np.sqrt(x**2 + y**2 + z**2) for x, y, z in zip(tx, ty, tz)]
+        )
 
-    def plot_wrench_frequency_domain(name):
-        pass
+    def plot_wrench(self, path, name):
+        plot = False
+        if self.w[0] and name:
+            plot = True
+
+            self.compute_magnitude()
+            self.plot_wrench_time_domain(path, name)
+            self.plot_wrench_frequency_domain(path, name)
+        
+        return plot
+
+    def plot_wrench_time_domain(self, path, name):
+        f, t = self.wrench_mag
+
+        fig, axs = plt.subplots(1)
+        plt.title('Wrench Magnitude')
+        axs.plot(f)
+        axs.plot(t)
+        axs.legend(['Force', 'Torque'])
+        plt.savefig(os.path.join(path, 'wrench_magnitude_' + name) + '.png')
+        plt.cla()
+
+        fig, axs = plt.subplots(2)
+        plt.title('Wrench')
+        ax1, ax2 = axs
+        for f in self.w[:3]:
+            ax1.plot(f)
+        ax1.legend(['force x', 'force y', 'force z'])
+        for t in self.w[3:]:
+            ax2.plot(t)
+        ax2.legend(['torque x', 'torque y', 'torque z'])
+        plt.savefig(os.path.join(path, 'wrench_coords_' + name) + '.png')
+        plt.cla()
+
+        f, t = self.filter_mag
+
+        fig, axs = plt.subplots(1)
+        plt.title('Filter Magnitude')
+        axs.plot(f)
+        axs.plot(t)
+        axs.legend(['Force', 'Torque'])
+        plt.savefig(os.path.join(path, 'wrench_magnitude_' + name) + '.png')
+        plt.cla()
+
+        fig, axs = plt.subplots(2)
+        plt.title('Filter')
+        ax1, ax2 = axs
+        for f in self.f[:3]:
+            ax1.plot(f)
+        ax1.legend(['force x', 'force y', 'force z'])
+        for t in self.f[3:]:
+            ax2.plot(t)
+        ax2.legend(['torque x', 'torque y', 'torque z'])
+        plt.savefig(os.path.join(path, 'filter_coords_' + name) + '.png')
+        plt.cla()
+        print('Wrench plotted in time domain with name "%s".' % name)
+
+    def plot_wrench_frequency_domain(self, path, name):
+        f, t = self.wrench_mag
+        f = np.abs(np.fft.fft(np.array(f)))
+        t = np.abs(np.fft.fft(np.array(t)))
+
+        fig, axs = plt.subplots(1)
+        plt.title('Wrench Magnitude Fourier Transform')
+        axs.plot(f)
+        axs.plot(t)
+        axs.legend(['Force', 'Torque'])
+        plt.savefig(os.path.join(path, 'wrench_magnitude_freq_' + name) + '.png')
+        plt.cla()
+
+        fig, axs = plt.subplots(2)
+        plt.title('Wrench Fourier Transform')
+        ax1, ax2 = axs
+        for f in self.w[:3]:
+            f = np.abs(np.fft.fft(f))
+            ax1.plot(f)
+        ax1.legend(['force x', 'force y', 'force z'])
+        for t in self.w[3:]:
+            t = np.abs(np.fft.fft(t))
+            ax2.plot(t)
+        ax2.legend(['torque x', 'torque y', 'torque z'])
+        plt.savefig(os.path.join(path, 'wrench_coords_freq_' + name) + '.png')
+        plt.cla()
+
+        f, t = self.filter_mag
+        f = np.abs(np.fft.fft(np.array(f)))
+        t = np.abs(np.fft.fft(np.array(t)))
+
+        fig, axs = plt.subplots(1)
+        plt.title('Filter Magnitude Fourier Transform')
+        axs.plot(f)
+        axs.plot(t)
+        axs.legend(['Force', 'Torque'])
+        plt.savefig(os.path.join(path, 'filter_magnitude_freq_' + name) + '.png')
+        plt.cla()
+
+        fig, axs = plt.subplots(2)
+        plt.title('Filter Fourier Transform')
+        ax1, ax2 = axs
+        for f in self.f[:3]:
+            f = np.abs(np.fft.fft(f))
+            ax1.plot(f)
+        ax1.legend(['force x', 'force y', 'force z'])
+        for t in self.f[3:]:
+            t = np.abs(np.fft.fft(t))
+            ax2.plot(t)
+        ax2.legend(['torque x', 'torque y', 'torque z'])
+        plt.savefig(os.path.join(path, 'filter_coords_freq_' + name) + '.png')
+        plt.cla()
+        print('Wrench plotted in frequency domain with name "%s".' % name)
 
 if __name__ == '__main__':
     rospy.init_node('wrench_plotter')
     wrench_plotter = WrenchPlotter()
     read_from_std = ReadFromStd()
 
-    reading_time = False
-    has_recorded = False
     name = ''
     path = './'
     print(
@@ -139,8 +221,11 @@ if __name__ == '__main__':
         elif c == 's':
             print('Plot name: ', end='', flush=True)
             name = read_from_std.get_string()
-            wrench_plotter.plot_wrench_time_domain(name)
-            wrench_plotter.plot_wrench_frequency_domain(name)
+            plotted = wrench_plotter.plot_wrench(path, name)
+            if not plotted:
+                print('Did not plot. Either name was empty or recording has not been made.')
         elif c == 'd':
             print('Path: ', end='', flush=True)
             path = read_from_std.get_string()
+        else:
+            print('"%c" is not a recognized command.' % c)
