@@ -12,9 +12,9 @@ from jp_exjobb.ros_examples.standard_input import ReadFromStd
 class LidarPlotter:
     def __init__(self):
         self.b_scan = None
-        self.b_scan_sub = rospy.Subscriber('/b_scan', LaserScan, callback=self.b_scan_callback)
+        self.b_scan_sub = rospy.Subscriber('/b_scan_rep117', LaserScan, callback=self.b_scan_callback)
         self.f_scan = None
-        self.f_scan_sub = rospy.Subscriber('/f_scan', LaserScan, callback=self.f_scan_callback)
+        self.f_scan_sub = rospy.Subscriber('/f_scan_rep117', LaserScan, callback=self.f_scan_callback)
 
     def b_scan_callback(self, msg):
         self.b_scan = msg
