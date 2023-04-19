@@ -53,15 +53,32 @@ class wait_for_force(PrimitiveThreadBase):
         self.time_limit = self.params['Time limit'].value
         self.force_goal_met = False
         self.running = True
+        self.preempted = False
         return True
+    
+    def onPreempt(self):
+        self.preempted = True
+        return self.fail('Pushing preempted',-1)
 
     def run(self):
         self.reset_pub.publish(Empty())
 
         ind = 0
-        while not self.force_goal_met and ind < self.hz * self.time_limit:
-            ind +=1
+        wait_period = True
+        start_time=rospy.Time.now().to_sec()
+        while not self.force_goal_met and ind < self.hz * self.time_limit and not self.preempted:
+            ind += 1
             self.rate.sleep()
+            if wait_period and ind > self.hz:
+                wait_period = False
+                force_time = rospy.Time.now().to_sec()
+                k = -self.force_limit / (self.time_limit - (force_time - start_time))
+                m = self.force_limit
+            
+            if not wait_period:
+                self.force_limit = k * (rospy.Time.now().to_sec() - force_time) + m
+
+            print(self.force_limit)
 
         self.running = False
         self.status_pub.publish(Bool(self.force_goal_met))
