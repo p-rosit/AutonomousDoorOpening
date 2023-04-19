@@ -18,9 +18,13 @@ class GoThroughDoor(SkillDescription):
         self.addPreCondition(self.getRelationCond('ButtonHasLookout', 'skiros:hasA', 'Button', 'ButtonLookout', True))
 
         self.addParam('TargetLocation', Element('scalable:Workstation'), ParamTypes.Required)
-        self.addParam('ArmHome', Element('scalable:JointState'), ParamTypes.Required)
-        self.addParam('JointState', Element('scalable:ControllerState'), ParamTypes.Required)
-        self.addParam('Compliant', Element('scalable:ControllerState'), ParamTypes.Required)
+        self.addParam('ArmHome', Element('scalable:JointState'), ParamTypes.Inferred)
+        self.addParam('JointState', Element('scalable:ControllerState'), ParamTypes.Inferred)
+        self.addParam('Compliant', Element('scalable:ControllerState'), ParamTypes.Inferred)
+
+        self.addPreCondition(self.getHasPropCond('HomePosition', 'rdfs:label', 'ArmHome', '=', 'home_state', True))
+        self.addPreCondition(self.getHasPropCond('CompliantController', 'rdfs:label', 'Compliant', '=', 'compliant', True))
+        self.addPreCondition(self.getHasPropCond('JointStateController', 'rdfs:label', 'JointState', '=', 'joint_state', True))
 
 class go_through_door(SkillBase):
     def createDescription(self):
@@ -47,8 +51,8 @@ class go_through_door(SkillBase):
                     'Arm': self.params['Arm'].value,
                     'Mode': self.params['Compliant'].value,
                     'Button': self.params['Button'].value,
-                    'Offset': 0.05,
-                    'Force': 25
+                    'Offset': 0.1,
+                    'Force': 100
                 }
             ),
             self.skill('JPMoveArm','jp_move_arm',
