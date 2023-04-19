@@ -22,9 +22,9 @@ class GoThroughDoor(SkillDescription):
         self.addParam('JointState', Element('scalable:ControllerState'), ParamTypes.Inferred)
         self.addParam('Compliant', Element('scalable:ControllerState'), ParamTypes.Inferred)
 
-        self.addPreCondition(self.getHasPropCond('HomePosition', 'rdfs:label', 'ArmHome', '=', 'home_state', True))
-        self.addPreCondition(self.getHasPropCond('CompliantController', 'rdfs:label', 'Compliant', '=', 'compliant', True))
-        self.addPreCondition(self.getHasPropCond('JointStateController', 'rdfs:label', 'JointState', '=', 'joint_state', True))
+        self.addPreCondition(self.getPropCond('HomePosition', 'rdfs:label', 'ArmHome', '=', 'home_state', True))
+        self.addPreCondition(self.getPropCond('CompliantController', 'rdfs:label', 'Compliant', '=', 'compliant', True))
+        self.addPreCondition(self.getPropCond('JointStateController', 'rdfs:label', 'JointState', '=', 'joint_state', True))
 
 class go_through_door(SkillBase):
     def createDescription(self):
