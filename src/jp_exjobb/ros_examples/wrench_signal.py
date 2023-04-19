@@ -182,7 +182,7 @@ class WrenchPlotter:
             ax1.plot(f)
         ax1.legend(['force x', 'force y', 'force z'])
         for t in self.f[3:]:
-            t = np.abs(np.fft.fft(t - t.mean))
+            t = np.abs(np.fft.fft(t - t.mean()))
             ax2.plot(t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
         plt.savefig(os.path.join(path, 'filter_coords_freq_' + name) + '.png')
