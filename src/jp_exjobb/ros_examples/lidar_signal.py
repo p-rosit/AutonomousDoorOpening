@@ -24,6 +24,7 @@ class LidarPlotter:
     def plot_lidar(self, path, name):
         plot = False
         if name and self.b_scan is not None and self.f_scan is not None:
+            plot = True
             _, axs = plt.subplots(2)
             ax1, ax2 = axs
             plt.title('Lidar Data')
@@ -35,6 +36,8 @@ class LidarPlotter:
 
             plt.savefig(os.path.join(path, name) + '.png')
             plt.cla()
+
+            print('Lidar data plotted.')
 
         return plot
 
@@ -61,6 +64,7 @@ if __name__ == '__main__':
             print('Stopping...')
             break
         elif c == 'a':
+            print('Plot name: ', end='', flush=True)
             name = read_from_std.get_string()
             plotted = lidar_plotter.plot_lidar(path, name)
             if not plotted:
