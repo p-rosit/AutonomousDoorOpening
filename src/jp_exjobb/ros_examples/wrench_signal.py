@@ -137,6 +137,7 @@ class WrenchPlotter:
 
     def plot_wrench_frequency_domain(self, path, name):
         f, t = self.wrench_mag
+        f, t = np.array(f), np.array(t)
         f = np.abs(np.fft.fft(np.array(f - f.mean())))
         t = np.abs(np.fft.fft(np.array(t - t.mean())))
 
@@ -152,10 +153,12 @@ class WrenchPlotter:
         plt.title('Wrench Fourier Transform')
         ax1, ax2 = axs
         for f in self.w[:3]:
+            f = np.array(f)
             f = np.abs(np.fft.fft(f - f.mean()))
             ax1.plot(f)
         ax1.legend(['force x', 'force y', 'force z'])
         for t in self.w[3:]:
+            t = np.array(t)
             t = np.abs(np.fft.fft(t - t.mean()))
             ax2.plot(t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
@@ -163,8 +166,9 @@ class WrenchPlotter:
         plt.cla()
 
         f, t = self.filter_mag
-        f = np.abs(np.fft.fft(np.array(f - f.mean())))
-        t = np.abs(np.fft.fft(np.array(t - t.mean())))
+        f, t = np.array(f), np.array(t)
+        f = np.abs(np.fft.fft(f - f.mean()))
+        t = np.abs(np.fft.fft(t - t.mean()))
 
         fig, axs = plt.subplots(1)
         plt.title('Filter Magnitude Fourier Transform')
@@ -178,10 +182,12 @@ class WrenchPlotter:
         plt.title('Filter Fourier Transform')
         ax1, ax2 = axs
         for f in self.f[:3]:
+            f = np.array(f)
             f = np.abs(np.fft.fft(f - f.mean()))
             ax1.plot(f)
         ax1.legend(['force x', 'force y', 'force z'])
         for t in self.f[3:]:
+            t = np.array(t)
             t = np.abs(np.fft.fft(t - t.mean()))
             ax2.plot(t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
