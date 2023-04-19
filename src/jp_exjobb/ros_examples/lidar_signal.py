@@ -37,7 +37,7 @@ class LidarPlotter:
             ax1, ax2 = axs
             plt.title('Lidar Data')
             ax1.hist(b_scan)
-            ax2.legend(['Back lidar data'])
+            ax1.legend(['Back lidar data'])
 
             ax2.hist(f_scan)
             ax2.legend(['Front lidar data'])
