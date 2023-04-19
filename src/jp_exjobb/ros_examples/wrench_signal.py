@@ -119,7 +119,7 @@ class WrenchPlotter:
         axs.plot(f)
         axs.plot(t)
         axs.legend(['Force', 'Torque'])
-        plt.savefig(os.path.join(path, 'wrench_magnitude_' + name) + '.png')
+        plt.savefig(os.path.join(path, 'filter_magnitude_' + name) + '.png')
         plt.cla()
 
         fig, axs = plt.subplots(2)
