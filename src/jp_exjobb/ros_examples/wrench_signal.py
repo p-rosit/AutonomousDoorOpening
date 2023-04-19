@@ -97,7 +97,7 @@ class WrenchPlotter:
         axs.plot(f)
         axs.plot(t)
         axs.legend(['Force', 'Torque'])
-        plt.savefig(os.path.join(path, 'wrench_magnitude_' + name) + '.png')
+        plt.savefig(os.path.join(path, name + '_wrench_magnitude') + '.png')
         plt.cla()
 
         fig, axs = plt.subplots(2)
@@ -109,7 +109,7 @@ class WrenchPlotter:
         for t in self.w[3:]:
             ax2.plot(t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
-        plt.savefig(os.path.join(path, 'wrench_coords_' + name) + '.png')
+        plt.savefig(os.path.join(path, name + '_wrench_coords') + '.png')
         plt.cla()
 
         f, t = self.filter_mag
@@ -119,7 +119,7 @@ class WrenchPlotter:
         axs.plot(f)
         axs.plot(t)
         axs.legend(['Force', 'Torque'])
-        plt.savefig(os.path.join(path, 'filter_magnitude_' + name) + '.png')
+        plt.savefig(os.path.join(path, name + '_filter_magnitude') + '.png')
         plt.cla()
 
         fig, axs = plt.subplots(2)
@@ -131,7 +131,7 @@ class WrenchPlotter:
         for t in self.f[3:]:
             ax2.plot(t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
-        plt.savefig(os.path.join(path, 'filter_coords_' + name) + '.png')
+        plt.savefig(os.path.join(path, name + '_filter_coords') + '.png')
         plt.cla()
         print('Wrench plotted in time domain with name "%s".' % name)
 
@@ -146,7 +146,7 @@ class WrenchPlotter:
         axs.plot(f)
         axs.plot(t)
         axs.legend(['Force', 'Torque'])
-        plt.savefig(os.path.join(path, 'wrench_magnitude_freq_' + name) + '.png')
+        plt.savefig(os.path.join(path, name + '_wrench_magnitude_freq') + '.png')
         plt.cla()
 
         fig, axs = plt.subplots(2)
@@ -162,7 +162,7 @@ class WrenchPlotter:
             t = np.abs(np.fft.fft(t - t.mean()))
             ax2.plot(t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
-        plt.savefig(os.path.join(path, 'wrench_coords_freq_' + name) + '.png')
+        plt.savefig(os.path.join(path, name + '_wrench_coords_freq') + '.png')
         plt.cla()
 
         f, t = self.filter_mag
@@ -175,7 +175,7 @@ class WrenchPlotter:
         axs.plot(f)
         axs.plot(t)
         axs.legend(['Force', 'Torque'])
-        plt.savefig(os.path.join(path, 'filter_magnitude_freq_' + name) + '.png')
+        plt.savefig(os.path.join(path, name + '_filter_magnitude_freq') + '.png')
         plt.cla()
 
         fig, axs = plt.subplots(2)
@@ -191,7 +191,7 @@ class WrenchPlotter:
             t = np.abs(np.fft.fft(t - t.mean()))
             ax2.plot(t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
-        plt.savefig(os.path.join(path, 'filter_coords_freq_' + name) + '.png')
+        plt.savefig(os.path.join(path, name + '_filter_coords_freq') + '.png')
         plt.cla()
         print('Wrench plotted in frequency domain with name "%s".' % name)
 
