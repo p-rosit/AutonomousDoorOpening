@@ -21,10 +21,9 @@ class GoThroughDoor(SkillDescription):
         self.addParam('ArmHome', Element('scalable:JointState'), ParamTypes.Inferred)
         self.addParam('JointState', Element('scalable:ControllerState'), ParamTypes.Inferred)
         self.addParam('Compliant', Element('scalable:ControllerState'), ParamTypes.Inferred)
-
         self.addPreCondition(self.getPropCond('HomePosition', 'skiros:Value', 'ArmHome', '=', 'home_state', True))
         self.addPreCondition(self.getPropCond('CompliantController', 'skiros:Value', 'Compliant', '=', 'compliant', True))
-        self.addPreCondition(self.getPropCond('JointStateController', 'skiros:Value', 'JointState', '=', 'joint_state', True))
+        self.addPreCondition(self.getPropCond('JointStateController', 'skiros:Value', 'JointState', '=', 'joint_config', True))
 
 class go_through_door(SkillBase):
     def createDescription(self):
