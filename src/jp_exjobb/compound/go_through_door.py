@@ -13,7 +13,7 @@ class GoThroughDoor(SkillDescription):
         self.addPreCondition(self.getRelationCond('ArmHasGripper', 'skiros:hasA', 'Arm', 'Gripper', True))
         self.addPreCondition(self.getRelationCond('GripperContainsCamera', 'skiros:contain', 'Gripper', 'Camera', True))
 
-        self.addParam('Button', Element('sumo:Object'), ParamTypes.Required)
+        self.addParam('Button', Element('scalable:DoorButton'), ParamTypes.Required)
         self.addParam('ButtonLookout', Element('scalable:JointState'), ParamTypes.Inferred)
         self.addPreCondition(self.getRelationCond('ButtonHasLookout', 'skiros:hasA', 'Button', 'ButtonLookout', True))
 
@@ -22,9 +22,9 @@ class GoThroughDoor(SkillDescription):
         self.addParam('JointState', Element('scalable:ControllerState'), ParamTypes.Inferred)
         self.addParam('Compliant', Element('scalable:ControllerState'), ParamTypes.Inferred)
 
-        self.addPreCondition(self.getPropCond('HomePosition', 'rdfs:label', 'ArmHome', '=', 'home_state', True))
-        self.addPreCondition(self.getPropCond('CompliantController', 'rdfs:label', 'Compliant', '=', 'compliant', True))
-        self.addPreCondition(self.getPropCond('JointStateController', 'rdfs:label', 'JointState', '=', 'joint_state', True))
+        self.addPreCondition(self.getPropCond('HomePosition', 'skiros:Value', 'ArmHome', '=', 'home_state', True))
+        self.addPreCondition(self.getPropCond('CompliantController', 'skiros:Value', 'Compliant', '=', 'compliant', True))
+        self.addPreCondition(self.getPropCond('JointStateController', 'skiros:Value', 'JointState', '=', 'joint_state', True))
 
 class go_through_door(SkillBase):
     def createDescription(self):

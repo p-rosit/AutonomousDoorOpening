@@ -1,6 +1,6 @@
 import sys
 from copy import deepcopy
-from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential, Selector
+from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential
 from skiros2_common.core.primitive import PrimitiveBase
 from skiros2_common.core.primitive_thread import PrimitiveThreadBase
 from skiros2_std_skills.action_client_primitive import PrimitiveActionClient
@@ -16,10 +16,21 @@ from actionlib_msgs.msg import GoalStatus
 
 import moveit_commander
 
+class FailSkill(SkillDescription):
+    def createDescription(self):
+        self.addParam('msg', 'Succeeded', ParamTypes.Required)
+
+class fail_skill(PrimitiveBase):
+    def createDescription(self):
+        self.setDescription(FailSkill(), self.__class__.__name__)
+    
+    def execute(self):
+        return self.fail(self.params['msg'].value, -1)
+
 class JPMoveArm(SkillDescription):
     def createDescription(self):
         self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Required)
-        self.addParam("Target", Element("skiros:TransformationPose"), ParamTypes.Required)
+        self.addParam('Target', Element('skiros:TransformationPose'), ParamTypes.Required)
         self.addParam('Mode', Element('scalable:ControllerState'), ParamTypes.Required)
 
 class jp_move_arm(SkillBase):
@@ -27,24 +38,33 @@ class jp_move_arm(SkillBase):
         self.setDescription(JPMoveArm(), self.__class__.__name__)
     
     def expand(self, skill):
-        # TODO: add error handling (joint_config needs joint states while compliant needs a pose)
-        # TODO: reject pose goal if it is too far from the current position
-        mode = self.params['Mode'].value.label
+        target = self.params['Target'].value
+        controller = self.params['Mode'].value
+        mode = controller.getProperty('skiros:Value').value
 
         self.setProcessor(Sequential())
-        skill(
-            self.skill('SwitchController', 'switch_controller', specify={'Controller': mode}),
-            self.skill(Selector())(
-                self.skill(Sequential())(
-                    self.skill('SelectString', 'select_string', specify={'Selection': 'joint_config', 'Input': mode}),
-                    self.skill('JPMoveArm', 'jp_primitive_joint')
-                ),
-                self.skill(Sequential())(
-                    self.skill('SelectString', 'select_string', specify={'Selection': 'compliant', 'Input': mode}),
-                    self.skill('JPMoveArm', 'jp_primitive_compliant')
-                )
+
+        if mode == 'compliant':
+            if target.hasProperty('skiros:DataType') and not target.hasProperty('skiros:DataType', value='compliant'):
+                skill(self.skill('FailSkill', 'fail_skill', specify={'msg': 'Target is not a pose in the world.'}))
+                return
+        elif mode == 'joint_config':
+            if not target.hasProperty('skiros:DataType', value='joint_values', not_none=True):
+                skill(self.skill('FailSkill', 'fail_skill', specify={'msg': 'Target does not contain joint values.'}))
+                return
+
+        if mode == 'joint_config':
+            skill(
+                self.skill('JPSwitchController', 'jp_switch_controller', specify={'Controller': controller}),
+                self.skill('JPMoveArm', 'jp_primitive_joint')
             )
-        )
+        elif mode == 'compliant':
+            skill(
+                self.skill('JPSwitchController', 'jp_switch_controller', specify={'Controller': controller}),
+                self.skill('JPMoveArm', 'jp_primitive_compliant')
+            )
+        else:
+            skill(self.skill('FailSkill', 'fail_skill', specify={'msg': 'Unknown controller state.'}))
 
 class jp_primitive_joint(PrimitiveThreadBase):
     def createDescription(self):

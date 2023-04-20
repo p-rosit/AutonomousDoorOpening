@@ -15,9 +15,9 @@ class ButtonPress(SkillDescription):
         self.addParam('Gripper', Element('scalable:WsgGripper'), ParamTypes.Inferred)
         self.addParam('Pose', Element('skiros:TransformationPose'), ParamTypes.Inferred)
         self.addParam('Compliant', Element('scalable:ControllerState'), ParamTypes.Inferred)
-        self.addPreCondition(self.getPropCond('CompliantController', 'rdfs:label', 'Compliant', '=', 'compliant', True))
+        self.addPreCondition(self.getPropCond('CompliantController', 'skiros:Value', 'Compliant', '=', 'compliant', True))
 
-        self.addParam('Button', Element('sumo:Object'), ParamTypes.Required)
+        self.addParam('Button', Element('scalable:DoorButton'), ParamTypes.Required)
         self.addParam('Offset', 0.05, ParamTypes.Required)
         self.addParam('Force', 60.0, ParamTypes.Required)
 
