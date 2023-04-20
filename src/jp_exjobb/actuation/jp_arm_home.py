@@ -1,13 +1,6 @@
-import sys
-import threading
-
 from skiros2_skill.core.skill import SkillBase, SkillDescription, Sequential
 from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.world_element import Element
-# from skiros2_common.core.primitive import PrimitiveBase
-# import moveit_commander
-
-# import rospy
 
 class JPArm(SkillDescription):
     def createDescription(self):

@@ -55,6 +55,7 @@ class jp_pose_estimation(PrimitiveThreadBase):
         return True
 
     def preStart(self):
+        self.preempt = False
         return True
 
     def run(self):
