@@ -209,7 +209,7 @@ class jp_pose_estimation(PrimitiveThreadBase):
                     if index < 4 or 7 < index:
                         raise ValueError
                 except ValueError:
-                    raise ValueError('Unsupported aruco dictionary: "%s"')
+                    raise ValueError('Unsupported aruco dictionary: "%s"' % dictionary)
 
                 if id in aruco_markers[index]:
                     raise RuntimeError('Object has duplicate aruco markers.')
