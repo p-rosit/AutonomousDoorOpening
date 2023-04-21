@@ -25,7 +25,7 @@ class JPPoseEstimation(SkillDescription):
 
         self.addParam('Detection Time (s)', 0.4, ParamTypes.Required)
         self.addParam('Image Capture Rate (hz)', 15, ParamTypes.Optional)
-        self.addParam('x', 0.0, ParamTypes.Required)
+        self.addParam('x', -0.04, ParamTypes.Required)
         self.addParam('y', 0.0, ParamTypes.Required)
         self.addParam('z', 0.0, ParamTypes.Required)
 
