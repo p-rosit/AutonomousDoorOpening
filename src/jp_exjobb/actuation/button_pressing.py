@@ -182,4 +182,4 @@ class generate_press_pose(PrimitiveThreadBase):
         pose.setProperty('skiros:OrientationW', 0.0)
         self.wmi.update_element_properties(pose)
 
-        return True, 'Pose generated.'
+        return self.succes('Pose generated.')
