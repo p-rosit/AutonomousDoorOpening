@@ -65,7 +65,7 @@ class jp_pose_estimation(PrimitiveThreadBase):
             return self.fail('Could not communicate with thread.', -1)
 
         if self.skill_succeeded:
-            return self.success('Found AruCo markers with ids [%s] in %d images.' % (', '.join([str(id) for id in self.detected], self.detected_imgs)))
+            return self.success('Found AruCo markers with ids [%s] in %d images.' % (', '.join([str(id) for id in self.detected]), self.detected_imgs))
         else:
             return self.fail('Object was not detected in %.2f seconds.' % (self.imgs / self.hz), -1)
 
@@ -188,7 +188,7 @@ class jp_pose_estimation(PrimitiveThreadBase):
         if self.preempt_requested:
             self.preempted = True
 
-        return self.success('Found AruCo markers with ids [%s] in %d images.' % (', '.join([str(id) for id in self.detected], self.detected_imgs)))
+        return self.success('Found AruCo markers with ids [%s] in %d images.' % (', '.join([str(id) for id in self.detected]), self.detected_imgs))
 
     def extract_object_markers(self):
         relations = self.params['Object'].value.getRelations()
