@@ -25,7 +25,7 @@ class JPPoseEstimation(SkillDescription):
 
         self.addParam('Detection Time (s)', 0.4, ParamTypes.Required)
         self.addParam('Image Capture Rate (hz)', 15, ParamTypes.Optional)
-        self.addParam('x', 0.04, ParamTypes.Required)
+        self.addParam('x', -0.04, ParamTypes.Required)
         self.addParam('y', 0.0, ParamTypes.Required)
         self.addParam('z', 0.0, ParamTypes.Required)
 
@@ -122,7 +122,7 @@ class jp_pose_estimation(PrimitiveThreadBase):
             view_frame = self.params['View Frame'].value
             camera_frame = view_frame.getProperty('skiros:FrameId').value
             object_parent_frame =thing.getProperty('skiros:BaseFrameId').value
-            ids = self.aruco_detection(img, K, dist, aruco_markers)
+            ids = self.aruco_detection(img, K, dist, aruco_markers, offset)
 
             if not ids:
                 self.status = 'Detected object in %2d out of %2d images.' % (self.detected_imgs, self.imgs)
@@ -217,7 +217,7 @@ class jp_pose_estimation(PrimitiveThreadBase):
         
         return aruco_markers
 
-    def aruco_detection(self, rgb, K, dist, aruco_markers):
+    def aruco_detection(self, rgb, K, dist, aruco_markers, offset):
         detected_ids = dict()
 
         for dictionary, aruco_dict in self.ds.items():
@@ -242,7 +242,7 @@ class jp_pose_estimation(PrimitiveThreadBase):
 
                 _, r, t = cv.solvePnP(obj_points, coords, K, None)
 
-                position = t.reshape(-1)
+                position = t.reshape(-1) - offset
                 rotation_matrix = cv.Rodrigues(r)
                 quaternion = rot.from_matrix(rotation_matrix[0]).as_quat()
 
