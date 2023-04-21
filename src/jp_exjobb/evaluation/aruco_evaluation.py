@@ -6,12 +6,11 @@ from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 
 import rospy
-from std_msgs.msg import Int32
 import tf2_ros
 
 import numpy as np
-from scipy.spatial.transform import Rotation
-from .pose_estimation import make_pose_stamped, unpack_pose_stamped
+from scipy.spatial.transform import Rotation as rot
+from skills.jp_exjobb.src.jp_exjobb.perception.pose_estimation import make_pose_stamped, unpack_pose_stamped
 
 class ArucoEvaluation(SkillDescription):
     def createDescription(self):
@@ -31,7 +30,6 @@ class aruco_evaluation(SkillBase):
             self.skill('ArucoEvaluation','coordinate_comparison')
         )
 
-
 class coordinate_comparison(PrimitiveBase):
 
     def createDescription(self):
@@ -42,12 +40,6 @@ class coordinate_comparison(PrimitiveBase):
         self.tf_listener = tf2_ros.TransformListener(self.buffer)
         return True
 
-    def onPreempt(self):
-        return True
-
-    def onStart(self):
-        return True
-
     def execute(self):
         aruco = self.params['ArUco marker'].value
         # Extract orientation of object
@@ -55,7 +47,7 @@ class coordinate_comparison(PrimitiveBase):
                     aruco.getProperty('skiros:OrientationY').value, 
                     aruco.getProperty('skiros:OrientationZ').value, 
                     aruco.getProperty('skiros:OrientationW').value])
-        quat_hat = Rotation.from_quat(quat_hat)
+        quat_hat = rot.from_quat(quat_hat)
 
         # Extract position of object
         t_hat = np.array([aruco.getProperty('skiros:PositionX').value, 
@@ -64,7 +56,7 @@ class coordinate_comparison(PrimitiveBase):
         
         # True orientation of object
         eul_ang = self.params['R'].values
-        quat = Rotation.from_euler('xyz', eul_ang, degrees=False).as_quat()
+        quat = rot.from_euler('xyz', eul_ang, degrees=False).as_quat()
         # True position of object
         t = self.params['t'].values + np.array([28.1, 7.4, 0.0])
 
@@ -73,7 +65,7 @@ class coordinate_comparison(PrimitiveBase):
         true_pose = make_pose_stamped('map', t, quat)
         true_pose = self.buffer.transform(true_pose, object_parent_frame, rospy.Duration(1))
         t, quat = unpack_pose_stamped(true_pose)
-        quat = Rotation.from_quat(quat)
+        quat = rot.from_quat(quat)
         # Compute difference in orientation
         diff_quat = (quat*quat_hat.inv()).as_quat()
         if diff_quat[3] < 0:
@@ -94,6 +86,3 @@ class coordinate_comparison(PrimitiveBase):
             f.write('---\n')
 
         return self.success('Done')
-
-    def onEnd(self):
-        return True
