@@ -82,9 +82,6 @@ class jp_pose_estimation(PrimitiveThreadBase):
         p2 = cam_params.getProperty('scalable:Distortionp2').value
         k3 = cam_params.getProperty('scalable:Distortionk3').value
 
-        fx, fy, cx, cy = calib
-        k1, k2, p1, p2, k3 = dist
-
         if aruco_ids:
             done = False
             trials = 0
