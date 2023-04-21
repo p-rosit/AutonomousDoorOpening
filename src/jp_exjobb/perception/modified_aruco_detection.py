@@ -23,8 +23,9 @@ class JPPoseEstimation(SkillDescription):
 
         self.addParam('Object', Element("sumo:Object"), ParamTypes.Required)
 
-        self.addParam('Detection Time (s)', 1.0, ParamTypes.Required)
-        self.addParam('x', -0.04, ParamTypes.Required)
+        self.addParam('Detection Time (s)', 0.4, ParamTypes.Required)
+        self.addParam('Image Capture Rate (hz)', 15, ParamTypes.Optional)
+        self.addParam('x', 0.0, ParamTypes.Required)
         self.addParam('y', 0.0, ParamTypes.Required)
         self.addParam('z', 0.0, ParamTypes.Required)
 
@@ -33,9 +34,13 @@ class jp_pose_estimation_alt(PrimitiveThreadBase):
         self.setDescription(JPPoseEstimation(), self.__class__.__name__)
     
     def onInit(self):
-        self.hz = 20
+        self.hz = 15  # Default rate
         self.rate = rospy.Rate(self.hz)
         self.sub = RGBListener()
+
+        self.preempt_hz = 10
+        self.preempt_rate = rospy.Rate(self.preempt_hz)
+        self.preempt_time_limit = 0.5
 
         self.buffer = tf2_ros.Buffer()  # type: any
         self.tf_listener = tf2_ros.TransformListener(self.buffer)
@@ -49,16 +54,44 @@ class jp_pose_estimation_alt(PrimitiveThreadBase):
         return True
     
     def onPreempt(self):
-        self.preempted = True
-        return self.fail('Preempted detection.', -1)
+        self.preempt_requested = True
+
+        ind = 0
+        while not self.preempted and ind < self.preempt_hz * self.preempt_time_limit:
+            ind += 1
+            self.preempt_rate.sleep()
+
+        if not self.preempt_received:
+            return self.fail('Could not communicate with thread.', -1)
+
+        if self.skill_succeeded:
+            return self.success('Found AruCo markers with ids: [%s]' % ', '.join([str(id) for id in self.detected]))
+        else:
+            return self.fail('Object was not detected in %f seconds.' % (self.imgs * self.params['Detection Time (s)'].value / self.hz), -1)
 
     def preStart(self):
+        self.hz = self.params['Image Capture Rate (hz)'].value
+        self.rate = rospy.Rate(self.hz)
+
+        self.detected_imgs = 0
+        self.imgs = 0
+        self.detected = set()
+
+        self.skill_succeeded = True
+        self.preempt_requested = False
+        self.preempt_received = False
         self.preempted = False
         return super().preempt()
     
     def run(self):
         thing = self.params['Object'].value
         aruco_markers = self.extract_object_markers()
+
+        offset = np.array([
+            self.params['x'].value,
+            self.params['y'].value,
+            self.params['z'].value
+        ])
 
         cam_params = self.params['Camera Parameters'].value
         calib, dist = cam_params.getData(':CameraCalibrationParameters')
@@ -70,7 +103,7 @@ class jp_pose_estimation_alt(PrimitiveThreadBase):
             if markers:
                 no_markers = False
         if no_markers:
-            return False, 'Object does not have markers'
+            return self.fail('Object does not have markers', -1)
 
         K = np.zeros((3, 3))
         # Create camera matrix
@@ -87,12 +120,10 @@ class jp_pose_estimation_alt(PrimitiveThreadBase):
         K[1, 2] = cy
         K[2, 2] = 1
 
-        ind = 0
         total_position = np.zeros(3, dtype=np.float64)
         total_quaternion = np.zeros(4, dtype=np.float64)
-        detected = set()
-        while ind < self.hz * time_limit:
-            ind += 1
+        while self.imgs < self.hz * time_limit and not self.preempt_requested:
+            self.imgs += 1
             img = self.sub.get(time_limit=1.0)
 
             view_frame = self.params['View Frame'].value
@@ -101,12 +132,16 @@ class jp_pose_estimation_alt(PrimitiveThreadBase):
             ids = self.aruco_detection(img, K, dist, aruco_markers)
 
             if not ids:
+                self.status = 'Detected object in %2d out of %2d images.' % (self.detected_imgs, self.imgs)
                 continue
+
+            self.detected_imgs += 1
+            self.status = 'Detected object in %2d out of %2d images.' % (self.detected_imgs, self.imgs)
 
             sub_position = np.zeros(3, dtype=np.float64)
             sub_quaternion = np.zeros(4, dtype=np.float64)
             for (id, dictionary), (marker, position, quaternion) in ids.items():
-                detected.add((id, dictionary))
+                self.detected.add((id, dictionary))
 
                 # Get pose of marker in object frame
                 marker_position = np.array(marker.getData(':Position'))
@@ -129,22 +164,38 @@ class jp_pose_estimation_alt(PrimitiveThreadBase):
 
                 sub_position += estimated_object_position
                 sub_quaternion += estimated_object_quaternion
+            
             total_position += sub_position / len(ids)
             total_quaternion += sub_quaternion / len(ids)
 
-        total_position /= ind
-        total_quaternion /= np.linalg.norm(total_quaternion)
-        thing.setData(':Position', total_position)
-        thing.setData(':Orientation', total_quaternion)
-        print(total_position)
-        print(total_quaternion)
+            # Update pose for each image
+            thing.setData(':Position', total_position / self.imgs - offset)
+            thing.setData(':Orientation', total_quaternion / np.linalg.norm(total_quaternion))
+            self.wmi.update_element_properties(thing)
 
+        if self.preempt_requested:
+            self.preempt_received = True
+
+        if not self.detected:
+            if self.preempt_requested:
+                self.preempted = True
+            self.skill_succeeded = False
+            return self.fail('Object was not detected in %f seconds.' % (self.imgs * time_limit / self.hz), -1)
+
+        self.skill_succeeded = True
+
+        # TODO: RanSaC instead of average
+        total_position /= self.imgs
+        total_quaternion /= np.linalg.norm(total_quaternion)
+
+        thing.setData(':Position', total_position - offset)
+        thing.setData(':Orientation', total_quaternion)
         self.wmi.update_element_properties(thing)
 
-        if not detected:
-            return False, 'Object was not detected in %f seconds.' % time_limit
+        if self.preempt_requested:
+            self.preempted = True
 
-        return True, 'Detected.'
+        return self.success('Found AruCo markers with ids: [%s]' % ', '.join([str(id) for id in self.detected]))
 
     def extract_object_markers(self):
         relations = self.params['Object'].value.getRelations()

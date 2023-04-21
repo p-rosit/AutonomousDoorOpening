@@ -29,7 +29,7 @@ class ArucoEstimation(SkillDescription):
         # self.addParam('y', 0.025, ParamTypes.Required)
         # self.addParam('z', -0.03, ParamTypes.Required)
 
-        self.addParam('x', -0.04, ParamTypes.Required)
+        self.addParam('x', 0.0, ParamTypes.Required)
         self.addParam('y', 0.0, ParamTypes.Required)
         self.addParam('z', 0.0, ParamTypes.Required)
 
@@ -81,6 +81,12 @@ class jp_pose_estimation(PrimitiveThreadBase):
         p1 = cam_params.getProperty('scalable:Distortionp1').value
         p2 = cam_params.getProperty('scalable:Distortionp2').value
         k3 = cam_params.getProperty('scalable:Distortionk3').value
+
+
+        calib = (585.756070948, 579.430235849, 319.5, 239.5)
+        dist = (0, 0, 0, 0, 0)
+        fx, fy, cx, cy = calib
+        k1, k2, p1, p2, k3 = dist
 
         if aruco_ids:
             done = False
@@ -134,11 +140,11 @@ class jp_pose_estimation(PrimitiveThreadBase):
                 self.wmi.update_element_properties(object)
 
                 result = "Found AruCo markers with ids: [%s]" % ", ".join([str(id) for id in ids.keys()])
-                return True, result
+                return self.success(result)
             else:
-                return False, 'Could not find AruCo marker within 5 seconds.'
+                return self.fail('Could not find AruCo marker within 5 seconds.', -1)
         else:
-            return False, 'Object does not have markers.'
+            return self.fail('Object does not have markers.', -1)
 
     def onEnd(self):
         return True

@@ -85,8 +85,8 @@ class wait_for_force(PrimitiveThreadBase):
         self.status_pub.publish(Bool(self.force_goal_met))
 
         if not self.force_goal_met:
-            return False, 'Did not reach force goal.'
-        return True, 'Force goal met.'
+            return self.fail('Did not reach force goal.', -1)
+        return self.success('Force goal met.')
 
 class ForceCheck(SkillDescription):
     def createDescription(self):
@@ -122,9 +122,9 @@ class force_check(PrimitiveThreadBase):
             self.rate.sleep()
         
         if not self.force_goal_met:
-            return False, 'Force goal not met.'
+            return self.fail('Force goal not met.', -1)
         
-        return True, 'Force goal met.'
+        return self.success('Force goal met.')
 
 class button_press(SkillBase):
     def createDescription(self):

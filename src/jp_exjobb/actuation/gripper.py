@@ -44,4 +44,11 @@ class jp_gripper(PrimitiveThreadBase):
             self._resp = self._call(self.release_srv, MoveRequest(100.0, 400.0))
         else:
             self._resp = self._call(self.grasp_srv, MoveRequest(0.0, 400.0))
-        return self._resp
+        
+        skill_succeded, msg = self._resp
+
+        if skill_succeded:
+            return self.success(msg)
+        else:
+            return self.fail(msg, -1)
+        

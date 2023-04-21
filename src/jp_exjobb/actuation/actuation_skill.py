@@ -114,9 +114,9 @@ class jp_primitive_joint(PrimitiveThreadBase):
         ]
 
         if self.group.go(joint_goal, wait=True):
-            return True, 'Goal Reached'
+            return self.success('Goal Reached')
         
-        return False, 'Movement Failed'
+        return self.fail('Movement Failed', -1)
 
     
     def onEnd(self):
@@ -215,9 +215,9 @@ class dance_skill_smiley(PrimitiveThreadBase):
         goal = self.buffer.transform(goal, arm_frame, rospy.Duration(1))
 
         if self.group.go(goal.pose, wait=True):
-            return True, 'Goal Reached'
+            return self.success('Goal Reached')
         
-        return False, 'Movement Failed'
+        return self.fail('Movement Failed')
 
     
     def onEnd(self):

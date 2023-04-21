@@ -75,7 +75,7 @@ class listen_to_wrench(PrimitiveThreadBase):
         plt.savefig(path + self.params['Name'].value + '_coords.png')
         plt.cla()
 
-        return True, 'Done listening to "/wrench" topic.'
+        return self.success('Done listening to "/wrench" topic.')
 
     def listen(self, msg):
         if self.running:
@@ -137,11 +137,11 @@ class force_sensing_on(PrimitiveThreadBase):
 
         if self.reply:
             if self.state_changed:
-                return True, 'Changed state.'
+                return self.success('Changed state.')
             else:
-                return True, 'Already in desired state'
+                return self.success('Already in desired state')
         
-        return False, 'No reply from wrench.'
+        return self.fail('No reply from wrench.', -1)
 
 class ForceZero(SkillDescription):
     def createDescription(self):
@@ -185,16 +185,16 @@ class adjust_force(PrimitiveThreadBase):
         if self.reply:
             if adjust_force:
                 if self.force_adjusted:
-                    return True, 'Force adjusted.'
+                    return self.success('Force adjusted.')
                 else:
-                    return False, 'Too much movement in signal.'
+                    return self.fail('Too much movement in signal.', -1)
             else:
                 if self.force_adjusted:
-                    return True, 'Force offset removed.'
+                    return self.success('Force offset removed.')
                 else:
-                    return True, 'No force offset to remove.'
+                    return self.success('No force offset to remove.')
         
-        return False, 'No reply from force_zero.'
+        return self.fail('No reply from force_zero.', -1)
 
 class EnableSmoothing(SkillDescription):
     def createDescription(self):
@@ -238,16 +238,16 @@ class enable_smoothing(PrimitiveThreadBase):
         if self.reply:
             if smooth:
                 if self.signal_smoothed:
-                    return True, 'Signal smoothed.'
+                    return self.success('Signal smoothed.')
                 else:
-                    return True, 'Signal already being smoothed.'
+                    return self.success('Signal already being smoothed.')
             else:
                 if self.signal_smoothed:
-                    return True, 'Smoothing removed.'
+                    return self.success('Smoothing removed.')
                 else:
-                    return True, 'Smoothing already removed.'
+                    return self.success('Smoothing already removed.')
         
-        return False, 'No reply from smooth signal.'
+        return self.fail('No reply from smooth signal.', -1)
     
 class ExpSmooth(SkillDescription):
     def createDescription(self):
@@ -291,16 +291,16 @@ class exp_smooth(PrimitiveThreadBase):
         if self.reply:
             if smooth:
                 if self.exp_smoothing:
-                    return True, 'Exponential smoothing enabled.'
+                    return self.success('Exponential smoothing enabled.')
                 else:
-                    return True, 'Exponential smoothing already enabled.'
+                    return self.success('Exponential smoothing already enabled.')
             else:
                 if self.exp_smoothing:
-                    return True, 'Moving average enabled.'
+                    return self.success('Moving average enabled.')
                 else:
-                    return True, 'Moving average already enabled.'
+                    return self.success('Moving average already enabled.')
         
-        return False, 'No reply from exp smooth.'
+        return self.fail('No reply from exp smooth.')
     
 class WeightUpdate(SkillDescription):
     def createDescription(self):
@@ -343,11 +343,11 @@ class weight_update(PrimitiveThreadBase):
 
         if self.reply:
             if self.result:
-                return True, 'Last weight value set.'
+                return self.success('Last weight value set.')
             else:
-                return False, 'Invalid weight value.'
+                return self.fail('Invalid weight value.', -1)
         
-        return False, 'No reply from weight update.'
+        return self.fail('No reply from weight update.', -1)
 
 class SizeUpdate(SkillDescription):
     def createDescription(self):
@@ -390,8 +390,8 @@ class size_update(PrimitiveThreadBase):
 
         if self.reply:
             if self.result:
-                return True, 'Size of smoothing window updated.'
+                return self.success('Size of smoothing window updated.')
             else:
-                return False, 'Size of smoothing window needs to be positive.'
+                return self.fail('Size of smoothing window needs to be positive.', -1)
         
-        return False, 'No reply from size update.'
+        return self.fail('No reply from size update.', -1)
