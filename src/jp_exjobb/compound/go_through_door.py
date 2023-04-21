@@ -1,7 +1,6 @@
 from skiros2_skill.core.skill import SkillBase, SkillDescription, Sequential
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
-# nörd
 
 class GoThroughDoor(SkillDescription):
     def createDescription(self):

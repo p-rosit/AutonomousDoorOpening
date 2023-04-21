@@ -12,8 +12,8 @@ class ButtonPress(SkillDescription):
         self.addPreCondition(self.getPropCond('CompliantController', 'skiros:Value', 'Compliant', '=', 'compliant', True))
 
         self.addParam('Button', Element('scalable:DoorButton'), ParamTypes.Required)
-        self.addParam('Offset', 0.05, ParamTypes.Required)
-        self.addParam('Force', 60.0, ParamTypes.Required)
+        self.addParam('Offset', 0.1, ParamTypes.Required)
+        self.addParam('Force', 100.0, ParamTypes.Required)
 
         self.addPreCondition(self.getRelationCond('ArmHasGripper', 'skiros:hasA', 'Arm', 'Gripper', True))
         self.addPreCondition(self.getRelationCond('GripperHasPose', 'skiros:contain', 'Gripper', 'Pose', True))
