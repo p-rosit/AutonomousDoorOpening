@@ -82,9 +82,6 @@ class jp_pose_estimation(PrimitiveThreadBase):
         p2 = cam_params.getProperty('scalable:Distortionp2').value
         k3 = cam_params.getProperty('scalable:Distortionk3').value
 
-
-        calib = (585.756070948, 579.430235849, 319.5, 239.5)
-        dist = (0, 0, 0, 0, 0)
         fx, fy, cx, cy = calib
         k1, k2, p1, p2, k3 = dist
 

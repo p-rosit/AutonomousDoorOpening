@@ -106,13 +106,6 @@ class jp_pose_estimation_alt(PrimitiveThreadBase):
             return self.fail('Object does not have markers', -1)
 
         K = np.zeros((3, 3))
-        # Create camera matrix
-        # camera matrix (K):
-        #            fx  0  cx
-        #            0  fy  cy
-        #            0  0   1
-        calib = (585.756070948, 579.430235849, 319.5, 239.5)
-        dist = (0, 0, 0, 0, 0)
         fx, fy, cx, cy = calib
         K[0, 0] = fx
         K[1, 1] = fy
