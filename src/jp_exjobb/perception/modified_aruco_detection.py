@@ -29,7 +29,7 @@ class JPPoseEstimation(SkillDescription):
         self.addParam('y', 0.0, ParamTypes.Required)
         self.addParam('z', 0.0, ParamTypes.Required)
 
-class jp_pose_estimation_alt(PrimitiveThreadBase):
+class jp_pose_estimation(PrimitiveThreadBase):
     def createDescription(self):
         self.setDescription(JPPoseEstimation(), self.__class__.__name__)
     
@@ -65,9 +65,9 @@ class jp_pose_estimation_alt(PrimitiveThreadBase):
             return self.fail('Could not communicate with thread.', -1)
 
         if self.skill_succeeded:
-            return self.success('Found AruCo markers with ids: [%s]' % ', '.join([str(id) for id in self.detected]))
+            return self.success('Found AruCo markers with ids [%s] in %d images.' % (', '.join([str(id) for id in self.detected], self.detected_imgs)))
         else:
-            return self.fail('Object was not detected in %f seconds.' % (self.imgs * self.params['Detection Time (s)'].value / self.hz), -1)
+            return self.fail('Object was not detected in %.2f seconds.' % (self.imgs / self.hz), -1)
 
     def preStart(self):
         self.hz = self.params['Image Capture Rate (hz)'].value
@@ -162,7 +162,7 @@ class jp_pose_estimation_alt(PrimitiveThreadBase):
             total_quaternion += sub_quaternion / len(ids)
 
             # Update pose for each image
-            thing.setData(':Position', total_position / self.imgs - offset)
+            thing.setData(':Position', total_position / self.detected_imgs - offset)
             thing.setData(':Orientation', total_quaternion / np.linalg.norm(total_quaternion))
             self.wmi.update_element_properties(thing)
 
@@ -173,12 +173,12 @@ class jp_pose_estimation_alt(PrimitiveThreadBase):
             if self.preempt_requested:
                 self.preempted = True
             self.skill_succeeded = False
-            return self.fail('Object was not detected in %f seconds.' % (self.imgs * time_limit / self.hz), -1)
+            return self.fail('Object was not detected in %.2f seconds.' % (self.imgs / self.hz), -1)
 
         self.skill_succeeded = True
 
         # TODO: RanSaC instead of average
-        total_position /= self.imgs
+        total_position /= self.detected_imgs
         total_quaternion /= np.linalg.norm(total_quaternion)
 
         thing.setData(':Position', total_position - offset)
@@ -188,7 +188,7 @@ class jp_pose_estimation_alt(PrimitiveThreadBase):
         if self.preempt_requested:
             self.preempted = True
 
-        return self.success('Found AruCo markers with ids: [%s]' % ', '.join([str(id) for id in self.detected]))
+        return self.success('Found AruCo markers with ids [%s] in %d images.' % (', '.join([str(id) for id in self.detected], self.detected_imgs)))
 
     def extract_object_markers(self):
         relations = self.params['Object'].value.getRelations()
