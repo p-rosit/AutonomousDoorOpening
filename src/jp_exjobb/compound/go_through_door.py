@@ -38,7 +38,7 @@ class go_through_door(SkillBase):
                     'Mode': self.params['JointState'].value
                 }
             ),
-            self.skill('ArucoEstimation', 'jp_pose_estimation', 
+            self.skill('JPPoseEstimation', 'jp_pose_estimation', 
                 specify={
                     'Camera': self.params['Camera'].value,
                     'Object': self.params['Button'].value
