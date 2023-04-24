@@ -12,7 +12,7 @@ class ButtonPress(SkillDescription):
         self.addPreCondition(self.getPropCond('CompliantController', 'skiros:Value', 'Compliant', '=', 'compliant', True))
 
         self.addParam('Button', Element('scalable:DoorButton'), ParamTypes.Required)
-        self.addParam('Offset', 0.1, ParamTypes.Required)
+        self.addParam('Offset', 0.05, ParamTypes.Required)
         self.addParam('Force', 100.0, ParamTypes.Required)
 
         self.addPreCondition(self.getRelationCond('ArmHasGripper', 'skiros:hasA', 'Arm', 'Gripper', True))
@@ -26,22 +26,47 @@ class button_press(SkillBase):
         self.setProcessor(Sequential())
         skill(
             # Move to lookout pose
-            self.skill('ForceSensingOn', 'force_sensing_on', specify={'Compliant': True}),
-            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.1}),
-            self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}, specify={'Mode': self.params['Compliant'].value}),
+            self.skill('ForceSensingOn', 'force_sensing_on',
+                specify={'Compliant': True}
+            ),
+            self.skill('GeneratePressPose','generate_press_pose',
+                specify={'Offset': -0.1}
+            ),
+            self.skill('ScaleUpdate', 'scale_update',
+                specify={'Scale': 0.5}
+            ),
+            self.skill('JPMoveArm','jp_move_arm',
+                remap={'Target': 'Pose'},
+                specify={'Mode': self.params['Compliant'].value}
+            ),
 
             # Move to pre press pose
-            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': self.params['Offset'].value}),
+            self.skill('GeneratePressPose','generate_press_pose',
+                specify={'Offset': self.params['Offset'].value}
+            ),
             self.skill(ParallelFs())(
                 # Move to press pose
-                self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}, specify={'Mode': self.params['Compliant'].value}),
-                self.skill('WaitForForce', 'wait_for_force', specify={'Force': self.params['Force'].value})
+                self.skill('JPMoveArm','jp_move_arm',
+                    remap={'Target': 'Pose'},
+                    specify={'Mode': self.params['Compliant'].value}
+                ),
+                self.skill('WaitForForce', 'wait_for_force',
+                    specify={'Force': self.params['Force'].value}
+                )
             ),
             self.skill('ForceCheck', 'force_check'),
             
             # Move back to pre press pose
-            self.skill('GeneratePressPose','generate_press_pose', specify={'Offset': -0.1}),
-            self.skill('JPMoveArm','jp_move_arm', remap={'Target': 'Pose'}, specify={'Mode': self.params['Compliant'].value})
+            self.skill('ScaleUpdate', 'scale_update',
+                specify={'Scale': 1.0}
+            ),
+            self.skill('GeneratePressPose','generate_press_pose',
+                specify={'Offset': -0.1}
+            ),
+            self.skill('JPMoveArm','jp_move_arm',
+                remap={'Target': 'Pose'},
+                specify={'Mode': self.params['Compliant'].value}
+            )
         )
 
 class GeneratePressPose(SkillDescription):

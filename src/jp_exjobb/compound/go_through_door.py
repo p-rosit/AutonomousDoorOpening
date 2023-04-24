@@ -24,7 +24,7 @@ class GoThroughDoor(SkillDescription):
         self.addPreCondition(self.getPropCond('CompliantController', 'skiros:Value', 'Compliant', '=', 'compliant', True))
         self.addPreCondition(self.getPropCond('JointStateController', 'skiros:Value', 'JointState', '=', 'joint_config', True))
 
-        self.addParam('Offset', 0.1, ParamTypes.Required)
+        self.addParam('Offset', 0.05, ParamTypes.Required)
 
 class go_through_door(SkillBase):
     def createDescription(self):
