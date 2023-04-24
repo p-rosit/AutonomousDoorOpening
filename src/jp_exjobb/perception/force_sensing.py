@@ -21,7 +21,7 @@ class wait_for_force(PrimitiveThreadBase):
         self.running = False
         self.hz = 50
         self.rate = rospy.Rate(self.hz)
-        self.forcesub = rospy.Subscriber('/cartesian_compliance_controller/ft_sensor_wrench', WrenchStamped, callback=self.earing)
+        self.forcesub = rospy.Subscriber('/wrench_filter/filtered_wrench', WrenchStamped, callback=self.earing)
         self.reset_pub = rospy.Publisher('/wait_for_force/reset', Empty, queue_size=1)
         self.status_pub = rospy.Publisher('/wait_for_force/status', Bool, queue_size=1)
     

@@ -3,102 +3,11 @@ from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.primitive_thread import PrimitiveThreadBase
 
 import rospy
-
-from geometry_msgs.msg import WrenchStamped
-from std_msgs.msg import Bool, Int32, Float64
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-class ListenToWrench(SkillDescription):
-    def createDescription(self):
-        self.addParam('Time (s)', 5.0, ParamTypes.Required)
-        self.addParam('Name', '', ParamTypes.Required)
-
-class listen_to_wrench(PrimitiveThreadBase):
-    def createDescription(self):
-        self.setDescription(ListenToWrench(), self.__class__.__name__)
-
-    def onInit(self):
-        self.running = False
-        self.sub = rospy.Subscriber('/cartesian_compliance_controller/ft_sensor_wrench', WrenchStamped, callback=self.listen)
-        self.rate = rospy.Rate(10)
-
-    def preStart(self):
-        self.running = True
-        self.preempt_requested = False
-        self.force = []
-        self.force_coords = ([], [], [])
-        self.torque = []
-        self.torque_coords = ([], [], [])
-        self.status = 'Listening to "/wrench" topic.'
-        return True
-    
-    def onPreempt(self):
-        self.preempt_requested = True
-        return self.fail('Listening preempted.', -1)
-
-    def run(self):
-        path = '/home/duploproject/'
-        # path = '/home/pontus/'
-
-        time_limit = rospy.Duration(self.params['Time (s)'].value)
-        start_time = rospy.Time.now()
-
-        while rospy.Time.now() - start_time < time_limit:
-            if self.preempt_requested:
-                return False, ''
-            self.rate.sleep()
-        
-        self.running = False
-
-        force_mag = np.array(self.force)
-        torque_mag = np.array(self.torque)
-
-        fig, axs = plt.subplots(1)
-        axs.plot(force_mag)
-        axs.plot(torque_mag)
-        axs.legend(['Force', 'Torque'])
-        plt.savefig(path + self.params['Name'].value + '_wrench.png')
-        plt.cla()
-
-        fig, axs = plt.subplots(2)
-        axs[0].plot(self.force_coords[0])
-        axs[0].plot(self.force_coords[1])
-        axs[0].plot(self.force_coords[2])
-        axs[0].legend(['force x', 'force y', 'force z'])
-        axs[1].plot(self.torque_coords[0])
-        axs[1].plot(self.torque_coords[1])
-        axs[1].plot(self.torque_coords[2])
-        axs[1].legend(['torque x', 'torque y', 'torque z'])
-        plt.savefig(path + self.params['Name'].value + '_coords.png')
-        plt.cla()
-
-        return self.success('Done listening to "/wrench" topic.')
-
-    def listen(self, msg):
-        if self.running:
-            fx = msg.wrench.force.x
-            fy = msg.wrench.force.y
-            fz = msg.wrench.force.z
-            tx = msg.wrench.torque.x
-            ty = msg.wrench.torque.y
-            tz = msg.wrench.torque.z
-
-            force_mag = np.sqrt(fx ** 2 + fy ** 2 + fz ** 2)
-            torque_mag = np.sqrt(tx ** 2 + ty ** 2 + tz ** 2)
-
-            self.force.append(force_mag)
-            self.torque.append(torque_mag)
-
-            [force.append(coord) for force, coord in zip(self.force_coords, [fx, fy, fz])]
-            [torque.append(coord) for torque, coord in zip(self.torque_coords, [tx, ty, tz])]
-
+from std_msgs.msg import Empty, Bool, Int32, Float64
 
 class ForceSensingOn(SkillDescription):
     def createDescription(self):
         self.addParam('Compliant', False, ParamTypes.Required)
-
 
 class force_sensing_on(PrimitiveThreadBase):
     def createDescription(self):
@@ -142,13 +51,13 @@ class force_sensing_on(PrimitiveThreadBase):
         
         return self.fail('No reply from wrench.', -1)
 
-class ForceZero(SkillDescription):
+class AdjustForce(SkillDescription):
     def createDescription(self):
         self.addParam('Adjust', False, ParamTypes.Required)
 
 class adjust_force(PrimitiveThreadBase):
     def createDescription(self):
-        self.setDescription(ForceZero(), self.__class__.__name__)
+        self.setDescription(AdjustForce(), self.__class__.__name__)
 
     def onInit(self):
         self.hz = 10
@@ -394,3 +303,43 @@ class size_update(PrimitiveThreadBase):
                 return self.fail('Size of smoothing window needs to be positive.', -1)
         
         return self.fail('No reply from size update.', -1)
+
+class ScaleUpdate(SkillDescription):
+    def createDescription(self):
+        self.addParam('Scale', 1.0, ParamTypes.Required)
+
+class scale_update(PrimitiveThreadBase):
+    def createDescription(self):
+        self.setDescription(ScaleUpdate(), self.__class__.__name__)
+
+    def onInit(self):
+        self.hz = 10
+        self.time_limit = 1.5
+        self.rate = rospy.Rate(self.hz)
+        self.pub = rospy.Publisher('/cartesian_compliance_controller/scale', Float64, queue_size=1)
+        self.sub = rospy.Subscriber('/cartesian_compliance_controller/scale_reply', Empty, callback=self.reply_callback)
+    
+    def preStart(self):
+        self.reply = False
+        self.running = True
+        return True
+
+    def reply_callback(self, _):
+        if self.running:
+            self.reply = True
+
+    def run(self):
+        scale = self.params['Scale'].value
+        self.pub.publish(Float64(scale))
+
+        count = 0
+        while not self.reply and count < self.time_limit * self.hz:
+            self.rate.sleep()
+            count += 1
+
+        self.running = False
+
+        if self.reply:
+            return self.success('Scale updated to %f.' % scale)
+         
+        return self.fail('No reply from scale update.', -1)
