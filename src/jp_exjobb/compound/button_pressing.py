@@ -1,5 +1,5 @@
 from skiros2_common.core.primitive_thread import PrimitiveThreadBase
-from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential, ParallelFs
+from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential, ParallelFs, ParallelFf
 from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.world_element import Element
 
@@ -12,8 +12,9 @@ class ButtonPress(SkillDescription):
         self.addPreCondition(self.getPropCond('CompliantController', 'skiros:Value', 'Compliant', '=', 'compliant', True))
 
         self.addParam('Button', Element('scalable:DoorButton'), ParamTypes.Required)
-        self.addParam('Offset', 0.05, ParamTypes.Required)
-        self.addParam('Force', 100.0, ParamTypes.Required)
+        self.addParam('Offset', 0.1, ParamTypes.Required)
+        self.addParam('Force', 60.0, ParamTypes.Required)
+        self.addParam('Sensitivity', 0.5, ParamTypes.Optional)
 
         self.addPreCondition(self.getRelationCond('ArmHasGripper', 'skiros:hasA', 'Arm', 'Gripper', True))
         self.addPreCondition(self.getRelationCond('GripperHasPose', 'skiros:contain', 'Gripper', 'Pose', True))
@@ -26,14 +27,13 @@ class button_press(SkillBase):
         self.setProcessor(Sequential())
         skill(
             # Move to lookout pose
-            self.skill('ForceSensingOn', 'force_sensing_on',
-                specify={'Compliant': True}
-            ),
-            self.skill('GeneratePressPose','generate_press_pose',
-                specify={'Offset': -0.1}
-            ),
-            self.skill('ScaleUpdate', 'scale_update',
-                specify={'Scale': 0.5}
+            self.skill(ParallelFf())(
+                self.skill('ForceSensingOn', 'force_sensing_on',
+                    specify={'Compliant': True}
+                ),
+                self.skill('GeneratePressPose','generate_press_pose',
+                    specify={'Offset': -0.1}
+                )
             ),
             self.skill('JPMoveArm','jp_move_arm',
                 remap={'Target': 'Pose'},
@@ -41,8 +41,13 @@ class button_press(SkillBase):
             ),
 
             # Move to pre press pose
-            self.skill('GeneratePressPose','generate_press_pose',
-                specify={'Offset': self.params['Offset'].value}
+            self.skill(ParallelFf())(
+                self.skill('GeneratePressPose','generate_press_pose',
+                    specify={'Offset': self.params['Offset'].value}
+                ),
+                self.skill('ScaleUpdate', 'scale_update',
+                    specify={'Scale': self.params['Sensitivity'].value}
+                )
             ),
             self.skill(ParallelFs())(
                 # Move to press pose
@@ -57,11 +62,13 @@ class button_press(SkillBase):
             self.skill('ForceCheck', 'force_check'),
             
             # Move back to pre press pose
-            self.skill('ScaleUpdate', 'scale_update',
-                specify={'Scale': 1.0}
-            ),
-            self.skill('GeneratePressPose','generate_press_pose',
-                specify={'Offset': -0.1}
+            self.skill(ParallelFf())(
+                self.skill('ScaleUpdate', 'scale_update',
+                    specify={'Scale': 1.0}
+                ),
+                self.skill('GeneratePressPose','generate_press_pose',
+                    specify={'Offset': -0.1}
+                )
             ),
             self.skill('JPMoveArm','jp_move_arm',
                 remap={'Target': 'Pose'},
