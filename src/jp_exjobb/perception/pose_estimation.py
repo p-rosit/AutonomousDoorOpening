@@ -154,6 +154,8 @@ class jp_pose_estimation(PrimitiveThreadBase):
                 estimated_object_position = estimated_position - estimated_object_rotation_matrix @ marker_position
 
                 estimated_object_quaternion = rot2quat(estimated_object_rotation_matrix)
+                if estimated_object_quaternion[-1] < 0:
+                    estimated_object_quaternion = -estimated_object_quaternion
 
                 sub_position += estimated_object_position
                 sub_quaternion += estimated_object_quaternion
