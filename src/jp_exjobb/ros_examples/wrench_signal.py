@@ -110,7 +110,6 @@ class WrenchPlotter:
         for f in self.w[:3]:
             ax1.plot(time, f)
         ax1.legend(['force x', 'force y', 'force z'])
-        ax1.set_xlabel('Time (s)')
         ax1.set_ylabel('Force (N)')
         for t in self.w[3:]:
             ax2.plot(time, t)
@@ -139,7 +138,6 @@ class WrenchPlotter:
         for f in self.f[:3]:
             ax1.plot(f)
         ax1.legend(['force x', 'force y', 'force z'])
-        ax1.set_xlabel('Time (s)')
         ax1.set_ylabel('Force (N)')
         for t in self.f[3:]:
             ax2.plot(t)
@@ -176,7 +174,6 @@ class WrenchPlotter:
             f = np.abs(np.fft.fft(f - f.mean()))
             ax1.plot(freq, f[:len(f)//2])
         ax1.legend(['force x', 'force y', 'force z'])
-        ax1.set_xlabel('Frequency (Hz)')
         ax1.set_ylabel('Force (N)')
         ax1.set_ylim(bottom=0)
         for t in self.w[3:]:
@@ -214,7 +211,6 @@ class WrenchPlotter:
             f = np.abs(np.fft.fft(f - f.mean()))
             ax1.plot(freq, f[:len(f)//2])
         ax1.legend(['force x', 'force y', 'force z'])
-        ax1.set_xlabel('Frequency (Hz)')
         ax1.set_ylabel('Force (N)')
         ax1.set_ylim(bottom=0)
         for t in self.f[3:]:
