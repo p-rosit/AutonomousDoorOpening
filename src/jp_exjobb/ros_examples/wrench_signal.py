@@ -112,13 +112,11 @@ class WrenchPlotter:
         ax1.legend(['force x', 'force y', 'force z'])
         ax1.set_xlabel('Time (s)')
         ax1.set_ylabel('Force (N)')
-        ax1.set_ylim(bottom=0)
         for t in self.w[3:]:
             ax2.plot(time, t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
         ax2.set_xlabel('Time (s)')
         ax2.set_ylabel('Torque (Nm)')
-        ax2.set_ylim(bottom=0)
         plt.savefig(os.path.join(path, name + '_wrench_coords') + '.png')
         plt.cla()
 
@@ -143,13 +141,11 @@ class WrenchPlotter:
         ax1.legend(['force x', 'force y', 'force z'])
         ax1.set_xlabel('Time (s)')
         ax1.set_ylabel('Force (N)')
-        ax1.set_ylim(bottom=0)
         for t in self.f[3:]:
             ax2.plot(t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
         ax2.set_xlabel('Time (s)')
         ax2.set_ylabel('Torque (Nm)')
-        ax2.set_ylim(bottom=0)
         plt.savefig(os.path.join(path, name + '_filter_coords') + '.png')
         plt.cla()
         print('Wrench plotted in time domain with name "%s".' % name)
@@ -190,6 +186,7 @@ class WrenchPlotter:
         ax2.legend(['torque x', 'torque y', 'torque z'])
         ax2.set_xlabel('Frequency (Hz)')
         ax2.set_ylabel('Torque (Nm)')
+        ax2.set_ylim(bottom=0)
         plt.savefig(os.path.join(path, name + '_wrench_coords_freq') + '.png')
         plt.cla()
 
@@ -219,6 +216,7 @@ class WrenchPlotter:
         ax1.legend(['force x', 'force y', 'force z'])
         ax1.set_xlabel('Frequency (Hz)')
         ax1.set_ylabel('Force (N)')
+        ax1.set_ylim(bottom=0)
         for t in self.f[3:]:
             t = np.array(t)
             t = np.abs(np.fft.fft(t - t.mean()))
@@ -226,6 +224,7 @@ class WrenchPlotter:
         ax2.legend(['torque x', 'torque y', 'torque z'])
         ax2.set_xlabel('Frequency (Hz)')
         ax2.set_ylabel('Torque (N)')
+        ax2.set_ylim(bottom=0)
         plt.savefig(os.path.join(path, name + '_filter_coords_freq') + '.png')
         plt.cla()
         print('Wrench plotted in frequency domain with name "%s".' % name)
