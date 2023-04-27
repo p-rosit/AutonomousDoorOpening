@@ -91,7 +91,7 @@ class WrenchPlotter:
 
     def plot_wrench_time_domain(self, path, name):
         f, t = self.wrench_mag
-        time = np.arange(0, self.time, len(f)) / len(f)
+        time = np.linspace(0, self.time, len(f))
 
         fig, axs = plt.subplots(1)
         plt.title('Wrench Magnitude')
@@ -153,7 +153,7 @@ class WrenchPlotter:
         f, t = np.array(f), np.array(t)
         f = np.abs(np.fft.fft(np.array(f - f.mean())))
         t = np.abs(np.fft.fft(np.array(t - t.mean())))
-        freq = 2 * np.pi * np.arange(0, np.pi, len(f) // 2) / len(f)
+        freq = np.linspace(0, np.pi, step=len(f) // 2)
 
         fig, axs = plt.subplots(1)
         plt.title('Wrench Magnitude Fourier Transform')
