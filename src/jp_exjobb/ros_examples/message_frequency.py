@@ -22,6 +22,7 @@ class Counter():
         self.nbr_of_msgs += 1
 
 if __name__ == '__main__':
+    rospy.init_node('msgs_counter')
     count = Counter()
     rate = rospy.Rate(200)
 
