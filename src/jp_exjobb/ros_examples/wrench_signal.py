@@ -91,12 +91,15 @@ class WrenchPlotter:
 
     def plot_wrench_time_domain(self, path, name):
         f, t = self.wrench_mag
+        time = np.arange(self.time, len(f)) / len(f)
 
         fig, axs = plt.subplots(1)
         plt.title('Wrench Magnitude')
-        axs.plot(f)
-        axs.plot(t)
+        axs.plot(time, f)
+        axs.plot(time, t)
         axs.legend(['Force', 'Torque'])
+        axs.set_xlabel('Time (s)')
+        axs.set_ylabel('Magnitude (N)')
         plt.savefig(os.path.join(path, name + '_wrench_magnitude') + '.png')
         plt.cla()
 
@@ -104,11 +107,15 @@ class WrenchPlotter:
         plt.title('Wrench')
         ax1, ax2 = axs
         for f in self.w[:3]:
-            ax1.plot(f)
+            ax1.plot(time, f)
         ax1.legend(['force x', 'force y', 'force z'])
+        ax1.set_xlabel('Time (s)')
+        ax1.set_ylabel('Magnitude (N)')
         for t in self.w[3:]:
-            ax2.plot(t)
+            ax2.plot(time, t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
+        ax2.set_xlabel('Time (s)')
+        ax2.set_ylabel('Magnitude (N)')
         plt.savefig(os.path.join(path, name + '_wrench_coords') + '.png')
         plt.cla()
 
@@ -119,6 +126,8 @@ class WrenchPlotter:
         axs.plot(f)
         axs.plot(t)
         axs.legend(['Force', 'Torque'])
+        axs.set_xlabel('Time (s)')
+        axs.set_ylabel('Magnitude (N)')
         plt.savefig(os.path.join(path, name + '_filter_magnitude') + '.png')
         plt.cla()
 
@@ -128,9 +137,13 @@ class WrenchPlotter:
         for f in self.f[:3]:
             ax1.plot(f)
         ax1.legend(['force x', 'force y', 'force z'])
+        ax1.set_xlabel('Time (s)')
+        ax1.set_ylabel('Magnitude (N)')
         for t in self.f[3:]:
             ax2.plot(t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
+        ax2.set_xlabel('Time (s)')
+        ax2.set_ylabel('Magnitude (N)')
         plt.savefig(os.path.join(path, name + '_filter_coords') + '.png')
         plt.cla()
         print('Wrench plotted in time domain with name "%s".' % name)
@@ -140,12 +153,15 @@ class WrenchPlotter:
         f, t = np.array(f), np.array(t)
         f = np.abs(np.fft.fft(np.array(f - f.mean())))
         t = np.abs(np.fft.fft(np.array(t - t.mean())))
+        freq = 2 * np.pi * np.arange(np.pi, len(f) // 2) / len(f)
 
         fig, axs = plt.subplots(1)
         plt.title('Wrench Magnitude Fourier Transform')
-        axs.plot(f)
-        axs.plot(t)
+        axs.plot(freq, f[:len(f)//2])
+        axs.plot(freq, t[:len(f)//2])
         axs.legend(['Force', 'Torque'])
+        axs.set_xlabel('Frequency (Hz)')
+        axs.set_ylabel('Magnitude (N)')
         plt.savefig(os.path.join(path, name + '_wrench_magnitude_freq') + '.png')
         plt.cla()
 
@@ -155,13 +171,17 @@ class WrenchPlotter:
         for f in self.w[:3]:
             f = np.array(f)
             f = np.abs(np.fft.fft(f - f.mean()))
-            ax1.plot(f)
+            ax1.plot(freq, f[:len(f)//2])
         ax1.legend(['force x', 'force y', 'force z'])
+        ax1.set_xlabel('Frequency (Hz)')
+        ax1.set_ylabel('Magnitude (N)')
         for t in self.w[3:]:
             t = np.array(t)
             t = np.abs(np.fft.fft(t - t.mean()))
-            ax2.plot(t)
+            ax2.plot(freq, t[:len(f)//2])
         ax2.legend(['torque x', 'torque y', 'torque z'])
+        ax2.set_xlabel('Frequency (Hz)')
+        ax2.set_ylabel('Magnitude (N)')
         plt.savefig(os.path.join(path, name + '_wrench_coords_freq') + '.png')
         plt.cla()
 
@@ -172,9 +192,11 @@ class WrenchPlotter:
 
         fig, axs = plt.subplots(1)
         plt.title('Filter Magnitude Fourier Transform')
-        axs.plot(f)
-        axs.plot(t)
+        axs.plot(freq, f[:len(f)//2])
+        axs.plot(freq, t[:len(f)//2])
         axs.legend(['Force', 'Torque'])
+        axs.set_xlabel('Frequency (Hz)')
+        axs.set_ylabel('Magnitude (N)')
         plt.savefig(os.path.join(path, name + '_filter_magnitude_freq') + '.png')
         plt.cla()
 
@@ -184,13 +206,17 @@ class WrenchPlotter:
         for f in self.f[:3]:
             f = np.array(f)
             f = np.abs(np.fft.fft(f - f.mean()))
-            ax1.plot(f)
+            ax1.plot(freq, f[:len(f)//2])
         ax1.legend(['force x', 'force y', 'force z'])
+        ax1.set_xlabel('Frequency (Hz)')
+        ax1.set_ylabel('Magnitude (N)')
         for t in self.f[3:]:
             t = np.array(t)
             t = np.abs(np.fft.fft(t - t.mean()))
-            ax2.plot(t)
+            ax2.plot(freq, t[:len(f)//2])
         ax2.legend(['torque x', 'torque y', 'torque z'])
+        ax2.set_xlabel('Frequency (Hz)')
+        ax2.set_ylabel('Magnitude (N)')
         plt.savefig(os.path.join(path, name + '_filter_coords_freq') + '.png')
         plt.cla()
         print('Wrench plotted in frequency domain with name "%s".' % name)
@@ -224,13 +250,12 @@ if __name__ == '__main__':
             time = read_from_std.get_float()
             wrench_plotter.record_wrench(time)
             print('Recorded wrench for %f seconds.' % time)
-        elif c == 's':
             print('Plot name: ', end='', flush=True)
             name = read_from_std.get_string()
             plotted = wrench_plotter.plot_wrench(path, name)
             if not plotted:
                 print('Did not plot. Either name was empty or recording has not been made.')
-        elif c == 'd':
+        elif c == 's':
             print('Path: ', end='', flush=True)
             path = read_from_std.get_string()
         else:
