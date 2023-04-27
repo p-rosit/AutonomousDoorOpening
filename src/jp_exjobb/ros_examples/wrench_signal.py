@@ -104,7 +104,7 @@ class WrenchPlotter:
         plt.cla()
 
         fig, axs = plt.subplots(2)
-        plt.title('Wrench')
+        plt.suptitle('Wrench')
         ax1, ax2 = axs
         for f in self.w[:3]:
             ax1.plot(time, f)
@@ -132,7 +132,7 @@ class WrenchPlotter:
         plt.cla()
 
         fig, axs = plt.subplots(2)
-        plt.title('Filter')
+        plt.suptitle('Filter')
         ax1, ax2 = axs
         for f in self.f[:3]:
             ax1.plot(f)
@@ -166,7 +166,7 @@ class WrenchPlotter:
         plt.cla()
 
         fig, axs = plt.subplots(2)
-        plt.title('Wrench Fourier Transform')
+        plt.suptitle('Wrench Fourier Transform')
         ax1, ax2 = axs
         for f in self.w[:3]:
             f = np.array(f)
@@ -201,7 +201,7 @@ class WrenchPlotter:
         plt.cla()
 
         fig, axs = plt.subplots(2)
-        plt.title('Filter Fourier Transform')
+        plt.suptitle('Filter Fourier Transform')
         ax1, ax2 = axs
         for f in self.f[:3]:
             f = np.array(f)
