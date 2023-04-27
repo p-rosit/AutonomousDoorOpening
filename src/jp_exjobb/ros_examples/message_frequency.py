@@ -4,12 +4,11 @@ import rospy
 from geometry_msgs.msg import WrenchStamped
 
 class Counter():
-    def init(self):
+    def __init__(self):
         self.wrench_sub = rospy.Subscriber('/wrench', WrenchStamped, callback=self.callback_counter)
         self.nbr_of_msgs = 0
         self.start_time = rospy.Time.now()
-        self.tt = 10
-        self.interval = 30 #rospy.Duration(30)
+        self.interval = rospy.Duration(30)
 
     def start_measuring(self):
         self.start_time = rospy.Time.now()
@@ -27,9 +26,6 @@ if __name__ == '__main__':
     rate = rospy.Rate(200)
 
     count.start_measuring()
-    print(count.start_time)
-    print(count.tt)
-    print(count.interval)
 
     while rospy.Time.now() - count.start_time < count.interval:
         rate.sleep()
