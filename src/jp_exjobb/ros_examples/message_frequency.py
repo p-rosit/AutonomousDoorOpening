@@ -9,7 +9,6 @@ class Counter():
         self.nbr_of_msgs = 0
         self.start_time = rospy.Time.now()
         self.interval = rospy.Duration(30)
-        
 
     def start_measuring(self):
         self.start_time = rospy.Time.now()
@@ -27,6 +26,8 @@ if __name__ == '__main__':
     rate = rospy.Rate(200)
 
     count.start_measuring()
+    print(count.start_time)
+    print(count.interval)
 
     while rospy.Time.now() - count.start_time < count.interval:
         rate.sleep()
