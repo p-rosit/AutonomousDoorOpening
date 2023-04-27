@@ -93,6 +93,8 @@ class WrenchPlotter:
         f, t = self.wrench_mag
         time = np.arange(self.time, len(f)) / len(f)
 
+        print(len(f), len(time), len(t))
+
         fig, axs = plt.subplots(1)
         plt.title('Wrench Magnitude')
         axs.plot(time, f)
