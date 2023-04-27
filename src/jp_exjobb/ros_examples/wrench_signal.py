@@ -99,7 +99,7 @@ class WrenchPlotter:
         axs.plot(time, t)
         axs.legend(['Force', 'Torque'])
         axs.set_xlabel('Time (s)')
-        axs.set_ylabel('Magnitude (N)')
+        axs.set_ylabel('Magnitude')
         plt.savefig(os.path.join(path, name + '_wrench_magnitude') + '.png')
         plt.cla()
 
@@ -115,7 +115,7 @@ class WrenchPlotter:
             ax2.plot(time, t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
         ax2.set_xlabel('Time (s)')
-        ax2.set_ylabel('Magnitude (N)')
+        ax2.set_ylabel('Magnitude (Nm)')
         plt.savefig(os.path.join(path, name + '_wrench_coords') + '.png')
         plt.cla()
 
@@ -127,7 +127,7 @@ class WrenchPlotter:
         axs.plot(t)
         axs.legend(['Force', 'Torque'])
         axs.set_xlabel('Time (s)')
-        axs.set_ylabel('Magnitude (N)')
+        axs.set_ylabel('Magnitude')
         plt.savefig(os.path.join(path, name + '_filter_magnitude') + '.png')
         plt.cla()
 
@@ -143,7 +143,7 @@ class WrenchPlotter:
             ax2.plot(t)
         ax2.legend(['torque x', 'torque y', 'torque z'])
         ax2.set_xlabel('Time (s)')
-        ax2.set_ylabel('Magnitude (N)')
+        ax2.set_ylabel('Magnitude (Nm)')
         plt.savefig(os.path.join(path, name + '_filter_coords') + '.png')
         plt.cla()
         print('Wrench plotted in time domain with name "%s".' % name)
@@ -153,7 +153,7 @@ class WrenchPlotter:
         f, t = np.array(f), np.array(t)
         f = np.abs(np.fft.fft(np.array(f - f.mean())))
         t = np.abs(np.fft.fft(np.array(t - t.mean())))
-        freq = np.linspace(0, np.pi, len(f) // 2)
+        freq = np.linspace(0, 90, len(f) // 2)
 
         fig, axs = plt.subplots(1)
         plt.title('Wrench Magnitude Fourier Transform')
@@ -161,7 +161,7 @@ class WrenchPlotter:
         axs.plot(freq, t[:len(f)//2])
         axs.legend(['Force', 'Torque'])
         axs.set_xlabel('Frequency (Hz)')
-        axs.set_ylabel('Magnitude (N)')
+        axs.set_ylabel('Magnitude')
         plt.savefig(os.path.join(path, name + '_wrench_magnitude_freq') + '.png')
         plt.cla()
 
@@ -181,7 +181,7 @@ class WrenchPlotter:
             ax2.plot(freq, t[:len(f)//2])
         ax2.legend(['torque x', 'torque y', 'torque z'])
         ax2.set_xlabel('Frequency (Hz)')
-        ax2.set_ylabel('Magnitude (N)')
+        ax2.set_ylabel('Magnitude (Nm)')
         plt.savefig(os.path.join(path, name + '_wrench_coords_freq') + '.png')
         plt.cla()
 
@@ -233,10 +233,10 @@ if __name__ == '__main__':
         '\n'
         '   q: Stops the node\n'
         '   a: Reads a float from std input, both the wrench and filtered\n'
-        '      wrench are recorded for that amount of time.\n'
-        '   s: Reads a string from std input, both the wrench and the\n'
-        '      filtered wrench are plotted and saved with that file name.\n'
-        '   d: Reads a string from std input, this is the path any plots\n'
+        '      wrench are recorded for that amount of time. A string is then\n'
+        '      read from std input, both the wrench and the filtered wrench\n'
+        '      are plotted and saved with that file name.\n'
+        '   s: Reads a string from std input, this is the path any plots\n'
         '      should be saved to. Default is the current working directory.\n'
     )
     while not rospy.is_shutdown():
