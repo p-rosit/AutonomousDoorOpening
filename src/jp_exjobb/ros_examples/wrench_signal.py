@@ -153,7 +153,7 @@ class WrenchPlotter:
         f, t = np.array(f), np.array(t)
         f = np.abs(np.fft.fft(np.array(f - f.mean())))
         t = np.abs(np.fft.fft(np.array(t - t.mean())))
-        freq = np.linspace(0, 90, len(f) // 2)
+        freq = np.linspace(0, 250, len(f) // 2)
 
         fig, axs = plt.subplots(1)
         plt.title('Wrench Magnitude Fourier Transform')
