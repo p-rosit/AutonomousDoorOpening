@@ -8,7 +8,7 @@ class Counter():
         self.wrench_sub = rospy.Subscriber('/wrench', WrenchStamped, callback=self.callback_counter)
         self.nbr_of_msgs = 0
         self.start_time = rospy.Time.now()
-        self.interval = rospy.Duration(30)
+        self.interval = 30#rospy.Duration(30)
 
     def start_measuring(self):
         self.start_time = rospy.Time.now()
