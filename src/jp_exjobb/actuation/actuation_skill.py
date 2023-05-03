@@ -9,23 +9,11 @@ from skiros2_common.core.world_element import Element
 
 import rospy
 import actionlib
-import tf2_ros
 
 from cartesian_trajectory_generator.msg import TrajectoryAction, TrajectoryGoal
 from actionlib_msgs.msg import GoalStatus
 
 import moveit_commander
-
-class FailSkill(SkillDescription):
-    def createDescription(self):
-        self.addParam('msg', 'Succeeded', ParamTypes.Required)
-
-class fail_skill(PrimitiveBase):
-    def createDescription(self):
-        self.setDescription(FailSkill(), self.__class__.__name__)
-    
-    def execute(self):
-        return self.fail(self.params['msg'].value, -1)
 
 class JPMoveArm(SkillDescription):
     def createDescription(self):
@@ -164,81 +152,3 @@ class jp_primitive_compliant(PrimitiveActionClient):
             rospy.loginfo(status)
             rospy.loginfo(msg)
             return self.fail("Unknown return code.", -100)
-
-
-class dance_skill_smiley(PrimitiveThreadBase):
-    def createDescription(self):
-        self.setDescription(JPMoveArm(), self.__class__.__name__)
-    
-    def onInit(self):
-        moveit_commander.roscpp_initialize(sys.argv)
-        self.robot = moveit_commander.RobotCommander()
-        self.scene = moveit_commander.PlanningSceneInterface()
-
-        self.buffer = tf2_ros.Buffer()  # type: any
-        self.tf_listener = tf2_ros.TransformListener(self.buffer)
-        return True
-    
-    def onPreempt(self):
-        self.preempt_motion = True
-        self.group.stop()
-        return self.fail('Motion preempted.', -1)
-
-    def preStart(self):
-        self.preempt_motion = False
-
-        arm = self.params['Arm'].value
-
-        self.group = moveit_commander.move_group.MoveGroupCommander(arm.getProperty("skiros:MoveItGroup").value)
-        self.group.set_planner_id("RRTConnect")
-        self.group.allow_replanning(True)
-        self.group.set_planning_time(20)
-        
-        self.group.set_pose_reference_frame(arm.getProperty("skiros:MoveItReferenceFrame").value)
-        self.group.set_end_effector_link(arm.getProperty("skiros:MoveItTCPLink").value)
-        self.group.set_max_velocity_scaling_factor(0.1)
-        self.group.set_max_acceleration_scaling_factor(0.1)
-        self.group.clear_pose_target(arm.getProperty("skiros:MoveItTCPLink").value)
-        self.group.clear_pose_targets()
-
-        return True
-
-    def run(self):
-        #do the flop
-        arm = self.params['Arm'].value
-        arm_frame = arm.getProperty("skiros:MoveItReferenceFrame").value
-
-        obj = self.params['Target'].value
-        goal = deepcopy(obj.getData(':PoseStampedMsg'))
-        goal.header.stamp = rospy.Time(0)
-        
-        goal = self.buffer.transform(goal, arm_frame, rospy.Duration(1))
-
-        if self.group.go(goal.pose, wait=True):
-            return self.success('Goal Reached')
-        
-        return self.fail('Movement Failed')
-
-    
-    def onEnd(self):
-        self.group.stop()
-        self.group.clear_pose_target(self.params['Arm'].value.getProperty("skiros:MoveItTCPLink").value)
-        self.group.clear_pose_targets()
-        return True
-    
-class SelectString(SkillDescription):
-    def createDescription(self):
-        self.addParam('Selection', '', ParamTypes.Required)
-        self.addParam('Input', '', ParamTypes.Required)
-
-class select_string(PrimitiveBase):
-    def createDescription(self):
-        self.setDescription(SelectString(), self.__class__.__name__)
-
-    def execute(self):
-        selection = self.params['Selection'].value
-        input =  self.params['Input'].value
-
-        if selection == input:
-            return self.success('%s chosen.' % selection)
-        return self.fail('%s not chosen.' % selection, -1)

@@ -288,7 +288,6 @@ def make_pose_stamped(frame, position, orientation):
     pose = PoseStamped()
 
     pose.header.stamp = rospy.Time(0)
-    # pose.header.stamp.secs -= 1
     pose.header.frame_id = frame
 
     pose.pose.position.x = position[0]
