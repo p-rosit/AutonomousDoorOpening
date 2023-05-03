@@ -7,11 +7,11 @@ from queue import Queue
 class NavigateBuilding(SkillDescription):
     def createDescription(self):
         self.addParam('Heron', Element('cora:Robot'), ParamTypes.Required)
-        self.addParam('Source', Element('scalable:Workstation'), ParamTypes.Inferred)
-        self.addParam('Destination', Element('scalable:Workstation'), ParamTypes.Required)
+        self.addParam('Source', Element('scalable:Location'), ParamTypes.Inferred)
+        self.addParam('Destination', Element('scalable:Location'), ParamTypes.Required)
 
-        self.addParam('SourceRegion', Element('skiros:Location'), ParamTypes.Inferred)
-        self.addParam('DestinationRegion', Element('skiros:Location'), ParamTypes.Inferred)
+        self.addParam('SourceRegion', Element('scalable:Region'), ParamTypes.Inferred)
+        self.addParam('DestinationRegion', Element('scalable:Region'), ParamTypes.Inferred)
 
         self.addPreCondition(self.getRelationCond('HeronAtWorkstation', 'skiros:at', 'Heron', 'Source', True))
         self.addPreCondition(self.getRelationCond('SourceInRegion', 'skiros:contain', 'SourceRegion', 'Source', True))

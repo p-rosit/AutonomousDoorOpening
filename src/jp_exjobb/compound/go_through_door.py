@@ -16,7 +16,7 @@ class GoThroughDoor(SkillDescription):
         self.addParam('ButtonLookout', Element('scalable:JointState'), ParamTypes.Inferred)
         self.addPreCondition(self.getRelationCond('ButtonHasLookout', 'skiros:hasA', 'Button', 'ButtonLookout', True))
 
-        self.addParam('TargetLocation', Element('scalable:Workstation'), ParamTypes.Required)
+        self.addParam('TargetLocation', Element('scalable:Waypoint'), ParamTypes.Required)
         self.addParam('ArmHome', Element('scalable:JointState'), ParamTypes.Inferred)
         self.addParam('JointState', Element('scalable:ControllerState'), ParamTypes.Inferred)
         self.addParam('Compliant', Element('scalable:ControllerState'), ParamTypes.Inferred)

@@ -110,7 +110,7 @@ def distance(pose1, pose2):
 
 class JPDrive(SkillDescription):
     def createDescription(self):
-        self.addParam('TargetLocation', Element('scalable:Workstation'), ParamTypes.Required)
+        self.addParam('TargetLocation', Element('scalable:Location'), ParamTypes.Required)
 
 class jp_drive(PrimitiveBase):
     def createDescription(self):

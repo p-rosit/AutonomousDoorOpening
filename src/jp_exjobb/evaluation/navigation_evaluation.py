@@ -13,8 +13,8 @@ class GoToPosition(SkillDescription):
     def createDescription(self):
         self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Required)
         self.addParam('Object', Element('skiros:Product'), ParamTypes.Required)
-        self.addParam('InitialLocation', Element('scalable:Workstation'), ParamTypes.Required)
-        self.addParam('TargetLocation', Element('scalable:Workstation'), ParamTypes.Required)
+        self.addParam('InitialLocation', Element('scalable:Waypoint'), ParamTypes.Required)
+        self.addParam('TargetLocation', Element('scalable:Waypoint'), ParamTypes.Required)
 
 class loop_heron(SkillBase):
     def createDescription(self):
