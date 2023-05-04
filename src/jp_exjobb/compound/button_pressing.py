@@ -81,13 +81,15 @@ class button_press(SkillBase):
 class GeneratePressPose(SkillDescription):
     def createDescription(self):
         self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Required)
+        self.addParam('EE', Element('scalable:Ur5'), ParamTypes.Inferred)
         self.addParam('Gripper', Element('scalable:WsgGripper'), ParamTypes.Inferred)
         self.addParam('Pose', Element('skiros:TransformationPose'), ParamTypes.Inferred)
 
         self.addParam('Button', Element('sumo:Object'), ParamTypes.Required)
         self.addParam('Offset', 0.0, ParamTypes.Required)
 
-        self.addPreCondition(self.getRelationCond('ArmHasGripper', 'skiros:hasA', 'Arm', 'Gripper', True))
+        self.addPreCondition(self.getRelationCond('ArmHasEE', 'skiros:hasA', 'Arm', 'EE', True))
+        self.addPreCondition(self.getRelationCond('EEHasGripper', 'skiros:hasA', 'EE', 'Gripper', True))
         self.addPreCondition(self.getRelationCond('GripperHasPose', 'skiros:contain', 'Gripper', 'Pose', True))
 
 class generate_press_pose(PrimitiveThreadBase):
