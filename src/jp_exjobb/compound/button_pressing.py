@@ -6,7 +6,7 @@ from skiros2_common.core.world_element import Element
 class ButtonPress(SkillDescription):
     def createDescription(self):
         self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Required)
-        self.addParam('EE', Element('scalable:Ur5'), ParamTypes.Inferred)
+        self.addParam('EE', Element('scalable:Ur5EndEffector'), ParamTypes.Inferred)
         self.addParam('Gripper', Element('scalable:WsgGripper'), ParamTypes.Inferred)
         self.addParam('Pose', Element('skiros:TransformationPose'), ParamTypes.Inferred)
         self.addParam('Compliant', Element('scalable:ControllerState'), ParamTypes.Inferred)
@@ -81,7 +81,7 @@ class button_press(SkillBase):
 class GeneratePressPose(SkillDescription):
     def createDescription(self):
         self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Required)
-        self.addParam('EE', Element('scalable:Ur5'), ParamTypes.Inferred)
+        self.addParam('EE', Element('scalable:Ur5EndEffector'), ParamTypes.Inferred)
         self.addParam('Gripper', Element('scalable:WsgGripper'), ParamTypes.Inferred)
         self.addParam('Pose', Element('skiros:TransformationPose'), ParamTypes.Inferred)
 
