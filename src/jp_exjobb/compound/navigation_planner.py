@@ -73,13 +73,14 @@ class navigate_building(SkillBase):
             if door is None:
                 break
         
+        print(reversed(path))
+
         return True, reversed(path)
 
     def get_connections(self, region):
         connections = []
         source_region = self.params['SourceRegion'].value
-        relations = source_region.getRelations(subj='-1', pred='skiros:hasA')
-        # relations = self.params['SourceRegion'].value.getRelations(subj='-1', pred='scalable:hasDoor')
+        relations = self.params['SourceRegion'].value.getRelations(subj='-1', pred='scalable:hasDoor')
 
         for relation in relations:
             door = self.wmi.get_element(relation['dst'])
@@ -87,16 +88,28 @@ class navigate_building(SkillBase):
                 continue
 
             next_loc = None
-            for door_relation in door.getRelations(pred='skiros:hasA', obj='-1'):
+            for door_relation in door.getRelations(subj='-1', pred='skiros:hasA'):
                 loc = self.wmi.get_element(door_relation['dst'])
 
-                if loc.type != 'skiros:Location' or loc.label == source_region.label:
+                if loc.type != 'scalable:Waypoint' or loc.label == source_region.label:
                     continue
 
                 next_loc = loc
-            
+
             if next_loc is None:
                 raise RuntimeError(':(')
+            
+            next_butt = None
+            for door_relation in door.getRelations(subj='-1', pred='skiros:hasA'):
+                butt = self.wmi.get_element(door_relation['dst'])
+
+                if butt.type != 'scalable:DoorButton' or butt.label != source_region.label:
+                    continue
+
+                next_butt = butt
+
+            if next_butt is None:
+                raise RuntimeError('No butt :(')
             
             connections.append((_, door, next_loc))
         
