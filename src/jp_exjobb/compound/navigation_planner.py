@@ -53,6 +53,11 @@ class navigate_building(SkillBase):
                     'TargetLocation': w1
                 }
             ))
+
+            # operate door button
+
+            # pass door
+
             skill_list.append(self.skill('GoThroughDoor', 'go_through_door',
                 specify={
                     'Heron': self.params['Heron'].value,
@@ -113,7 +118,7 @@ class navigate_building(SkillBase):
 
         for relation in relations:
             door = self.wmi.get_element(relation['dst'])
-            if door.type != 'scalable:RegionTransition':
+            if self.wmi.get_super_class(door.type) != 'scalable:RegionTransition':
                 continue
 
             next_loc = None
@@ -121,7 +126,7 @@ class navigate_building(SkillBase):
             # Get door from WM
             for door_relation in door.getRelations(subj='-1', pred='skiros:hasA'):
                 loc = self.wmi.get_element(door_relation['dst'])
-                if loc.type != 'scalable:Waypoint':
+                if self.wmi.get_super_class(loc.type) != 'scalable:Location':
                     continue
                 
                 temp = loc.getRelations(subj=region.id, pred='skiros:contain', obj='-1')
@@ -147,7 +152,7 @@ class navigate_building(SkillBase):
             # Get correct button from WM
             for door_relation in door.getRelations(subj='-1', pred='skiros:hasA'):
                 butt = self.wmi.get_element(door_relation['dst'])
-                if butt.type != 'scalable:DoorButton':
+                if self.wmi.get_super_class(butt.type) != 'scalable:DoorOperatingMechanism':
                     continue
 
                 temp = butt.getRelations(subj='-1', pred='skiros:hasA')
@@ -158,7 +163,7 @@ class navigate_building(SkillBase):
                 # Check if button is in the correct region
                 for butt_relation in temp:
                     buttrub = self.wmi.get_element(butt_relation['dst'])
-                    if buttrub.type != 'scalable:Waypoint':
+                    if self.wmi.get_super_class(buttrub.type) != 'scalable:Location':
                         continue
 
                     tmp = buttrub.getRelations(subj=region.id, pred='skiros:contain', obj='-1')
