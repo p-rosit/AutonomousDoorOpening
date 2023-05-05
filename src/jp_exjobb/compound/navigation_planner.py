@@ -15,7 +15,7 @@ class NavigateBuilding(SkillDescription):
 
         self.addPreCondition(self.getRelationCond('HeronAtWorkstation', 'skiros:at', 'Heron', 'Source', True))
         self.addPreCondition(self.getRelationCond('SourceInRegion', 'skiros:contain', 'SourceRegion', 'Source', True))
-        self.addPreCondition(self.getRelationCond('DestionationInRegion', 'skiros:contain', 'DestinationRegion', 'Destination', True))
+        self.addPreCondition(self.getRelationCond('DestinationInRegion', 'skiros:contain', 'DestinationRegion', 'Destination', True))
 
 class navigate_building(SkillBase):
     def createDescription(self):
@@ -25,6 +25,7 @@ class navigate_building(SkillBase):
         self.setProcessor(Sequential())
 
         planning_succeded, path = self.plan_path()
+        print(planning_succeded)
 
         if planning_succeded:
             skill_list = self.build_skill_list(path)
@@ -47,9 +48,11 @@ class navigate_building(SkillBase):
 
         while not q.empty():
             prev_region, button, door, region = q.get()
-
+            # print(prev_region)
             if region.label in visited:
                 continue
+            
+            # print(prev_region)
 
             visited.add(region.label)
             prev[region.label] = (prev_region, button, door)
@@ -57,6 +60,7 @@ class navigate_building(SkillBase):
             if dest.label == region.label:
                 break
 
+            print(self.get_connections(region))
             for next_button, next_door, next_region in self.get_connections(region):
                 q.put((region, next_button, next_door, next_region))
 
@@ -73,40 +77,56 @@ class navigate_building(SkillBase):
             if door is None:
                 break
         
-        print(reversed(path))
+        print(list(reversed(path)))
 
         return True, reversed(path)
 
     def get_connections(self, region):
         connections = []
-        source_region = self.params['SourceRegion'].value
-        relations = self.params['SourceRegion'].value.getRelations(subj='-1', pred='scalable:hasDoor')
+        relations = region.getRelations(subj='-1', pred='scalable:hasDoor')
+        print('reg', region)
 
         for relation in relations:
             door = self.wmi.get_element(relation['dst'])
-            if door.type != 'scalable:LocationTransition':
+            if door.type != 'scalable:RegionTransition':
                 continue
 
             next_loc = None
             for door_relation in door.getRelations(subj='-1', pred='skiros:hasA'):
                 loc = self.wmi.get_element(door_relation['dst'])
+                print('loc', loc)
+                if loc.type != 'scalable:Waypoint':
+                    continue
+                
+                temp = loc.getRelations(subj=region.id,pred='skiros:contain', obj='-1')
+                print(temp)
+                print(len(temp))
 
-                if loc.type != 'scalable:Waypoint' or loc.label == source_region.label:
+                if len(temp) > 0:
                     continue
 
                 next_loc = loc
-
+                break
+            print('lock', next_loc)
             if next_loc is None:
                 raise RuntimeError(':(')
             
             next_butt = None
             for door_relation in door.getRelations(subj='-1', pred='skiros:hasA'):
                 butt = self.wmi.get_element(door_relation['dst'])
+                print('butt', butt)
+                if butt.type != 'scalable:DoorButton':
+                    continue
 
-                if butt.type != 'scalable:DoorButton' or butt.label != source_region.label:
+                temp = butt.getRelations(subj=region.id,pred='skiros:contain', obj='-1')
+                print(temp)
+                print(len(temp))
+
+                if len(temp) == 0:
                     continue
 
                 next_butt = butt
+                break
 
             if next_butt is None:
                 raise RuntimeError('No butt :(')
