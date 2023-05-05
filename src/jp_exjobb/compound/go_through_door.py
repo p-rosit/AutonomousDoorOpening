@@ -6,10 +6,12 @@ class GoThroughDoor(SkillDescription):
     def createDescription(self):
         self.addParam('Heron', Element('cora:Robot'), ParamTypes.Required)
         self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Inferred)
+        self.addParam('EE', Element('scalable:Ur5EndEffector'), ParamTypes.Inferred)
         self.addParam('Gripper', Element('scalable:WsgGripper'), ParamTypes.Inferred)
         self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Inferred)
         self.addPreCondition(self.getRelationCond('HeronHasArm', 'skiros:hasA', 'Heron', 'Arm', True))
-        self.addPreCondition(self.getRelationCond('ArmHasGripper', 'skiros:hasA', 'Arm', 'Gripper', True))
+        self.addPreCondition(self.getRelationCond('ArmHasEE', 'skiros:hasA', 'Arm', 'EE', True))
+        self.addPreCondition(self.getRelationCond('EEHasGripper', 'skiros:hasA', 'EE', 'Gripper', True))
         self.addPreCondition(self.getRelationCond('GripperContainsCamera', 'skiros:contain', 'Gripper', 'Camera', True))
 
         self.addParam('Button', Element('scalable:DoorButton'), ParamTypes.Required)

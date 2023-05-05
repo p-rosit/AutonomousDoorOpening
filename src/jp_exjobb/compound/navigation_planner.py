@@ -25,7 +25,6 @@ class navigate_building(SkillBase):
         self.setProcessor(Sequential())
 
         planning_succeded, path = self.plan_path()
-        print(planning_succeded)
 
         if planning_succeded:
             skill_list = self.build_skill_list(path)
@@ -34,8 +33,35 @@ class navigate_building(SkillBase):
                 'msg': 'Path to goal from "%s" to "%s" does not exist.' % (self.params['Source'].value.label, self.params['Destination'].value.label)
             })
 
-        # skill(*skill_list)
-        skill(self.skill('FailSkill', 'fail_skill', specify={'msg': 'Not Implemented'}))
+        for sk in skill_list:
+            print(sk.label)
+
+        skill(*skill_list)
+
+    def build_skill_list(self, path):
+        skill_list = []
+
+        for ii in path:
+            (w1, b), (w2, d), sm = ii
+            print((b, d, sm))
+
+        for node in path:
+            (w1, butt), (w2, door), region = node
+            skill_list.append(self.skill('JPDrive', 'jp_drive', 
+                specify={
+                    'Heron': self.params['Heron'].value,
+                    'TargetLocation': w1
+                }
+            ))
+            skill_list.append(self.skill('GoThroughDoor', 'go_through_door',
+                specify={
+                    'Heron': self.params['Heron'].value,
+                    'Button': butt,
+                    'TargetLocation': w2
+                }
+            ))
+
+        return skill_list
 
     def plan_path(self):
         dest = self.params['DestinationRegion'].value
@@ -70,22 +96,20 @@ class navigate_building(SkillBase):
         region = dest
         while True:
             prev_region, button, door = prev[region.label]
-            path.append((button, door, region))
-            region = prev_region
 
             if door is None:
                 break
-        
-        print(list(reversed(path)))
 
-        return True, reversed(path)
+            path.append((button, door, region))
+            region = prev_region
+        
+        return True, list(reversed(path))
 
     def get_connections(self, region):
         # TODO: find out if there is some fancy way to query the world model to simplify this //JP
         # TODO: not happening :) //JP
         connections = []
         relations = region.getRelations(subj='-1', pred='scalable:hasDoor')
-        # print('reg', region)
 
         for relation in relations:
             door = self.wmi.get_element(relation['dst'])
@@ -94,33 +118,35 @@ class navigate_building(SkillBase):
 
             next_loc = None
             next_region = None
+            # Get door from WM
             for door_relation in door.getRelations(subj='-1', pred='skiros:hasA'):
                 loc = self.wmi.get_element(door_relation['dst'])
-                # print('loc', loc)
                 if loc.type != 'scalable:Waypoint':
                     continue
                 
                 temp = loc.getRelations(subj=region.id, pred='skiros:contain', obj='-1')
-                # print(temp)
-                # print(len(temp))
 
                 if len(temp) > 0:
                     continue
 
-                # get region
-                next_region = None
+                for loc_relation in loc.getRelations(pred='skiros:contain', obj='-1'):
+                    find_region = self.wmi.get_element(loc_relation['src'])
+                    if find_region.type != 'scalable:Region':
+                        continue
+
+                    next_region = find_region
 
                 next_loc = loc
+
                 break
-            # print('lock', next_loc)
             if next_loc is None:
                 raise RuntimeError(':(')
             
             butt_loc = None
             next_butt = None
+            # Get correct button from WM
             for door_relation in door.getRelations(subj='-1', pred='skiros:hasA'):
                 butt = self.wmi.get_element(door_relation['dst'])
-                # print('butt', butt)
                 if butt.type != 'scalable:DoorButton':
                     continue
 
@@ -129,6 +155,7 @@ class navigate_building(SkillBase):
                     continue
 
                 has_region = False
+                # Check if button is in the correct region
                 for butt_relation in temp:
                     buttrub = self.wmi.get_element(butt_relation['dst'])
                     if buttrub.type != 'scalable:Waypoint':
@@ -150,9 +177,4 @@ class navigate_building(SkillBase):
             
             connections.append(((butt_loc, butt), (next_loc, door), next_region))
         
-        print(region)
-        print(connections)
         return connections
-        
-    def build_skill_list(self, temp):
-        pass

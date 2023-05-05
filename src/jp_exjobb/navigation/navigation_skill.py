@@ -110,7 +110,11 @@ def distance(pose1, pose2):
 
 class JPDrive(SkillDescription):
     def createDescription(self):
+        self.addParam('Heron', Element('cora:Robot'), ParamTypes.Required)
+        self.addParam('SourceLocation', Element('scalable:Location'), ParamTypes.Inferred)
         self.addParam('TargetLocation', Element('scalable:Location'), ParamTypes.Required)
+        
+        self.addPreCondition(self.getRelationCond('HeronAtLocation', 'skiros:at', 'Heron', 'SourceLocation', True))
 
 class jp_drive(PrimitiveBase):
     def createDescription(self):
@@ -152,6 +156,29 @@ class jp_drive(PrimitiveBase):
         self.thread.join()
 
         if self.result:
+            heron = self.params['Heron'].value
+            source = self.params['SourceLocation'].value
+            target = self.params['TargetLocation'].value
+            
+            heron.removeRelation({'src': '-1', 'type': 'skiros:at', 'dst': source.id, 'state': True, 'abstract': False})
+            heron.addRelation('-1', 'skiros:at', target.id)
+            self.wmi.update_element(heron)
             return self.success('Done')
         else:
             return self.fail('Failed', -1)
+
+class jp_move_heron(PrimitiveBase):
+    def createDescription(self):
+        self.setDescription(JPDrive(), self.__class__.__name__)
+    
+    def execute(self):
+        heron = self.params['Heron'].value
+        source = self.params['SourceLocation'].value
+        target = self.params['TargetLocation'].value
+        
+        heron.removeRelation({'src': '-1', 'type': 'skiros:at', 'dst': source.id, 'state': True, 'abstract': False})
+        heron.addRelation('-1', 'skiros:at', target.id)
+        self.wmi.update_element(heron)
+        return self.success(
+            'Moved Heron from %s to %s in wm.' % (source.label, target.label)
+        )
