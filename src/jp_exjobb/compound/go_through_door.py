@@ -12,7 +12,7 @@ class GoThroughDoor(SkillDescription):
         self.addPreCondition(self.getRelationCond('HeronHasArm', 'skiros:hasA', 'Heron', 'Arm', True))
         self.addPreCondition(self.getRelationCond('ArmHasEE', 'skiros:hasA', 'Arm', 'EE', True))
         self.addPreCondition(self.getRelationCond('EEHasGripper', 'skiros:hasA', 'EE', 'Gripper', True))
-        self.addPreCondition(self.getRelationCond('GripperContainsCamera', 'skiros:contain', 'Gripper', 'Camera', True))
+        self.addPreCondition(self.getRelationCond('EEhasCamera', 'skiros:hasA', 'EE', 'Camera', True))
 
         self.addParam('Button', Element('scalable:DoorButton'), ParamTypes.Required)
         self.addParam('ButtonLookout', Element('scalable:JointState'), ParamTypes.Inferred)
