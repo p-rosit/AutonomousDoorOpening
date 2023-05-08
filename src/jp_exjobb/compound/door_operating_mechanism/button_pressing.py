@@ -13,8 +13,8 @@ class ButtonPress(SkillDescription):
         self.addPreCondition(self.getPropCond('CompliantController', 'skiros:Value', 'Compliant', '=', 'compliant', True))
 
         self.addParam('Button', Element('scalable:DoorButton'), ParamTypes.Required)
-        self.addParam('Offset', 0.1, ParamTypes.Required)
-        self.addParam('Force', 60.0, ParamTypes.Required)
+        self.addParam('Offset', 0.05, ParamTypes.Optional)
+        self.addParam('Force', 60.0, ParamTypes.Optional)
         self.addParam('Sensitivity', 0.5, ParamTypes.Optional)
 
         self.addPreCondition(self.getRelationCond('ArmHasEE', 'skiros:hasA', 'Arm', 'EE', True))
@@ -28,7 +28,7 @@ class button_press(SkillBase):
     def expand(self, skill):
         self.setProcessor(Sequential())
         skill(
-            # Move to lookout pose
+            # Generate pre press pose
             self.skill(ParallelFf())(
                 self.skill('ForceSensingOn', 'force_sensing_on',
                     specify={'Compliant': True}
@@ -37,12 +37,13 @@ class button_press(SkillBase):
                     specify={'Offset': -0.1}
                 )
             ),
+            # Move to pre press pose
             self.skill('JPMoveArm','jp_move_arm',
                 remap={'Target': 'Pose'},
                 specify={'Mode': self.params['Compliant'].value}
             ),
 
-            # Move to pre press pose
+            # Generate press pose
             self.skill(ParallelFf())(
                 self.skill('GeneratePressPose','generate_press_pose',
                     specify={'Offset': self.params['Offset'].value}
@@ -51,8 +52,8 @@ class button_press(SkillBase):
                     specify={'Scale': self.params['Sensitivity'].value}
                 )
             ),
+            # Move to press pose
             self.skill(ParallelFs())(
-                # Move to press pose
                 self.skill('JPMoveArm','jp_move_arm',
                     remap={'Target': 'Pose'},
                     specify={'Mode': self.params['Compliant'].value}
@@ -61,9 +62,10 @@ class button_press(SkillBase):
                     specify={'Force': self.params['Force'].value}
                 )
             ),
+            # Check if force goal was met
             self.skill('ForceCheck', 'force_check'),
             
-            # Move back to pre press pose
+            # Generate pre press pose
             self.skill(ParallelFf())(
                 self.skill('ScaleUpdate', 'scale_update',
                     specify={'Scale': 1.0}
@@ -72,6 +74,7 @@ class button_press(SkillBase):
                     specify={'Offset': -0.1}
                 )
             ),
+            # Move back to pre press pose
             self.skill('JPMoveArm','jp_move_arm',
                 remap={'Target': 'Pose'},
                 specify={'Mode': self.params['Compliant'].value}

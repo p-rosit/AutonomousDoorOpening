@@ -7,6 +7,9 @@ from queue import Queue
 class NavigateBuilding(SkillDescription):
     def createDescription(self):
         self.addParam('Heron', Element('cora:Robot'), ParamTypes.Required)
+        self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Inferred)
+        self.addPreCondition(self.getRelationCond('HeronHasArm', 'skiros:hasA', 'Heron', 'Arm', True))
+
         self.addParam('Source', Element('scalable:Location'), ParamTypes.Inferred)
         self.addParam('Destination', Element('scalable:Location'), ParamTypes.Required)
 
@@ -36,35 +39,64 @@ class navigate_building(SkillBase):
         for sk in skill_list:
             print(sk.label)
 
-        skill(*skill_list)
+        # skill(*skill_list)
+        skill(self.skill('FailSkill', 'fail_skill', specify={'msg': 'no'}))
 
     def build_skill_list(self, path):
+        arm = self.params['Arm'].value
         skill_list = []
 
         for ii in path:
-            (w1, b), (w2, d), sm = ii
+            (_, b), (_, d), sm = ii
             print((b, d, sm))
 
         for node in path:
-            (w1, butt), (w2, door), region = node
-            skill_list.append(self.skill('JPDrive', 'jp_drive', 
+            (button_waypoint, dom), (door_waypoint, door), region = node
+
+            # Go to button waypoint
+            skill_list.append(self.skill('JPDrive', 'jp_drive',
                 specify={
                     'Heron': self.params['Heron'].value,
-                    'TargetLocation': w1
+                    'TargetLocation': button_waypoint
                 }
             ))
 
-            # operate door button
+            # Detect door operating mechanism
+            skill_list.append(self.skill('JPDetectDOM', 'jp_detect_dom', specify={
+                'Arm': arm,
+                'Mechanism': dom
+            }))
 
-            # pass door
+            # Operate door button
+            if dom.type == 'scalable:DoorButton':
+                # press button
+                skill_list.append(self.skill('ButtonPress', 'button_press', specify={
+                    'Arm': arm,
+                    'Button': dom
+                }))
+            elif dom.type == 'scalable:DoorHandle':
+                butt = dom
+                # handle door handle
+                skill_list.append(self.skill('OperateHandle', 'operate_handle', specify={
+                    'Arm': arm,
+                    'Handle': butt, # with great enthusiasm
+                }))
+            else:
+                raise RuntimeError('Cannot handle this type of door operating mechanism.')
 
-            skill_list.append(self.skill('GoThroughDoor', 'go_through_door',
-                specify={
+            # Pass door
+            if door.type == 'scalable:Door':
+                skill_list.append(self.skill('JPPassDoor', 'jp_pass_door', specify={
                     'Heron': self.params['Heron'].value,
-                    'Button': butt,
-                    'TargetLocation': w2
-                }
-            ))
+                    'Target': door_waypoint
+                }))
+            elif door.type == 'scalable:Elevator':
+                skill_list.append(self.skill('JPPassElevator', 'jp_pass_elevator', specify={
+                    'Heron': self.params['Heron'].value,
+                    'Target': door_waypoint
+                }))
+            else:
+                raise RuntimeError('Cannot handle this type of door.')
 
         return skill_list
 
@@ -78,21 +110,18 @@ class navigate_building(SkillBase):
         prev = dict()
 
         while not q.empty():
-            prev_region, button, door, region = q.get()
-            # print(prev_region)
+            prev_region, dom, door, region = q.get()
             if region.label in visited:
                 continue
-            
-            # print(prev_region)
 
             visited.add(region.label)
-            prev[region.label] = (prev_region, button, door)
+            prev[region.label] = (prev_region, dom, door)
 
             if dest.label == region.label:
                 break
 
-            for next_button, next_door, next_region in self.get_connections(region):
-                q.put((region, next_button, next_door, next_region))
+            for next_dom, next_door, next_region in self.get_connections(region):
+                q.put((region, next_dom, next_door, next_region))
 
         if dest.label not in visited:
             return False, []
@@ -100,12 +129,12 @@ class navigate_building(SkillBase):
         path = []
         region = dest
         while True:
-            prev_region, button, door = prev[region.label]
+            prev_region, dom, door = prev[region.label]
 
             if door is None:
                 break
 
-            path.append((button, door, region))
+            path.append((dom, door, region))
             region = prev_region
         
         return True, list(reversed(path))
@@ -145,41 +174,41 @@ class navigate_building(SkillBase):
 
                 break
             if next_loc is None:
-                raise RuntimeError(':(')
+                raise RuntimeError('No door waypoint :(')
             
-            butt_loc = None
-            next_butt = None
+            dom_loc = None
+            next_dom = None
             # Get correct button from WM
             for door_relation in door.getRelations(subj='-1', pred='skiros:hasA'):
-                butt = self.wmi.get_element(door_relation['dst'])
-                if self.wmi.get_super_class(butt.type) != 'scalable:DoorOperatingMechanism':
+                dom = self.wmi.get_element(door_relation['dst'])
+                if self.wmi.get_super_class(dom.type) != 'scalable:DoorOperatingMechanism':
                     continue
 
-                temp = butt.getRelations(subj='-1', pred='skiros:hasA')
+                temp = dom.getRelations(subj='-1', pred='skiros:hasA')
                 if len(temp) == 0:
                     continue
 
                 has_region = False
                 # Check if button is in the correct region
-                for butt_relation in temp:
-                    buttrub = self.wmi.get_element(butt_relation['dst'])
-                    if self.wmi.get_super_class(buttrub.type) != 'scalable:Location':
+                for dom_relation in temp:
+                    sub = self.wmi.get_element(dom_relation['dst'])
+                    if self.wmi.get_super_class(sub.type) != 'scalable:Location':
                         continue
 
-                    tmp = buttrub.getRelations(subj=region.id, pred='skiros:contain', obj='-1')
+                    tmp = sub.getRelations(subj=region.id, pred='skiros:contain', obj='-1')
                     if len(tmp) > 0:
-                        butt_loc = buttrub
+                        dom_loc = sub
                         has_region = True
                         break
 
                 if not has_region:
                     continue
-                next_butt = butt
+                next_dom = dom
                 break
 
-            if next_butt is None:
+            if next_dom is None:
                 raise RuntimeError('No butt :(')
             
-            connections.append(((butt_loc, butt), (next_loc, door), next_region))
+            connections.append(((dom_loc, dom), (next_loc, door), next_region))
         
         return connections
