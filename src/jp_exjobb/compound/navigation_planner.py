@@ -88,12 +88,12 @@ class navigate_building(SkillBase):
             if door.type == 'scalable:Door':
                 skill_list.append(self.skill('JPPassDoor', 'jp_pass_door', specify={
                     'Heron': self.params['Heron'].value,
-                    'Target': door_waypoint
+                    'Door': door
                 }))
             elif door.type == 'scalable:Elevator':
                 skill_list.append(self.skill('JPPassElevator', 'jp_pass_elevator', specify={
                     'Heron': self.params['Heron'].value,
-                    'Target': door_waypoint
+                    'Elevator': door
                 }))
             else:
                 raise RuntimeError('Cannot handle this type of door.')
@@ -165,7 +165,7 @@ class navigate_building(SkillBase):
 
                 for loc_relation in loc.getRelations(pred='skiros:contain', obj='-1'):
                     find_region = self.wmi.get_element(loc_relation['src'])
-                    if find_region.type != 'scalable:Region':
+                    if find_region.type != 'scalable:Region' and self.wmi.get_super_class(find_region.type) != 'scalable:Region':
                         continue
 
                     next_region = find_region

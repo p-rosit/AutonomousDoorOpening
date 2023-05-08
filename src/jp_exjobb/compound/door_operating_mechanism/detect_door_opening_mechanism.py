@@ -12,7 +12,7 @@ class JPDetectDOM(SkillDescription):
         self.addPreCondition(self.getRelationCond('EEHasGripper', 'skiros:hasA', 'EE', 'Gripper', True))
         self.addPreCondition(self.getRelationCond('EEhasCamera', 'skiros:hasA', 'EE', 'Camera', True))
 
-        self.addParam('DOM', Element('scalable:DoorOperatingMechanism'), ParamTypes.Required)
+        self.addParam('Mechanism', Element('scalable:DoorOperatingMechanism'), ParamTypes.Required)
         self.addParam('JointState', Element('scalable:ControllerState'), ParamTypes.Inferred)
         self.addParam('Target', Element('scalable:JointState'), ParamTypes.Inferred)
 
@@ -35,7 +35,7 @@ class jp_detect_dom(SkillBase):
             }),
             self.skill('JPPoseEstimation', 'jp_pose_estimation', specify={
                 'Camera': self.params['Camera'].value,
-                'Object': self.params['DOM'].value,
+                'Object': self.params['Mechanism'].value,
                 'Detection Time (s)': 0.4
             })
         )

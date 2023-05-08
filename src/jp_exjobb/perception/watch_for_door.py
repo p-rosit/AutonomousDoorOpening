@@ -13,3 +13,4 @@ class watch_for_door(PrimitiveThreadBase):
 
     def expand(self, skill):
         return super().expand(skill)
+
