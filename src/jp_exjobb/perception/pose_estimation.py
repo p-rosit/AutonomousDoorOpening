@@ -113,8 +113,8 @@ class jp_pose_estimation(PrimitiveThreadBase):
         K[1, 2] = cy
         K[2, 2] = 1
 
-        total_position = np.zeros(3, dtype=np.float64)
-        total_quaternion = np.zeros(4, dtype=np.float64)
+        total_position = np.zeros(3, dtype=float)
+        total_quaternion = np.zeros(4, dtype=float)
         while self.imgs < self.hz * time_limit and not self.preempt_requested:
             self.imgs += 1
             img = self.sub.get(time_limit=1.0)
