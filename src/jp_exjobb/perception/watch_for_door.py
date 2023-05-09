@@ -96,6 +96,8 @@ class watch_for_door(PrimitiveThreadBase):
 
         plt.plot(f_x, f_y, '*')
         plt.plot(b_x, b_y, '*')
+        plt.xlim(35, 50)
+        plt.ylim(0, 10)
         
         plt.savefig('/home/duploproject/penis.png')
         
