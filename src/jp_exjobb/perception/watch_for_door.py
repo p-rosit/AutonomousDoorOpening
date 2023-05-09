@@ -97,6 +97,6 @@ class watch_for_door(PrimitiveThreadBase):
         plt.plot(f_x, f_y, '*')
         plt.plot(b_x, b_y, '*')
         
-        plt.savefig('~/duploproject/penis.png')
+        plt.savefig('/home/duploproject/penis.png')
         
         return self.success(':)')
