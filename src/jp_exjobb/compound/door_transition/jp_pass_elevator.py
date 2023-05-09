@@ -39,8 +39,27 @@ class jp_pass_elevator(SkillBase):
     
     def expand(self, skill):
         self.setProcessor(Sequential())
-        target = self.infer_target()
-        target_region = self.infer_region(target)
+        could_infer, msg, target = self.infer_target()
+
+        if not could_infer:
+            self.setProcessor(Sequential())
+            skill(
+                self.skill('FailSkill', 'fail_skill', specify={
+                    'msg': msg
+                })
+            )
+            return
+        
+        could_infer, msg, target_region = self.infer_region(target)
+
+        if not could_infer:
+            self.setProcessor(Sequential())
+            skill(
+                self.skill('FailSkill', 'fail_skill', specify={
+                    'msg': msg
+                })
+            )
+            return
 
         if target_region.type == 'scalable:Region':
             skill(
@@ -66,12 +85,15 @@ class jp_pass_elevator(SkillBase):
             raise RuntimeError('Cannot handle region type.')
 
     def infer_target(self):
+        could_infer = True
+        msg = ''
+        
         elevator = self.params['Elevator'].value
         region = self.params['SourceRegion'].value
         target = None
 
-        for elevator_relation in elevator.getRelations(subj='-1', pred='skiros:hasA'):
-            obj = self.wmi.get_element(elevator_relation['dst'])
+        for door_relation in elevator.getRelations(subj='-1', pred='skiros:hasA'):
+            obj = self.wmi.get_element(door_relation['dst'])
 
             obj_type = self.wmi.get_super_class(obj.type)
             obj_region = obj.getRelations(subj=region.id, pred='skiros:contain', obj='-1')
@@ -79,16 +101,21 @@ class jp_pass_elevator(SkillBase):
                 continue
 
             if target is not None:
-                raise RuntimeError('Target can not be uniquely determined. Got "%s" and "%s" as possible candidates.' % (target.id, obj.id))
+                could_infer = False
+                msg = 'Target can not be uniquely determined. Got "%s" and "%s" as possible candidates.' % (target.id, obj.id)
+                break
 
             target = obj
 
         if target is None:
-            raise RuntimeError('Target not found.')
+            could_infer = False
+            msg = 'Target not found.'
 
-        return target
+        return could_infer, msg, target
     
     def infer_region(self, target):
+        could_infer = True
+        msg = ''
         region = None
 
         for target_relation in target.getRelations(pred='skiros:contain', obj='-1'):
@@ -98,11 +125,14 @@ class jp_pass_elevator(SkillBase):
                 continue
 
             if region is not None:
-                raise RuntimeError('Region can not be uniquely determined. Got "%s" and "%s" as possible candidates.' % (region.id, obj.id))
+                could_infer = False
+                msg = 'Region can not be uniquely determined. Got "%s" and "%s" as possible candidates.' % (region.id, obj.id)
+                break
             
             region = obj
 
         if region is None:
-            raise RuntimeError('Target region not found.')
-    
-        return region
+            could_infer = False
+            msg = 'Target region not found.'
+         
+        return could_infer, msg, region

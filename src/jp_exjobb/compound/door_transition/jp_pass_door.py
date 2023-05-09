@@ -38,7 +38,16 @@ class jp_pass_door(SkillBase):
         self.setDescription(JPPassDoor(), self.__class__.__name__)
     
     def expand(self, skill):
-        target = self.infer_target()
+        could_infer, msg, target = self.infer_target()
+
+        if not could_infer:
+            self.setProcessor(Sequential())
+            skill(
+                self.skill('FailSkill', 'fail_skill', specify={
+                    'msg': msg
+                })
+            )
+            return
 
         self.setProcessor(ParallelFf())
         skill(
@@ -59,6 +68,9 @@ class jp_pass_door(SkillBase):
         )
     
     def infer_target(self):
+        could_infer = True
+        msg = ''
+        
         door = self.params['Door'].value
         region = self.params['SourceRegion'].value
         target = None
@@ -72,11 +84,14 @@ class jp_pass_door(SkillBase):
                 continue
 
             if target is not None:
-                raise RuntimeError('Target can not be uniquely determined. Got "%s" and "%s" as possible candidates.' % (target.id, obj.id))
+                could_infer = False
+                msg = 'Target can not be uniquely determined. Got "%s" and "%s" as possible candidates.' % (target.id, obj.id)
+                break
 
             target = obj
 
         if target is None:
-            raise RuntimeError('Target not found.')
+            could_infer = False
+            msg = 'Target not found.'
 
-        return target
+        return could_infer, msg, target

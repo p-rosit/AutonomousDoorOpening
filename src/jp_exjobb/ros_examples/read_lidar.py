@@ -9,9 +9,9 @@ from sensor_msgs.msg import LaserScan
 class LidarReader():
     def __init__(self):
         self.b_scan = None
-        self.b_scan_sub = rospy.Subscriber('/b_scan_rep117', LaserScan, callback=self.b_scan_callback)
+        self.b_scan_sub = rospy.Subscriber('/b_scan', LaserScan, callback=self.b_scan_callback)
         self.f_scan = None
-        self.f_scan_sub = rospy.Subscriber('/f_scan_rep117', LaserScan, callback=self.f_scan_callback)
+        self.f_scan_sub = rospy.Subscriber('/f_scan', LaserScan, callback=self.f_scan_callback)
 
         self.nbr_of_msgs = 0
         self.start_time = rospy.Time.now()
@@ -33,7 +33,8 @@ class LidarReader():
         f_x = f_values * np.cos(f_angles)
         f_y = f_values * np.sin(f_angles)
         
-        plt.plot(f_x,f_y,'*')
+        plt.axis('equal')
+        plt.plot(f_x, f_y, '*')
         
         b_angle_min = self.b_scan.angle_min
         b_angle_max = self.b_scan.angle_max
@@ -42,7 +43,7 @@ class LidarReader():
         b_x = b_values * np.cos(b_angles)
         b_y = b_values * np.sin(b_angles)
 
-        plt.plot(-b_x,-b_y,'*')
+        plt.plot(-b_x, -b_y, '*')
         
         plt.draw()
         plt.pause(0.001)
@@ -55,7 +56,5 @@ if __name__ == '__main__':
 
     while True:
         rate.sleep()
-        #print('B_scan', read.b_scan)
-        #print('F_scan', read.f_scan)
         read.plot_lidar()
 
