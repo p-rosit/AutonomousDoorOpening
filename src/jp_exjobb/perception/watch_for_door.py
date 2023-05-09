@@ -50,7 +50,7 @@ class watch_for_door(PrimitiveThreadBase):
         frame = msg.header.frame_id
         
         for i in range(x.shape[0]):
-            x[i],y[i] = self.transform(frame, x[i], y[i])
+            x[i], y[i] = self.transform(frame, x[i], y[i])
 
         self.f = (x, y)
 
@@ -65,7 +65,7 @@ class watch_for_door(PrimitiveThreadBase):
         frame = msg.header.frame_id
         
         for i in range(x.shape[0]):
-            x[i],y[i] = self.transform(frame, x[i], y[i])
+            x[i], y[i] = self.transform(frame, x[i], y[i])
 
         self.b = (x, y)
     
@@ -97,6 +97,6 @@ class watch_for_door(PrimitiveThreadBase):
         plt.plot(f_x, f_y, '*')
         plt.plot(b_x, b_y, '*')
         
-        plt.savefig('~/penis.png')
+        plt.savefig('~/duploproject/penis.png')
         
         return self.success(':)')
