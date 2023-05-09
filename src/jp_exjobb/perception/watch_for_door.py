@@ -21,21 +21,69 @@ class watch_for_door(PrimitiveThreadBase):
         self.setDescription(WatchForDoor(), self.__class__.__name__)
     
     def onInit(self):
+        self.hz = 50
+        self.rate = rospy.Rate(self.hz)
         return True
 
     def preStart(self):
         return True
 
     def check_lidar(self, msg):
+        #check your mom
         pass
 
     def run(self):
-        left_corner, right_corner = self.infer_corners()
+        could_infer, msg, left_corner, right_corner = self.infer_corners()
+        if not could_infer:
+            return self.fail(msg, -1)
+        
+        ind = 0
+        while ind < self.hz:    
+            if self.dooropen:
+                self.status = 'Door gay'
+            else:
+                self.status = 'Door still in closet'
+            ind +=1
+            self.rate.sleep()
         
         return self.success('No obstruction was detected.')
 
     def infer_corners(self):
-        return 0, 0
+        door = self.params['Region Transition'].value
+
+        could_infer = True
+        msg = ''
+        left_corner = None
+        right_corner = None
+
+        for door_relation in door.getRelations(subj='-1', pred='skiros:hasA'):
+            obj = self.wmi.get_element(door_relation['dst'])
+
+            if obj.type != 'scalable:RegionCorner':
+                continue
+
+            if obj.label == 'Left':
+                if left_corner is not None:
+                    could_infer = False
+                    msg = 'there is more then one left corner'
+                    break
+                left_corner = obj
+            elif obj.label == 'Right':
+                if right_corner is not None:
+                    could_infer = False
+                    msg = 'there is more then one right corner'
+                    break
+                right_corner = obj
+            else:
+                could_infer = False
+                msg = 'unsupported laber for corners'
+                break
+
+        if None in [left_corner, right_corner]:
+            could_infer = False
+            msg = 'no corners of door :('
+
+        return could_infer, msg, left_corner, right_corner
 
 class watchwatchwatch(PrimitiveThreadBase):
     def createDescription(self):
