@@ -14,14 +14,30 @@ import matplotlib.pylab as plt
 class WatchForDoor(SkillDescription):
     def createDescription(self):
         self.addParam('Region Transition', Element('scalable:RegionTransition'), ParamTypes.Required)
-        # self.addParam('Left Point', Element('scalable:'), ParamTypes.Inferred)
-        # self.addParam('Right Point', Element('scalable:'), ParamTypes.Inferred)
-        self.addParam('time_limit', 1000.0, ParamTypes.Required)
-
-        # self.addParam(self.getRelationCond('DoorHasLeft', 'skiros:hasA', 'Region Transition', 'Left Point', True))
-        # self.addParam(self.getRelationCond('DoorHasRight', 'skiros:hasA', 'Region Transition', 'Right Point', True))
+        self.addParam('time_limit', 10.0, ParamTypes.Required)
 
 class watch_for_door(PrimitiveThreadBase):
+    def createDescription(self):
+        self.setDescription(WatchForDoor(), self.__class__.__name__)
+    
+    def onInit(self):
+        return True
+
+    def preStart(self):
+        return True
+
+    def check_lidar(self, msg):
+        pass
+
+    def run(self):
+        left_corner, right_corner = self.infer_corners()
+        
+        return self.success('No obstruction was detected.')
+
+    def infer_corners(self):
+        return 0, 0
+
+class watchwatchwatch(PrimitiveThreadBase):
     def createDescription(self):
         self.setDescription(WatchForDoor(), self.__class__.__name__)
 
