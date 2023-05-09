@@ -13,10 +13,6 @@ class LidarReader():
         self.f_scan = None
         self.f_scan_sub = rospy.Subscriber('/f_scan', LaserScan, callback=self.f_scan_callback)
 
-        self.nbr_of_msgs = 0
-        self.start_time = rospy.Time.now()
-        self.interval = rospy.Duration(30)
-
     def b_scan_callback(self, msg):
         self.b_scan = msg
 
@@ -43,7 +39,7 @@ class LidarReader():
         b_x = b_values * np.cos(b_angles)
         b_y = b_values * np.sin(b_angles)
 
-        plt.plot(-b_x, -b_y, '*')
+        # plt.plot(-b_x, -b_y, '*')
         
         plt.draw()
         plt.pause(0.001)
