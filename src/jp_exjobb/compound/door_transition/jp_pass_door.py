@@ -56,7 +56,7 @@ class jp_pass_door(SkillBase):
             # }),
             self.skill('JPDrive', 'jp_drive', specify={
                 'Heron': self.params['Heron'].value,
-                'Target': target
+                'TargetLocation': target
             })
             # self.skill('JPDrive', 'jp_move_heron', specify={
             #     'Heron': self.params['Heron'].value,
