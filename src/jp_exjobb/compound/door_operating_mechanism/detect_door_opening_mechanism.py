@@ -16,7 +16,7 @@ class JPDetectDOM(SkillDescription):
         self.addParam('JointState', Element('scalable:ControllerState'), ParamTypes.Inferred)
         self.addParam('Target', Element('scalable:JointState'), ParamTypes.Inferred)
 
-        self.addPreCondition(self.getRelationCond('DOMHasLookout', 'skiros:hasA', 'DOM', 'Target', True))
+        self.addPreCondition(self.getRelationCond('DOMHasLookout', 'skiros:hasA', 'Mechanism', 'Target', True))
         self.addPreCondition(self.getPropCond('JointStateController', 'skiros:Value', 'JointState', '=', 'joint_config', True))
 
 

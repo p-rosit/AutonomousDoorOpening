@@ -54,17 +54,17 @@ class jp_pass_door(SkillBase):
             # self.skill('WatchForDoor', 'watch_for_door', specify={
             #     'time_limit': 1000.0
             # }),
-            # self.skill('JPDrive', 'jp_drive', specify={
-            #     'Heron': self.params['Heron'].value,
-            #     'Target': target
-            # })
-            self.skill('JPDrive', 'jp_move_heron', specify={
+            self.skill('JPDrive', 'jp_drive', specify={
                 'Heron': self.params['Heron'].value,
-                'TargetLocation': target
-            }),
-            self.skill('SuccessSkill', 'success_skill', specify={
-                'msg': 'Going through door...'
+                'Target': target
             })
+            # self.skill('JPDrive', 'jp_move_heron', specify={
+            #     'Heron': self.params['Heron'].value,
+            #     'TargetLocation': target
+            # }),
+            # self.skill('SuccessSkill', 'success_skill', specify={
+            #     'msg': 'Going through door...'
+            # })
         )
     
     def infer_target(self):
