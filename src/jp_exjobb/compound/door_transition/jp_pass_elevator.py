@@ -25,10 +25,12 @@ class JPPassElevatorTemp(SkillDescription):
 class JPPassElevator(SkillDescription):
     def createDescription(self):
         self.addParam('Heron', Element('cora:Robot'), ParamTypes.Required)
+        self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Inferred)
         self.addParam('Elevator', Element('scalable:Elevator'), ParamTypes.Required)
         self.addParam('Source', Element('scalable:Location'), ParamTypes.Inferred)
         self.addParam('SourceRegion', Element('scalable:Region'), ParamTypes.Inferred)
 
+        self.addPreCondition(self.getRelationCond('HeronHasArm', 'skiros:hasA', 'Heron', 'Arm', True))
         self.addPreCondition(self.getRelationCond('HeronAtSource', 'skiros:at', 'Heron', 'Source', True))
         self.addPreCondition(self.getRelationCond('RegionHasSource', 'skiros:contain', 'SourceRegion', 'Source', True))
         self.addPreCondition(self.getRelationCond('RegionHasElevator', 'scalable:hasDoor', 'SourceRegion', 'Elevator', True))
@@ -63,6 +65,7 @@ class jp_pass_elevator(SkillBase):
 
         if target_region.type == 'scalable:Region':
             skill(
+                self.skill('JPArm', 'jp_arm_home'),
                 self.skill('JPDrive', 'jp_move_heron', specify={
                     'Heron': self.params['Heron'].value,
                     'TargetLocation': target

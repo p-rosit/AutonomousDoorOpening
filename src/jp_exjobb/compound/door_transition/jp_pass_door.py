@@ -25,10 +25,12 @@ class JPPassDoorTemp(SkillDescription):
 class JPPassDoor(SkillDescription):
     def createDescription(self):
         self.addParam('Heron', Element('cora:Robot'), ParamTypes.Required)
+        self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Inferred)
         self.addParam('Door', Element('scalable:Door'), ParamTypes.Required)
         self.addParam('Source', Element('scalable:Location'), ParamTypes.Inferred)
         self.addParam('SourceRegion', Element('scalable:Region'), ParamTypes.Inferred)
 
+        self.addPreCondition(self.getRelationCond('HeronHasArm', 'skiros:hasA', 'Heron', 'Arm', True))
         self.addPreCondition(self.getRelationCond('HeronAtSource', 'skiros:at', 'Heron', 'Source', True))
         self.addPreCondition(self.getRelationCond('RegionHasSource', 'skiros:contain', 'SourceRegion', 'Source', True))
         self.addPreCondition(self.getRelationCond('RegionHasDoor', 'scalable:hasDoor', 'SourceRegion', 'Door', True))
@@ -54,6 +56,7 @@ class jp_pass_door(SkillBase):
             # self.skill('WatchForDoor', 'watch_for_door', specify={
             #     'time_limit': 1000.0
             # }),
+            self.skill('JPArm', 'jp_arm_home'),
             self.skill('JPDrive', 'jp_drive', specify={
                 'Heron': self.params['Heron'].value,
                 'TargetLocation': target
