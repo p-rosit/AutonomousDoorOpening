@@ -14,7 +14,12 @@ import matplotlib.pylab as plt
 class WatchForDoor(SkillDescription):
     def createDescription(self):
         self.addParam('Region Transition', Element('scalable:RegionTransition'), ParamTypes.Required)
-        self.addParam('time_limit', 10.0, ParamTypes.Required)
+        self.addParam('Region Bounding Box', Element('scalable:RegionBB'), ParamTypes.Inferred)
+        self.addParam('Time Limit (s)', 100000.0, ParamTypes.Required)
+        self.addParam('Door Open Threshold', 0.3, ParamTypes.Required)
+        self.addParam('Door Closed Threshold', 0.8, ParamTypes.Required)
+
+        self.addPreCondition(self.getRelationCond('DoorHasBB', 'skiros:hasA', 'Region Transition', 'Region Bounding Box', True))
 
 class watch_for_door(PrimitiveThreadBase):
     def createDescription(self):
@@ -26,64 +31,108 @@ class watch_for_door(PrimitiveThreadBase):
         return True
 
     def preStart(self):
+        self.door_open = False
+        self.door_intermediate = False
+        self.door_bb = self.params['Region Bounding Box'].value  # big boobed door
+        self.open_threshold = self.params['Door Open Threshold'].value
+        self.closed_threshold = self.params['Door Closed Threshold'].value
+
+        self.bb_frame = self.door_bb.getProperty('skiros:FrameId').value
+        self.bb_sizex = self.door_bb.getProperty('skiros:SizeX').value / 2
+        self.bb_sizey = self.door_bb.getProperty('skiros:SizeY').value / 2
+
+        self.preempted = False
+        self.running = True
         return True
 
     def check_lidar(self, msg):
-        #check your mom
-        pass
+        if self.running:
+            frame, pts = self.lidar2points(msg)
+            pts = self.transform_lidar(frame, pts)
+
+            pts = pts[
+                (-self.bb_sizex < pts[0]) & (pts[0] < self.bb_sizex) &
+                (-self.bb_sizey < pts[1]) & (pts[1] < self.bb_sizey)
+            ]
+
+            # TODO: RanSaC inside bounding box to detect line and throw away points not on door
+            # Problem with that kind of outlier rejection: doors that are not straight, elevator door...
+
+            if pts.shape[0] < 5:
+                self.door_intermediate = True
+                return
+
+            pts = pts[0].reshape((-1, 1))
+            dists = np.abs(pts - pts.T)
+            
+            dists[dists == 0.0] = np.inf
+            min_dist = dists.min()
+
+            filled_area = min_dist * pts.shape[0] / self.bb_sizex
+
+            if self.closed_threshold < filled_area:
+                self.door_open = False
+                self.door_intermediate = False
+                return
+            
+            if filled_area < self.open_threshold:
+                self.door_open = True
+                self.door_intermediate = False
+                return
+            
+            self.door_intermediate = True
+
+    def transform_lidar(self, frame, pts):
+        x, y = pts
+        for i in range(pts.shape[1]):
+            pose = PoseStamped()
+            pose.header.frame_id = frame
+            pose.header.stamp = rospy.Time(0)
+            pose.pose.position.x = x[i]
+            pose.pose.position.y = y[i]
+            
+            pose = self.buffer.transform(pose, self.bb_frame, rospy.Duration(1))
+            
+            x[i] = pose.pose.position.x
+            y[i] = pose.pose.position.y
+        
+        return x,y
+
+    def lidar2points(self, msg):
+        angle_min = msg.angle_min
+        angle_max = msg.angle_max
+        lengths = np.array(msg.ranges)
+        angles = np.linspace(angle_min, angle_max, num=lengths.shape[0])
+        x = lengths * np.cos(angles)
+        y = lengths * np.sin(angles)
+        pts = np.zeros((2, x.shape[0]))
+        pts[0] = x #ting 1
+        pts[1] = y #ting 2
+
+        return msg.header.frame_id, pts
+
+    def onPreempt(self):
+        self.preempted = True
+        return self.fail('Watching preempted.', -1)
 
     def run(self):
-        could_infer, msg, left_corner, right_corner = self.infer_corners()
-        if not could_infer:
-            return self.fail(msg, -1)
-        
         ind = 0
-        while ind < self.hz:    
-            if self.dooropen:
-                self.status = 'Door gay'
+        while ind < self.hz and not self.preempted:
+            if not self.door_intermediate:
+                if self.door_open:
+                    self.status = 'Door gay'
+                else:
+                    self.status = 'Door still in closet'
             else:
-                self.status = 'Door still in closet'
+                self.status = 'Door sexuality unknown'
             ind +=1
             self.rate.sleep()
         
-        return self.success('No obstruction was detected.')
+        return self.success('Door stayed open during skill.')
 
-    def infer_corners(self):
-        door = self.params['Region Transition'].value
-
-        could_infer = True
-        msg = ''
-        left_corner = None
-        right_corner = None
-
-        for door_relation in door.getRelations(subj='-1', pred='skiros:hasA'):
-            obj = self.wmi.get_element(door_relation['dst'])
-
-            if obj.type != 'scalable:RegionCorner':
-                continue
-
-            if obj.label == 'Left':
-                if left_corner is not None:
-                    could_infer = False
-                    msg = 'there is more then one left corner'
-                    break
-                left_corner = obj
-            elif obj.label == 'Right':
-                if right_corner is not None:
-                    could_infer = False
-                    msg = 'there is more then one right corner'
-                    break
-                right_corner = obj
-            else:
-                could_infer = False
-                msg = 'unsupported laber for corners'
-                break
-
-        if None in [left_corner, right_corner]:
-            could_infer = False
-            msg = 'no corners of door :('
-
-        return could_infer, msg, left_corner, right_corner
+    def onEnd(self):
+        self.running = False
+        return True
 
 class watchwatchwatch(PrimitiveThreadBase):
     def createDescription(self):
