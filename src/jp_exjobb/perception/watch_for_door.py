@@ -75,7 +75,7 @@ class watch_for_door(PrimitiveThreadBase):
 
             pts = pts[0].reshape((-1, 1))
             dists = np.abs(pts - pts.T)
-            dists = dists[:]
+            dists = dists.reshape(-1)
 
             dists[dists == 0.0] = np.inf
             dists = np.sort(dists)
