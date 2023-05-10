@@ -68,17 +68,10 @@ class watch_for_door(PrimitiveThreadBase):
             # TODO: RanSaC inside bounding box to detect line and throw away points not on door
             # Problem with that kind of outlier rejection: doors that are not straight, elevator door...
 
-            print('---')
-            print(x_in_door.sum())
-            print(y_in_door.sum())
-            print((x_in_door & y_in_door).sum())
-            print(x.shape)
-
             if x.shape[0] < 5:
-                self.door_intermediate = True
                 return
 
-            print('shape', pts.shape)
+            # print('shape', pts.shape)
 
             pts = pts[0].reshape((-1, 1))
             dists = np.abs(pts - pts.T)
@@ -86,11 +79,11 @@ class watch_for_door(PrimitiveThreadBase):
             dists[dists == 0.0] = np.inf
             min_dist = dists.min()
 
-            print('dist', min_dist)
+            # print('dist', min_dist)
 
             filled_area = min_dist * pts.shape[0] / self.bb_sizex
 
-            print('area', filled_area)
+            # print('area', filled_area)
 
             if self.closed_threshold < filled_area:
                 self.door_open = False
@@ -102,7 +95,7 @@ class watch_for_door(PrimitiveThreadBase):
                 self.door_intermediate = False
                 return
             
-            self.door_intermediate = True
+            # self.door_intermediate = True
 
     def transform_lidar(self, frame, pts):
         x, y = pts
@@ -142,13 +135,13 @@ class watch_for_door(PrimitiveThreadBase):
 
         ind = 0
         while ind < self.hz * time_limit and not self.preempted:
-            if not self.door_intermediate:
-                if self.door_open:
-                    self.status = 'Door gay'
-                else:
-                    self.status = 'Door still in closet'
+            # if not self.door_intermediate:
+            if self.door_open:
+                self.status = 'Door gay'
             else:
-                self.status = 'Door sexuality unknown'
+                self.status = 'Door still in closet'
+            # else:
+            #     self.status = 'Door sexuality unknown'
             ind +=1
             self.rate.sleep()
         
