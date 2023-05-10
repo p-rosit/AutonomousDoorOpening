@@ -56,7 +56,7 @@ class watch_for_door(PrimitiveThreadBase):
             frame, pts = self.lidar2points(msg)
             pts = self.transform_lidar(frame, pts)
 
-            print(pts)
+            # print(pts)
 
             x, y = pts
             x_in_door = (-self.bb_sizex < pts[0]) & (pts[0] < self.bb_sizex)
@@ -67,6 +67,12 @@ class watch_for_door(PrimitiveThreadBase):
 
             # TODO: RanSaC inside bounding box to detect line and throw away points not on door
             # Problem with that kind of outlier rejection: doors that are not straight, elevator door...
+
+            print('---')
+            print(x_in_door.sum())
+            print(y_in_door.sum())
+            print((x_in_door & y_in_door).sum())
+            print(x.shape)
 
             if x.shape[0] < 5:
                 self.door_intermediate = True
