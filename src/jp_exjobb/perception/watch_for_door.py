@@ -71,7 +71,7 @@ class watch_for_door(PrimitiveThreadBase):
             if x.shape[0] < 5:
                 return
 
-            # print('shape', pts.shape)
+            print('shape', pts.shape)
 
             pts = pts[0].reshape((-1, 1))
             dists = np.abs(pts - pts.T)
@@ -79,11 +79,11 @@ class watch_for_door(PrimitiveThreadBase):
             dists[dists == 0.0] = np.inf
             min_dist = dists.min()
 
-            # print('dist', min_dist)
+            print('dist', min_dist)
 
             filled_area = min_dist * pts.shape[0] / self.bb_sizex
 
-            # print('area', filled_area)
+            print('area', filled_area)
 
             if self.closed_threshold < filled_area:
                 self.door_open = False
