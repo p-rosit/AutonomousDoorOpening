@@ -56,10 +56,6 @@ class watch_for_door(PrimitiveThreadBase):
             frame, pts = self.lidar2points(msg)
             pts = self.transform_lidar(frame, pts)
 
-            # print(pts[0] < self.bb_sizex)
-            # print((-self.bb_sizex < pts[0]) & (pts[0] < self.bb_sizex) &
-            #     (-self.bb_sizey < pts[1]) & (pts[1] < self.bb_sizey))
-
             pts = pts[:, (
                 (-self.bb_sizex < pts[0]) & (pts[0] < self.bb_sizex) &
                 (-self.bb_sizey < pts[1]) & (pts[1] < self.bb_sizey)
@@ -72,13 +68,19 @@ class watch_for_door(PrimitiveThreadBase):
                 self.door_intermediate = True
                 return
 
+            print('shape', pts.shape)
+
             pts = pts[0].reshape((-1, 1))
             dists = np.abs(pts - pts.T)
-            
+
             dists[dists == 0.0] = np.inf
             min_dist = dists.min()
 
+            print('dist', min_dist)
+
             filled_area = min_dist * pts.shape[0] / self.bb_sizex
+
+            print('area', filled_area)
 
             if self.closed_threshold < filled_area:
                 self.door_open = False
