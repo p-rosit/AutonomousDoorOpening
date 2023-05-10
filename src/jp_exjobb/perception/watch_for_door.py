@@ -15,7 +15,7 @@ class WatchForDoor(SkillDescription):
     def createDescription(self):
         self.addParam('Region Transition', Element('scalable:RegionTransition'), ParamTypes.Required)
         self.addParam('Region Bounding Box', Element('scalable:RegionBB'), ParamTypes.Inferred)
-        self.addParam('Time Limit (s)', 100000.0, ParamTypes.Required)
+        self.addParam('Time Limit (s)', 3600.0, ParamTypes.Required)
         self.addParam('Door Open Threshold', 0.3, ParamTypes.Required)
         self.addParam('Door Closed Threshold', 0.8, ParamTypes.Required)
 
@@ -30,6 +30,10 @@ class watch_for_door(PrimitiveThreadBase):
         self.rate = rospy.Rate(self.hz)
         self.running = False
         self.sub = rospy.Subscriber('/scan', LaserScan, callback=self.check_lidar)
+
+        self.buffer = tf2_ros.Buffer()  # type: any
+        self.tf_listener = tf2_ros.TransformListener(self.buffer)
+        
         return True
 
     def preStart(self):
