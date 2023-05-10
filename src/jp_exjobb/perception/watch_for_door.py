@@ -90,7 +90,7 @@ class watch_for_door(PrimitiveThreadBase):
             dist = dists[0]
 
             print('min', dists[0])
-            print('mid', dists[dist.shape[0] // 2])
+            print('mid', dists[dists.shape[0] // 2])
 
             # print('dist', dist)
 
@@ -148,13 +148,13 @@ class watch_for_door(PrimitiveThreadBase):
 
         ind = 0
         while ind < self.hz * time_limit and not self.preempted:
-            # if not self.door_intermediate:
-            if self.door_open:
-                self.status = 'Door gay'
+            if not self.door_intermediate:
+                if self.door_open:
+                    self.status = 'Door gay'
+                else:
+                    self.status = 'Door still in closet'
             else:
-                self.status = 'Door still in closet'
-            # else:
-            #     self.status = 'Door sexuality unknown'
+                self.status = 'Door sexuality unknown'
             ind +=1
             self.rate.sleep()
         
