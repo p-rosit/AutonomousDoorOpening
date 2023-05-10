@@ -69,6 +69,7 @@ class watch_for_door(PrimitiveThreadBase):
             # Problem with that kind of outlier rejection: doors that are not straight, elevator door...
 
             if x.shape[0] < 5:
+                self.door_open = True
                 return
 
             print('shape', pts.shape)
@@ -79,7 +80,8 @@ class watch_for_door(PrimitiveThreadBase):
 
             dists[dists == 0.0] = np.inf
             dists = np.sort(dists)
-            dist = dists[dists.shape[0] // 2]
+            dist = dists[dists.shape[0] // 10]
+            # dist = dists[0]
 
             print('dist', dist)
 
