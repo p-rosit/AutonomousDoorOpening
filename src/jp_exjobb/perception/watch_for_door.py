@@ -28,6 +28,7 @@ class watch_for_door(PrimitiveThreadBase):
     def onInit(self):
         self.hz = 50
         self.rate = rospy.Rate(self.hz)
+        self.running = False
         self.sub = rospy.Subscriber('/scan', LaserScan, callback=self.check_lidar)
         return True
 
