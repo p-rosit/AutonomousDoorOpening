@@ -77,11 +77,12 @@ class watch_for_door(PrimitiveThreadBase):
             dists = np.abs(pts - pts.T)
 
             dists[dists == 0.0] = np.inf
-            min_dist = dists.min()
+            dists = np.sort(dists)
+            dist = dists[dists.shape[0] // 2]
 
-            print('dist', min_dist)
+            print('dist', dist)
 
-            filled_area = min_dist * pts.shape[0] / self.bb_sizex
+            filled_area = dist * pts.shape[0] / self.bb_sizex
 
             print('area', filled_area)
 
