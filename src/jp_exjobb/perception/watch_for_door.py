@@ -81,7 +81,7 @@ class watch_for_door(PrimitiveThreadBase):
 
             print('shape', door_pts.shape)
 
-            dists = cdist(door_pts, door_pts)
+            dists = cdist(door_pts.T, door_pts.T)
             dists = dists.reshape(-1)
 
             dists[dists == 0.0] = np.inf
