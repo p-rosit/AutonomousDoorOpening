@@ -86,6 +86,7 @@ class watch_for_door(PrimitiveThreadBase):
 
             dists[dists == 0.0] = np.inf
             dists = np.sort(dists)
+            print(dists)
             dist = dists[dists.shape[0] // 2]
             dist = dists[0]
 
