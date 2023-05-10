@@ -9,6 +9,7 @@ import tf2_ros
 from tf2_geometry_msgs import PoseStamped
 
 import numpy as np
+from scipy.spatial.distance import cdist
 import matplotlib.pylab as plt
 
 class WatchForDoor(SkillDescription):
@@ -44,6 +45,7 @@ class watch_for_door(PrimitiveThreadBase):
         self.closed_threshold = self.params['Door Closed Threshold'].value
 
         self.bb_frame = self.door_bb.getProperty('skiros:FrameId').value
+        self.bb_size = self.door_bb.getProperty('skiros:Size').value / 2
         self.bb_sizex = self.door_bb.getProperty('skiros:SizeX').value / 2
         self.bb_sizey = self.door_bb.getProperty('skiros:SizeY').value / 2
 
@@ -59,33 +61,40 @@ class watch_for_door(PrimitiveThreadBase):
             # print(pts)
 
             x, y = pts
-            x_in_door = (-self.bb_sizex < pts[0]) & (pts[0] < self.bb_sizex)
-            y_in_door = (-self.bb_sizey < pts[1]) & (pts[1] < self.bb_sizey)
+            x_in_door = (-self.bb_sizex < x) & (x < self.bb_sizex)
+            y_in_door = (-self.bb_sizey < y) & (y < self.bb_sizey)
+            x_by_door = (-self.bb_sizex - self.bb_size < x) & (x < self.bb_sizex + self.bb_size)
 
-            x = x[x_in_door & y_in_door]
-            # y = y[x_in_door & y_in_door]
+            door_frame_pts = pts[:, x_by_door & ~(x_in_door & y_in_door)]
+            door_pts = pts[:, x_in_door & y_in_door]
 
             # TODO: RanSaC inside bounding box to detect line and throw away points not on door
             # Problem with that kind of outlier rejection: doors that are not straight, elevator door...
 
-            if x.shape[0] < 5:
+            if door_frame_pts.shape[1] < 2:
+                return
+
+            if door_pts.shape[1] < 5:
+                self.door_intermediate = False
                 self.door_open = True
                 return
 
-            print('shape', pts.shape)
+            print('shape', door_pts.shape)
 
-            pts = pts[0].reshape((-1, 1))
-            dists = np.abs(pts - pts.T)
+            dists = cdist(door_pts, door_pts)
             dists = dists.reshape(-1)
 
             dists[dists == 0.0] = np.inf
             dists = np.sort(dists)
-            dist = dists[dists.shape[0] // 10]
-            # dist = dists[0]
+            dist = dists[dists.shape[0] // 2]
+            dist = dists[0]
 
-            print('dist', dist)
+            print('min', dists[0])
+            print('mid', dists[dist.shape[0] // 2])
 
-            filled_area = dist * pts.shape[0] / self.bb_sizex
+            # print('dist', dist)
+
+            filled_area = dist * door_pts.shape[1] / self.bb_sizex
 
             print('area', filled_area)
 
@@ -99,7 +108,7 @@ class watch_for_door(PrimitiveThreadBase):
                 self.door_intermediate = False
                 return
             
-            # self.door_intermediate = True
+            self.door_intermediate = True
 
     def transform_lidar(self, frame, pts):
         x, y = pts
