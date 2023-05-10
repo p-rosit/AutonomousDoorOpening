@@ -23,6 +23,7 @@ class MoveArmOnSphere(SkillDescription):
         self.addParam('Origin Min Radius', 0.5, ParamTypes.Optional)
         self.addParam('Max Angle (deg)', 50.0, ParamTypes.Required)
         self.addParam('Angle Interval (deg)', 10.0, ParamTypes.Optional)
+        self.addParam('Goal Wait (s)', 20.0, ParamTypes.Optional)
 
         self.addParam('Compliant', Element('scalable:ControllerState'), ParamTypes.Inferred)
         self.addPreCondition(self.getPropCond('CompliantController', 'skiros:Value', 'Compliant', '=', 'compliant', True))
@@ -51,7 +52,7 @@ class move_arm_on_sphere(SkillBase):
             }),
             self.skill(ParallelFs())(
                 self.skill('TimerSkill', 'timer_skill', specify={
-                    'Max Time (s)': 15.0
+                    'Max Time (s)': self.params['Goal Wait (s)'].value
                 }),
                 self.skill('JPMoveArm', 'jp_move_arm', specify={
                     'Target': self.params['Pose'].value,
