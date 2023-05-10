@@ -56,6 +56,10 @@ class watch_for_door(PrimitiveThreadBase):
             frame, pts = self.lidar2points(msg)
             pts = self.transform_lidar(frame, pts)
 
+            print(pts[0] < self.bb_sizex)
+            print((-self.bb_sizex < pts[0]) & (pts[0] < self.bb_sizex) &
+                (-self.bb_sizey < pts[1]) & (pts[1] < self.bb_sizey))
+
             pts = pts[(
                 (-self.bb_sizex < pts[0]) & (pts[0] < self.bb_sizex) &
                 (-self.bb_sizey < pts[1]) & (pts[1] < self.bb_sizey)
