@@ -28,6 +28,7 @@ class watch_for_door(PrimitiveThreadBase):
     def onInit(self):
         self.hz = 50
         self.rate = rospy.Rate(self.hz)
+        self.sub = rospy.Subscriber('/scan', LaserScan, callback=self.check_lidar)
         return True
 
     def preStart(self):
@@ -117,7 +118,7 @@ class watch_for_door(PrimitiveThreadBase):
 
     def run(self):
         time_limit = self.params['Time Limit (s)'].value
-        
+
         ind = 0
         while ind < self.hz * time_limit and not self.preempted:
             if not self.door_intermediate:
