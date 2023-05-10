@@ -58,15 +58,17 @@ class watch_for_door(PrimitiveThreadBase):
 
             print(pts)
 
-            pts = pts[:, (
-                (-self.bb_sizex < pts[0]) & (pts[0] < self.bb_sizex) &
-                (-self.bb_sizey < pts[1]) & (pts[1] < self.bb_sizey)
-            )]
+            x, y = pts
+            x_in_door = (-self.bb_sizex < pts[0]) & (pts[0] < self.bb_sizex)
+            y_in_door = (-self.bb_sizey < pts[1]) & (pts[1] < self.bb_sizey)
+
+            x = x[x_in_door & y_in_door]
+            # y = y[x_in_door & y_in_door]
 
             # TODO: RanSaC inside bounding box to detect line and throw away points not on door
             # Problem with that kind of outlier rejection: doors that are not straight, elevator door...
 
-            if pts.shape[0] < 5:
+            if x.shape[0] < 5:
                 self.door_intermediate = True
                 return
 
