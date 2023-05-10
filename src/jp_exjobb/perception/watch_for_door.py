@@ -116,8 +116,10 @@ class watch_for_door(PrimitiveThreadBase):
         return self.fail('Watching preempted.', -1)
 
     def run(self):
+        time_limit = self.params['Time Limit (s)'].value
+        
         ind = 0
-        while ind < self.hz and not self.preempted:
+        while ind < self.hz * time_limit and not self.preempted:
             if not self.door_intermediate:
                 if self.door_open:
                     self.status = 'Door gay'
