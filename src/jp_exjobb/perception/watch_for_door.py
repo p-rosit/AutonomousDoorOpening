@@ -85,15 +85,12 @@ class watch_for_door(PrimitiveThreadBase):
             dists = dists.reshape(-1)
 
             dists[dists == 0.0] = np.inf
-            dists = np.sort(dists)
-            print(dists)
-            dist = dists[dists.shape[0] // 2]
-            dist = dists[0]
+            dist = dists.min()
 
-            print('min', dists[0])
-            print('mid', dists[dists.shape[0] // 2])
+            # print('min', dists[0])
+            # print('mid', dists[dists.shape[0] // 2])
 
-            # print('dist', dist)
+            print('dist', dist)
 
             filled_area = dist * door_pts.shape[1] / self.bb_sizex
 
