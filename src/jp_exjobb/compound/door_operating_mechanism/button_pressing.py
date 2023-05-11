@@ -26,7 +26,7 @@ class button_press(SkillBase):
         self.setDescription(ButtonPress(), self.__class__.__name__)
 
     def expand(self, skill):
-        compliant = self.parasm['Compliant'].value
+        compliant = self.params['Compliant'].value
 
         self.setProcessor(Sequential())
         skill(
