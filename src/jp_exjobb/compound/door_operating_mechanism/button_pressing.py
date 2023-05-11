@@ -93,7 +93,7 @@ class GeneratePressPose(SkillDescription):
 
         self.addPreCondition(self.getRelationCond('ArmHasEE', 'skiros:hasA', 'Arm', 'EE', True))
         self.addPreCondition(self.getRelationCond('EEHasGripper', 'skiros:hasA', 'EE', 'Gripper', True))
-        self.addPreCondition(self.getRelationCond('GripperHasPose', 'skiros:contain', 'Gripper', 'Pose', True))
+        self.addPreCondition(self.getPropCond('ScenePose', 'skiros:Value', 'Pose', '=', 'scene_point', True))
 
 class generate_press_pose(PrimitiveThreadBase):
     def createDescription(self):

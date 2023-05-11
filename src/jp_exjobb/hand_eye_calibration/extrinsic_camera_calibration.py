@@ -1,4 +1,4 @@
-from skiros2_skill.core.skill import SkillBase, SkillDescription, Sequential, Loop
+from skiros2_skill.core.skill import SkillBase, SkillDescription, Sequential, Loop, Selector
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 
@@ -26,11 +26,13 @@ class HandEyeCalibration(SkillDescription):
         self.addParam('Max Poses', 10, ParamTypes.Required)
         self.addParam('EE has Camera', True, ParamTypes.Required)
 
+        self.addParam('JointController', Element('scalable:ControllerState'), ParamTypes.Inferred)
         self.addParam('CompliantController', Element('scalable:ControllerState'), ParamTypes.Inferred)
 
         self.addPreCondition(self.getRelationCond('ArmHasEE', 'skiros:hasA', 'Arm', 'EE', True))
         self.addPreCondition(self.getRelationCond('EEhasGripper', 'skiros:hasA', 'EE', 'Gripper', True))
-        self.addPreCondition(self.getPropCond('Controller', 'skiros:Value', 'CompliantController', '=', 'compliant', True))
+        self.addPreCondition(self.getPropCond('JointController', 'skiros:Value', 'JointController', '=', 'joint_config', True))
+        self.addPreCondition(self.getPropCond('CompliantController', 'skiros:Value', 'CompliantController', '=', 'compliant', True))
 
 class hand_eye_calibration(SkillBase):
     def createDescription(self):
@@ -39,7 +41,7 @@ class hand_eye_calibration(SkillBase):
     def expand(self, skill):
         self.setProcessor(Sequential())
         skill(
-            # self.skill('StartHandEyeCalibration', 'start_hand_eye_calibration'),
+            self.skill('StartHandEyeCalibration', 'start_hand_eye_calibration'),
             self.skill(Loop(self.params['Max Poses'].value))(
                 self.skill('MoveArmOnSphere', 'move_arm_on_sphere', specify={
                     'Base': self.params['Base'].value,
@@ -51,26 +53,33 @@ class hand_eye_calibration(SkillBase):
                     'Angle Interval (deg)': self.params['Angle Interval (deg)'].value,
                     'Goal Wait (s)': 20.0
                 }),
-                # self.skill('JPMoveArm', 'jp_move_arm', specify={
-                #     'Target': self.params['Gripper'].value,
-                #     'Mode': self.params['CompliantController'].value
-                # }),
+                self.skill('JPSwitchController', 'jp_switch_controller', specify={
+                    'Arm': self.params['Arm'].value,
+                    'Controller': self.params['JointController'].value
+                }),
                 self.skill('WaitForVelocity', 'wait_for_velocity', specify={
                     'Thing': self.params['Gripper'].value,
                     'Time Limit (s)': 10.0,
                     'Position Threshold': self.params['Velocity Threshold'].value,
                     'Orientation Threshold': 1e-4
                 }),
-                self.skill('JPPoseEstimation', 'jp_pose_estimation', specify={
-                    'Camera': self.params['Camera'].value,
-                    'Object': self.params['Marker'].value,
-                    'Detection Time (s)': self.params['Detection Time (s)'].value,
-                    'Image Capture Rate (hz)': self.params['Capture Rate (hz)'].value
-                }),
-                # self.skill('JPSaveHandEyeCalibData', 'jp_save_hand_eye_calib_data', specify={
-                #     'Hand': self.params['EE'].value,
-                #     'Marker': self.params['Marker'].value
-                # })
+                self.skill(Selector())(
+                    self.skill(Sequential())(
+                        self.skill('JPPoseEstimation', 'jp_pose_estimation', specify={
+                            'Camera': self.params['Camera'].value,
+                            'Object': self.params['Marker'].value,
+                            'Detection Time (s)': self.params['Detection Time (s)'].value,
+                            'Image Capture Rate (hz)': self.params['Capture Rate (hz)'].value
+                        }),
+                        self.skill('JPSaveHandEyeCalibData', 'jp_save_hand_eye_calib_data', specify={
+                            'Hand': self.params['EE'].value,
+                            'Marker': self.params['Marker'].value
+                        })
+                    ),
+                    self.skill('SuccessSkill', 'success_skill', specify={
+                        'msg': 'Marker was not visible at the specified pose.'
+                    })
+                )
             ),
             # self.skill('ComputeHandEyeCalibration', 'compute_hand_eye_calibration', specify={
             #     'Camera': self.params['Camera'].value,

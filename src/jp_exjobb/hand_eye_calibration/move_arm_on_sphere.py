@@ -13,7 +13,7 @@ class MoveArmOnSphere(SkillDescription):
 
         self.addPreCondition(self.getRelationCond('ArmHasEE', 'skiros:hasA', 'Arm', 'EE', True))
         self.addPreCondition(self.getRelationCond('EEHasGripper', 'skiros:hasA', 'EE', 'Gripper', True))
-        self.addPreCondition(self.getRelationCond('GripperHasPose', 'skiros:contain', 'Gripper', 'Pose', True))
+        self.addPreCondition(self.getPropCond('ScenePose', 'skiros:Value', 'Pose', '=', 'scene_point', True))
 
         self.addParam('Direction Up', [0.0, 0.0, -1.0], ParamTypes.Optional)
         self.addParam('Direction Frame', '', ParamTypes.Optional)

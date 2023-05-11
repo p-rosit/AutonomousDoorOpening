@@ -37,8 +37,9 @@ class wait_for_velocity(PrimitiveThreadBase):
         while ind < self.hz * time_limit:
             ind += 1
             pos_vel, quat_vel = self.approx_velocity()
-            self.status = 'Pos: %f, Quat: %f' % (pos_vel, quat_vel)
-            print(pos_vel, quat_vel)
+
+            if pos_vel != 0.0 and quat_vel != 0.0:
+                self.status = 'Pos: %f, Quat: %f' % (pos_vel, quat_vel)
 
             if (pos_vel != 0.0 and quat_vel != 0.0 and
                 pos_vel < pos_th and quat_vel < quat_th):
