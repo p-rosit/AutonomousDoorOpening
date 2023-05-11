@@ -40,9 +40,10 @@ class wait_for_door(PrimitiveThreadBase):
 
             if self.door_state_known:
                 if self.door_open:
-                    self.count += 1
+                    count += 1
+                    self.status = 'Door open %.2f.' % self.door_fill
                 else:
-                    self.count = 0
+                    count = 0
                     self.status = 'Door closed %.2f.' % self.door_fill
             else:
                 self.status = 'Door sexuality unknown, %.2f.' % self.door_fill

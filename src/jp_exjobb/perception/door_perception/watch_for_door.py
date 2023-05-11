@@ -44,6 +44,7 @@ class watch_for_door(PrimitiveThreadBase):
                     self.status = 'Door open %.2f.' % self.door_fill
                 else:
                     count += 1
+                    self.status = 'Door closed %.2f.' % self.door_fill
             else:
                 self.status = 'Door sexuality unknown, %.2f.' % self.door_fill
             

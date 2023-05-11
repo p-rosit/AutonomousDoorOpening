@@ -32,7 +32,7 @@ class DoorStateClassifier:
         return self.door_state_known, self.door_open
     
     def get_filled_value(self):
-        return self.door_fill / 2
+        return self.door_fill
 
     def check_lidar(self, msg):
         frame, pts = self.lidar2points(msg)
