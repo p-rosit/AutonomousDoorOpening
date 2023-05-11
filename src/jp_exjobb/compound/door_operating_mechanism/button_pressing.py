@@ -26,6 +26,8 @@ class button_press(SkillBase):
         self.setDescription(ButtonPress(), self.__class__.__name__)
 
     def expand(self, skill):
+        compliant = self.parasm['Compliant'].value
+
         self.setProcessor(Sequential())
         skill(
             # Generate pre press pose
@@ -40,7 +42,7 @@ class button_press(SkillBase):
             # Move to pre press pose
             self.skill('JPMoveArm','jp_move_arm',
                 remap={'Target': 'Pose'},
-                specify={'Mode': self.params['Compliant'].value}
+                specify={'Mode': compliant}
             ),
 
             # Generate press pose
@@ -56,7 +58,7 @@ class button_press(SkillBase):
             self.skill(ParallelFs())(
                 self.skill('JPMoveArm','jp_move_arm',
                     remap={'Target': 'Pose'},
-                    specify={'Mode': self.params['Compliant'].value}
+                    specify={'Mode': compliant}
                 ),
                 self.skill('WaitForForce', 'wait_for_force',
                     specify={'Force': self.params['Force'].value}
@@ -77,7 +79,7 @@ class button_press(SkillBase):
             # Move back to pre press pose
             self.skill('JPMoveArm','jp_move_arm',
                 remap={'Target': 'Pose'},
-                specify={'Mode': self.params['Compliant'].value}
+                specify={'Mode': compliant}
             )
         )
 
