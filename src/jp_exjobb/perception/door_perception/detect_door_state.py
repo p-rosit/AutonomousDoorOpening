@@ -14,6 +14,7 @@ class DetectDoorState(SkillDescription):
         self.addParam('Time Limit (s)', 3600.0, ParamTypes.Required)
         self.addParam('Door Open Threshold', 0.3, ParamTypes.Required)
         self.addParam('Door Closed Threshold', 0.8, ParamTypes.Required)
+        self.addParam('Time', 0.2, ParamTypes.Optional)
 
         self.addPreCondition(self.getRelationCond('DoorHasBB', 'skiros:hasA', 'Region Transition', 'Region Bounding Box', True))
 

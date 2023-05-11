@@ -29,6 +29,8 @@ class watch_for_door(PrimitiveThreadBase):
         return self.fail('Watching preempted.', -1)
 
     def run(self):
+        count = 0
+        amount = self.hz * self.params['Time'].value
         time_limit = self.params['Time Limit (s)'].value
 
         ind = 0
@@ -38,14 +40,19 @@ class watch_for_door(PrimitiveThreadBase):
 
             if self.door_state_known:
                 if self.door_open:
+                    count = 0
                     self.status = 'Door open %.2f.' % self.door_fill
                 else:
-                    return self.fail('Door closed.', -1)
+                    count += 1
             else:
                 self.status = 'Door sexuality unknown, %.2f.' % self.door_fill
+            
+            if amount < count:
+                return self.fail('Door closed.', -1)
+        
             ind +=1
             self.rate.sleep()
-        
+
         return self.success('Door peeping concluded, door did not close.')
 
     def onEnd(self):
