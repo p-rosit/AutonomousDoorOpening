@@ -2,25 +2,25 @@ from skiros2_skill.core.skill import SkillBase, SkillDescription, Sequential, Pa
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 
-class JPPassDoorTemp(SkillDescription):
-    def createDescription(self):
-        self.addParam('Heron', Element('cora:Robot'), ParamTypes.Required)
-        self.addParam('Door', Element('scalable:Door'), ParamTypes.Required)
-        self.addParam('Source', Element('scalable:Location'), ParamTypes.Inferred)
-        self.addParam('Target', Element('scalable:Location'), ParamTypes.Inferred)
-        self.addParam('SourceRegion', Element('scalable:Region'), ParamTypes.Inferred)
-        self.addParam('TargetRegion', Element('scalable:Region'), ParamTypes.Inferred)
+# class JPPassDoorTemp(SkillDescription):
+#     def createDescription(self):
+#         self.addParam('Heron', Element('cora:Robot'), ParamTypes.Required)
+#         self.addParam('Door', Element('scalable:Door'), ParamTypes.Required)
+#         self.addParam('Source', Element('scalable:Location'), ParamTypes.Inferred)
+#         self.addParam('Target', Element('scalable:Location'), ParamTypes.Inferred)
+#         self.addParam('SourceRegion', Element('scalable:Region'), ParamTypes.Inferred)
+#         self.addParam('TargetRegion', Element('scalable:Region'), ParamTypes.Inferred)
 
-        self.addPreCondition(self.getRelationCond('HeronAtSource', 'skiros:at', 'Heron', 'Source', True))
-        self.addPreCondition(self.getRelationCond('HeronNotAtTarget', 'skiros:at', 'Heron', 'Target', False))
-        self.addPreCondition(self.getRelationCond('SourceInRegion', 'skiros:contain', 'SourceRegion', 'Source', True))
-        self.addPreCondition(self.getRelationCond('TargetInRegion', 'skiros:contain', 'TargetRegion', 'Target', True))
-        self.addPreCondition(self.getRelationCond('SourceInRegion', 'skiros:contain', 'SourceRegion', 'Target', False))
-        self.addPreCondition(self.getRelationCond('TargetInRegion', 'skiros:contain', 'TargetRegion', 'Source', False))
+#         self.addPreCondition(self.getRelationCond('HeronAtSource', 'skiros:at', 'Heron', 'Source', True))
+#         self.addPreCondition(self.getRelationCond('HeronNotAtTarget', 'skiros:at', 'Heron', 'Target', False))
+#         self.addPreCondition(self.getRelationCond('SourceInRegion', 'skiros:contain', 'SourceRegion', 'Source', True))
+#         self.addPreCondition(self.getRelationCond('TargetInRegion', 'skiros:contain', 'TargetRegion', 'Target', True))
+#         self.addPreCondition(self.getRelationCond('SourceInRegion', 'skiros:contain', 'SourceRegion', 'Target', False))
+#         self.addPreCondition(self.getRelationCond('TargetInRegion', 'skiros:contain', 'TargetRegion', 'Source', False))
 
-        self.addPreCondition(self.getRelationCond('SourceRegionHasDoor', 'scalable:hasDoor', 'SourceRegion', 'Door', True))
-        self.addPreCondition(self.getRelationCond('TargetRegionHasDoor', 'scalable:hasDoor', 'TargetRegion', 'Door', True))
-        self.addPreCondition(self.getRelationCond('DoorHasWaypoint', 'skiros:hasA', 'Door', 'Target', True))
+#         self.addPreCondition(self.getRelationCond('SourceRegionHasDoor', 'scalable:hasDoor', 'SourceRegion', 'Door', True))
+#         self.addPreCondition(self.getRelationCond('TargetRegionHasDoor', 'scalable:hasDoor', 'TargetRegion', 'Door', True))
+#         self.addPreCondition(self.getRelationCond('DoorHasWaypoint', 'skiros:hasA', 'Door', 'Target', True))
 
 class JPPassDoor(SkillDescription):
     def createDescription(self):
@@ -51,23 +51,21 @@ class jp_pass_door(SkillBase):
             )
             return
 
-        self.setProcessor(ParallelFf())
+        self.setProcessor(Sequential())
         skill(
-            # self.skill('WatchForDoor', 'watch_for_door', specify={
-            #     'time_limit': 1000.0
-            # }),
-            self.skill('JPArm', 'jp_arm_home'),
-            self.skill('JPDrive', 'jp_drive', specify={
-                'Heron': self.params['Heron'].value,
-                'TargetLocation': target
-            })
-            # self.skill('JPDrive', 'jp_move_heron', specify={
-            #     'Heron': self.params['Heron'].value,
-            #     'TargetLocation': target
-            # }),
-            # self.skill('SuccessSkill', 'success_skill', specify={
-            #     'msg': 'Going through door...'
-            # })
+            self.skill('JPArm', 'jp_arm_home', specify={
+                'Arm': self.params['Arm'].value
+            }),
+            self.skill(ParallelFf())(
+                self.skill('WatchForDoor', 'watch_for_door', specify={
+                    'time_limit': 3600.0
+                }),
+                self.skill('JPDrive', 'jp_drive', specify={
+                    'Heron': self.params['Heron'].value,
+                    'TargetLocation': target
+                })
+            )
+            # check if door closed during drive
         )
     
     def infer_target(self):

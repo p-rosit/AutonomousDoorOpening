@@ -45,7 +45,7 @@ class jp_pose_estimation(PrimitiveThreadBase):
         self.buffer = tf2_ros.Buffer()  # type: any
         self.tf_listener = tf2_ros.TransformListener(self.buffer)
 
-            # Dict of size and matching aruco dict to detect.
+        # Dict of size and matching aruco dict to detect.
         self.ds = {4: cv.aruco.getPredefinedDictionary(cv.aruco.DICT_4X4_1000),
                    5: cv.aruco.getPredefinedDictionary(cv.aruco.DICT_5X5_1000),
                    6: cv.aruco.getPredefinedDictionary(cv.aruco.DICT_6X6_1000),

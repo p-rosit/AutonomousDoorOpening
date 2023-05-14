@@ -18,7 +18,7 @@ class HandEyeCalibration(SkillDescription):
         self.addParam('Max Angle (deg)', 40.0, ParamTypes.Required)
         self.addParam('Angle Interval (deg)', 10.0, ParamTypes.Optional)
 
-        self.addParam('Velocity Threshold', 1e-4, ParamTypes.Optional)
+        self.addParam('Velocity Threshold', 3e-4, ParamTypes.Optional)
 
         self.addParam('Detection Time (s)', 1.0, ParamTypes.Optional)
         self.addParam('Capture Rate (hz)', 15, ParamTypes.Optional)
@@ -38,10 +38,25 @@ class hand_eye_calibration(SkillBase):
     def createDescription(self):
         self.setDescription(HandEyeCalibration(), self.__class__.__name__)
     
+    # skiros:OrientationW "-0.3657361936740062"^^xsd:float ;
+    # skiros:OrientationX "0.9306675937131903"^^xsd:float ;
+    # skiros:OrientationY "-0.00866394453415788"^^xsd:float ;
+    # skiros:OrientationZ "0.004450024051497509"^^xsd:float ;
+    
+    # skiros:PositionX "0.06984320245101241"^^xsd:float ;
+    # skiros:PositionY "0.05043679833557958"^^xsd:float ;
+    # skiros:PositionZ "-0.09155969684345365"^^xsd:float ;
+
     def expand(self, skill):
         self.setProcessor(Sequential())
         skill(
-            self.skill('StartHandEyeCalibration', 'start_hand_eye_calibration'),
+            self.skill('StartHandEyeCalibration', 'start_hand_eye_calibration', specify={
+                'Camera': self.params['Camera'].value,
+                'Hand': self.params['Gripper'].value,
+                'Marker': self.params['Marker'].value,
+                'Base': self.params['Base'].value,
+                'EE has Camera': self.params['EE has Camera'].value
+            }),
             self.skill(Loop(self.params['Max Poses'].value))(
                 self.skill('MoveArmOnSphere', 'move_arm_on_sphere', specify={
                     'Base': self.params['Base'].value,
@@ -61,7 +76,7 @@ class hand_eye_calibration(SkillBase):
                     'Thing': self.params['Gripper'].value,
                     'Time Limit (s)': 10.0,
                     'Position Threshold': self.params['Velocity Threshold'].value,
-                    'Orientation Threshold': 1e-4
+                    'Orientation Threshold': 3e-4
                 }),
                 self.skill(Selector())(
                     self.skill(Sequential())(
@@ -71,26 +86,13 @@ class hand_eye_calibration(SkillBase):
                             'Detection Time (s)': self.params['Detection Time (s)'].value,
                             'Image Capture Rate (hz)': self.params['Capture Rate (hz)'].value
                         }),
-                        self.skill('JPSaveHandEyeCalibData', 'jp_save_hand_eye_calib_data', specify={
-                            'Hand': self.params['EE'].value,
-                            'Marker': self.params['Marker'].value
-                        })
+                        self.skill('SaveHandEyeCalibrationPoses', 'save_hand_eye_calibration_poses')
                     ),
                     self.skill('SuccessSkill', 'success_skill', specify={
                         'msg': 'Marker was not visible at the specified pose.'
                     })
                 )
             ),
-            # self.skill('ComputeHandEyeCalibration', 'compute_hand_eye_calibration', specify={
-            #     'Camera': self.params['Camera'].value,
-            #     'Hand': self.params['EE'].value,
-            #     'Marker': self.params['Marker'].value,
-            #     'EE has camera': self.params['EE has Camera'].value
-            # }),
-            # self.skill('ComputeHandEyeCalibration', 'save_hand_eye_calibration', specify={
-            #     'Camera': self.params['Camera'].value,
-            #     'Hand': self.params['EE'].value,
-            #     'Marker': self.params['Marker'].value,
-            #     'EE has camera': self.params['EE has Camera'].value 
-            # })
+            self.skill('ComputeHandEyeCalibration', 'compute_hand_eye_calibration'),
+            self.skill('ComputeHandEyeCalibration', 'save_hand_eye_calibration')
         )

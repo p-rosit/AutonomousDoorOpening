@@ -4,77 +4,27 @@ from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.world_element import Element
 
 import rospy
-from std_msgs.msg import Empty, String, Bool
-from geometry_msgs.msg import PoseStamped
+
+import numpy as np
+import cv2 as cv
+from scipy.spatial.transform import Rotation as rot
 
 class ComputeHandEyeCalibration(SkillDescription):
     def createDescription(self):
-        self.addParam('Camera', Element('skiros:DepthCamera'), ParamTypes.Required)
-        self.addParam('Hand', Element('sumo:Object'), ParamTypes.Required)
-        self.addParam('Marker', Element('sumo:Object'), ParamTypes.Required)
-        self.addParam('EE has camera', True, ParamTypes.Required)
+        self.addParam(('start_hand_eye_calibration', 'started'), Element('skiros:Parameter'), ParamTypes.SharedInput)
+        self.addParam(('save_hand_eye_calibration_poses', 'hand_poses'), Element('skiros:Parameter'), ParamTypes.SharedInput)
+        self.addParam(('save_hand_eye_calibration_poses', 'marker_poses'), Element('skiros:Parameter'), ParamTypes.SharedInput)
+        self.addParam('computed_transformation', Element('skiros:TransformationPose'), ParamTypes.SharedOutput)
 
 class compute_hand_eye_calibration(PrimitiveThreadBase):
     def createDescription(self):
         self.setDescription(ComputeHandEyeCalibration(), self.__class__.__name__)
     
     def onInit(self):
-        self.running = False
-        self.start_reply = False
-        self.started = False
         self.preempted = False
-        self.compute_pub = rospy.Subscriber('/hand_eye_calibration/camera_pose', PoseStamped, queue_size=1)
-        self.hand_pub = rospy.Subscriber('/hand_eye_calibration/hand_pose', PoseStamped, callback=self.get_hand_pose)
-        self.mark_pub = rospy.Subscriber('/hand_eye_calibration/marker_pose', PoseStamped, callback=self.get_marker_pose)
-
-        self.start_pub = rospy.Publisher('/hand_eye_calibration/is_started', Empty, queue_size=1)
-        self.start_sub = rospy.Subscriber('/hand_eye_calibration/is_started_reply', Bool, callback=self.start_callback)
-        self.clear_sub = rospy.Subscriber('/hand_eye_calibration/clear', Empty, callback=self.clear)
-        self.reply_pub = rospy.Publisher('/hand_eye_calibration/reply', String, queue_size=10)
-
-        self.poses = []
-        self.active_poses = [None, None]
         return True
 
-    def start_callback(self, msg):
-        if self.running:
-            self.start_reply = True
-            self.started = msg.data
-
-    def get_hand_pose(self, msg):
-        if self.active_poses[0] is None:
-            self.active_poses[0] = msg.pose
-        else:
-            raise RuntimeError('Two hand poses were received but no marker pose.')
-        
-        if self.active_poses[1] is not None:
-            self.poses.append(self.active_poses)
-            self.active_poses = [None, None]
-            print(self.poses)
-    
-        self.reply_pub.publish(String('hand'))
-
-    def get_marker_pose(self, msg):
-        if self.active_poses[1] is None:
-            self.active_poses[1] = msg.pose
-        else:
-            raise RuntimeError('Two marker poses were received but no hand pose.')
-        
-        if self.active_poses[0] is not None:
-            self.poses.append(self.active_poses)
-            self.active_poses = [None, None]
-            print(self.poses)
-        
-        self.reply_pub.publish(String('mark'))
-
-    def clear(self, _):
-        self.poses = []
-        self.active_poses = [None, None]
-
     def preStart(self):
-        self.running = True
-        self.started = False
-        self.reply_received = False
         self.preempted = False
         return True
 
@@ -83,22 +33,68 @@ class compute_hand_eye_calibration(PrimitiveThreadBase):
         return self.fail('Computation of hand eye calibration was preempted.', -1)
 
     def run(self):
-        self.start_pub.publish(Empty())
-        
-        ind = 0
-        while ind < self.hz * self.time_limit and not self.start_reply:
-            ind += 1
-            self.rate.sleep()
-        
-        if not self.start_reply:
-            return self.fail('Hand eye calibration server did not respond.')
-        if not self.started:
-            return self.fail('Hand eye calibration has not been started.')
-        
-        # compute parameters
+        hand_root = self.params['hand_poses'].value
+        marker_root = self.params['marker_poses'].value
 
-        return self.success('Hand eye calibration computation timed out.')
+        hand_poses = self.get_poses_from(hand_root)
+        marker_poses = self.get_poses_from(marker_root)
 
-    def onEnd(self):
-        self.running = False
-        return True
+        hand_poses = self.transform_poses(hand_poses)
+        marker_poses = self.transform_poses(marker_poses)
+
+        poses = self.merge_poses(hand_poses, marker_poses)
+
+        if self.preempted:
+            return self.fail('Hand eye calibration preempted.', -1)
+
+        hand_pos = np.array([pos for (pos, _), _ in poses])
+        hand_rot = np.array([mat for (_, mat), _ in poses])
+        marker_pos = np.array([pos for _, (pos, _) in poses])
+        marker_rot = np.array([mat for _, (_, mat) in poses])
+
+        camera_rot, camera_pos = cv.calibrateHandEye(hand_rot, hand_pos, marker_rot, marker_pos)
+
+        pose = self.params['computed_transformation'].value
+        pose.setData(':Position', camera_pos.reshape(-1))
+        pose.setData(':Orientation', rot.from_matrix(camera_rot).as_quat())
+
+        self.set_shared_output('computed_transformation', pose)
+
+        return self.success('Hand eye calibration computed.')
+    
+    def merge_poses(self, hand_poses, marker_poses):
+        merged_poses = []
+
+        for key, pose in hand_poses.items():
+            if key not in marker_poses:
+                rospy.logwarn('Hand pose is missing its buddy, are illegal things happening or is SkiROS lagging?')
+                continue
+
+            merged_poses.append((pose, marker_poses[key]))
+
+        for key in marker_poses:
+            if key not in hand_poses:
+                rospy.logwarn('Marker pose is missing its buddy, are illegal things happening or is SkiROS lagging?')
+
+        return merged_poses
+
+    def transform_poses(self, poses):
+        new_poses = dict()
+        for key, (pos, quat) in poses.items():
+            mat = rot.from_quat(quat).as_matrix()
+            new_poses[key] = (pos, mat)
+        return new_poses
+
+    def get_poses_from(self, root):
+        poses = dict()
+        for root_relation in root.getRelations(subj='-1', pred='skiros:hasParam'):
+            pose = self.wmi.get_element(root_relation['dst'])
+
+            if pose.type != 'skiros:TransformationPose':
+                rospy.logwarn('Found an unexpected element. Are you doing something illegal by writing poses to this parameter (%s) on your own?' % root.label)
+                continue
+
+            time_stamp = pose.getProperty('skiros:Value').value
+            poses[time_stamp] = pose.getData(':Pose')
+
+        return poses

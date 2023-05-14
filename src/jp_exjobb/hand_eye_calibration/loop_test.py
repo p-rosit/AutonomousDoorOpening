@@ -31,3 +31,22 @@ class loop_test(SkillBase):
                 })
             )
         )
+
+class TT(SkillDescription):
+    def createDescription(self):
+        self.addParam('Hand', Element('sumo:Object'), ParamTypes.Required)
+        self.addParam('Marker', Element('sumo:Object'), ParamTypes.Required)
+
+class tt(SkillBase):
+    def createDescription(self):
+        self.setDescription(TT(), self.__class__.__name__)
+    
+    def expand(self, skill):
+        self.setProcessor(Sequential())
+        skill(
+            self.skill('StartHandEyeCalibration', ''),
+            self.skill('JPSaveHandEyeCalibData', '', specify={
+                'Hand': self.params['Hand'].value,
+                'Marker': self.params['Marker'].value
+            })
+        )
