@@ -52,11 +52,6 @@ class compute_hand_eye_calibration(PrimitiveThreadBase):
         marker_pos = np.array([pos for _, (pos, _) in poses])
         marker_rot = np.array([mat for _, (_, mat) in poses])
 
-        # print(hand_pos)
-        # print(hand_rot)
-        # print(marker_pos)
-        # print(marker_rot)
-
         camera_rot, camera_pos = cv.calibrateHandEye(hand_rot, hand_pos, marker_rot, marker_pos, method=cv.CALIB_HAND_EYE_TSAI)
         # camera_rot, camera_pos = cv.calibrateHandEye(hand_rot, hand_pos, marker_rot, marker_pos, method=cv.CALIB_HAND_EYE_DANIILIDIS)
 
