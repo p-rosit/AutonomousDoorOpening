@@ -8,7 +8,7 @@ class SaveHandEyeCalibration(SkillDescription):
         self.addParam(('start_hand_eye_calibration', 'started'), Element('skiros:Parameter'), ParamTypes.SharedInput)
         self.addParam(('save_hand_eye_calibration_poses', 'hand_poses'), Element('skiros:Parameter'), ParamTypes.SharedInput)
         self.addParam(('save_hand_eye_calibration_poses', 'marker_poses'), Element('skiros:Parameter'), ParamTypes.SharedInput)
-        # self.addParam(('compute_hand_eye_calibration', 'computed_transformation'), Element('skiros:TransformationPose'), ParamTypes.SharedInput)
+        self.addParam(('compute_hand_eye_calibration', 'computed_transformation'), Element('skiros:TransformationPose'), ParamTypes.SharedInput, remap='ppp')
 
 class save_hand_eye_calibration(PrimitiveThreadBase):
     def createDescription(self):
@@ -31,10 +31,10 @@ class save_hand_eye_calibration(PrimitiveThreadBase):
         start.setProperty('skiros:Value', False)
         self.wmi.update_element_properties(start)
 
-        # computed_pose = self.params['computed_transformation'].value
-        # print('PPOSE -----------------------')
-        # print(computed_pose.getData(':Pose'))
-        # print('-----------------------------')
+        computed_pose = self.params['ppp'].value
+        print('PPOSE -----------------------')
+        print(computed_pose.getData(':Pose'))
+        print('-----------------------------')
 
         poses = self.params['hand_poses'].value
         for pose in poses.getRelations(subj='-1', pred='skiros:hasParam'):
