@@ -96,12 +96,11 @@ class compute_hand_eye_calibration(PrimitiveThreadBase):
         for root_relation in root.getRelations(subj='-1', pred='skiros:hasParam'):
             pose = self.wmi.get_element(root_relation['dst'])
 
-            if pose.type != 'skiros:TransformationPose':
+            if pose.type != 'skiros:Parameter':
                 rospy.logwarn('Found an unexpected element. Are you doing something illegal by writing poses to this parameter (%s) on your own?' % root.label)
                 continue
 
             time_stamp = pose.getProperty('skiros:Value').value
-            print(time_stamp)
             poses[time_stamp] = getPose(pose)
 
         return poses
