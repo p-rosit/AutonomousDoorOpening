@@ -75,7 +75,7 @@ class save_hand_eye_calibration_poses(PrimitiveThreadBase):
         setPose(hand, hand_pose)
         hand.setProperty('skiros:Value', time_stamp)
 
-        marker = Element('skiros:TransformationPose')
+        marker = Element('skiros:Parameter')
         setPose(marker, marker_pose)
         marker.setProperty('skiros:Value', time_stamp)
         
