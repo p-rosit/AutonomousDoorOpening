@@ -66,17 +66,17 @@ class save_hand_eye_calibration_poses(PrimitiveThreadBase):
         hand_pose = hand_param.getData(':PoseStampedMsg')
         marker_pose = marker_param.getData(':PoseStampedMsg')
 
-        camera_frame = camera.getProperty('skiros:FrameId').value
+        camera_frame = camera.getProperty('skiros:BaseFrameId').value
         hand_pose = self.buffer.transform(hand_pose, 'map', rospy.Duration(1))
         marker_pose = self.buffer.transform(marker_pose, camera_frame, rospy.Duration(1))
 
         time_stamp = rospy.Time.now().to_sec()
-        hand = Element('skiros:TransformationPose')
-        hand.setData(':PoseStampedMsg', hand_pose)
+        hand = Element('skiros:Parameter')
+        setPose(hand, hand_pose)
         hand.setProperty('skiros:Value', time_stamp)
 
         marker = Element('skiros:TransformationPose')
-        marker.setData(':PoseStampedMsg', marker_pose)
+        setPose(marker, marker_pose)
         marker.setProperty('skiros:Value', time_stamp)
         
         hand.addRelation(subj=hand_poses.id, predicate='skiros:hasParam', obj='-1')
@@ -86,3 +86,13 @@ class save_hand_eye_calibration_poses(PrimitiveThreadBase):
         self.wmi.add_element(marker)
 
         return self.success('Saved poses.')
+
+def setPose(element, pose):
+    element.setProperty('skiros:PositionX', pose.pose.position.x)
+    element.setProperty('skiros:PositionY', pose.pose.position.y)
+    element.setProperty('skiros:PositionZ', pose.pose.position.z)
+    
+    element.setProperty('skiros:OrientationX', pose.pose.orientation.x)
+    element.setProperty('skiros:OrientationY', pose.pose.orientation.y)
+    element.setProperty('skiros:OrientationZ', pose.pose.orientation.z)
+    element.setProperty('skiros:OrientationW', pose.pose.orientation.w)

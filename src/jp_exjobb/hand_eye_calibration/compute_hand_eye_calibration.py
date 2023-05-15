@@ -96,6 +96,20 @@ class compute_hand_eye_calibration(PrimitiveThreadBase):
                 continue
 
             time_stamp = pose.getProperty('skiros:Value').value
-            poses[time_stamp] = pose.getData(':Pose')
+            poses[time_stamp] = getPose(pose)
 
         return poses
+
+def getPose(element):
+    position = (
+        element.getProperty('skiros:PositionX').value,
+        element.getProperty('skiros:PositionY').value,
+        element.getProperty('skiros:PositionZ').value
+    )
+    orientation = (
+        element.getProperty('skiros:OrientationX').value,
+        element.getProperty('skiros:OrientationY').value,
+        element.getProperty('skiros:OrientationZ').value,
+        element.getProperty('skiros:OrientationW').value
+    )
+    return position, orientation
