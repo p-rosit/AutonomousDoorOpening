@@ -54,14 +54,14 @@ class save_hand_eye_calibration_poses(PrimitiveThreadBase):
             return self.fail('Hand eye calibration has not been started.')
 
         self.status = 'Saving poses.'
-        hand_poses = self.get_shared_output('hand_poses')
-        marker_poses = self.get_shared_output('marker_poses')
+        hand_poses = self.getOutput('hand_poses')
+        marker_poses = self.getOutput('marker_poses')
         if hand_poses is None:
             hand_poses = self.params['hand_poses'].value
-            hand_poses = self.set_shared_output('hand_poses', hand_poses)
+            hand_poses = self.setOutput('hand_poses', hand_poses)
         if marker_poses is None:
             marker_poses = self.params['marker_poses'].value
-            marker_poses = self.set_shared_output('marker_poses', marker_poses)
+            marker_poses = self.setOutput('marker_poses', marker_poses)
 
         hand_pose = hand_param.getData(':PoseStampedMsg')
         marker_pose = marker_param.getData(':PoseStampedMsg')

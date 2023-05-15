@@ -24,10 +24,10 @@ class test1_skill(PrimitiveBase):
         out = self.params['named_output'].value
         out.setProperty('scalable:PositionKnown', self.params['Name'].value)
 
-        self.set_shared_output('named_output', out)
+        self.setOutput('named_output', out)
         
         camera = self.params['Camera'].value
-        self.set_shared_output('Linked', camera)
+        self.setOutput('Linked', camera)
 
         return self.success('1')
 
