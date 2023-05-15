@@ -3,8 +3,6 @@ from skiros2_skill.core.skill import SkillDescription
 from skiros2_common.core.params import ParamTypes
 from skiros2_common.core.world_element import Element
 
-import rospy
-
 class SaveHandEyeCalibration(SkillDescription):
     def createDescription(self):
         self.addParam(('start_hand_eye_calibration', 'started'), Element('skiros:Parameter'), ParamTypes.SharedInput)
