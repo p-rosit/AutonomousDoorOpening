@@ -66,7 +66,7 @@ class save_hand_eye_calibration_poses(PrimitiveThreadBase):
         hand_pose = hand_param.getData(':PoseStampedMsg')
         marker_pose = marker_param.getData(':PoseStampedMsg')
 
-        camera_frame = camera.getProperty('skiros:BaseFrameId').value
+        camera_frame = camera.getProperty('skiros:FrameId').value
         hand_pose = self.buffer.transform(hand_pose, 'map', rospy.Duration(1))
         marker_pose = self.buffer.transform(marker_pose, camera_frame, rospy.Duration(1))
 

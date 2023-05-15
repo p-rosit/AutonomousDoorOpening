@@ -52,7 +52,7 @@ class compute_hand_eye_calibration(PrimitiveThreadBase):
         marker_pos = np.array([pos for _, (pos, _) in poses])
         marker_rot = np.array([mat for _, (_, mat) in poses])
 
-        camera_rot, camera_pos = cv.calibrateHandEye(hand_rot, hand_pos, marker_rot, marker_pos)
+        camera_rot, camera_pos = cv.calibrateHandEye(hand_rot, hand_pos, marker_rot, marker_pos, method=cv.CALIB_HAND_EYE_TSAI)
 
         pose = self.params['computed_transformation'].value
         pose.setData(':Position', camera_pos.reshape(-1))
