@@ -58,6 +58,9 @@ class compute_hand_eye_calibration(PrimitiveThreadBase):
         pose.setData(':Position', camera_pos.reshape(-1))
         pose.setData(':Orientation', rot.from_matrix(camera_rot).as_quat())
 
+        print('Position:', camera_pos.reshape(-1))
+        print('Orientat:', rot.from_matrix(camera_rot).as_quat())
+
         self.setOutput('computed_transformation', pose)
 
         return self.success('Hand eye calibration computed.')
