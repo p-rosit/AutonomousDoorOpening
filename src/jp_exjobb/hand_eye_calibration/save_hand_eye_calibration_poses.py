@@ -91,7 +91,12 @@ def setPose(element, pose):
     element.setProperty('skiros:PositionX', pose.pose.position.x)
     element.setProperty('skiros:PositionY', pose.pose.position.y)
     element.setProperty('skiros:PositionZ', pose.pose.position.z)
-    
+
+    if pose.pose.orientation.w < 0:
+        pose.pose.orientation.x = -x
+        pose.pose.orientation.y = -y
+        pose.pose.orientation.z = -z
+        pose.pose.orientation.w = -w
     element.setProperty('skiros:OrientationX', pose.pose.orientation.x)
     element.setProperty('skiros:OrientationY', pose.pose.orientation.y)
     element.setProperty('skiros:OrientationZ', pose.pose.orientation.z)
