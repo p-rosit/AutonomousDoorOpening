@@ -44,11 +44,11 @@ class save_hand_eye_calibration_poses(PrimitiveThreadBase):
         marker_param = self.params['marker'].value
 
         if not start.hasProperty('skiros:Value', not_none=True):
-            return self.fail('Start object does not have the correct parameter.')
+            return self.fail('Start object does not have the correct parameter.', -1)
         
         started = start.getProperty('skiros:Value').value
         if not started:
-            return self.fail('Hand eye calibration has not been started.')
+            return self.fail('Hand eye calibration has not been started.', -1)
 
         self.status = 'Saving poses.'
         hand_poses = self.getOutput('hand_poses')
