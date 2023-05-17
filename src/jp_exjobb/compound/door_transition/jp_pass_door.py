@@ -39,14 +39,15 @@ class jp_pass_door(SkillBase):
             self.skill(ParallelFf())(
                 self.skill('DetectDoorState', 'watch_for_door', specify={
                     'Region Transition': self.params['Door'].value,
-                    'Time Limit (s)': 3600.0
+                    'Time Limit (s)': 3600.0,
+                    'Fail On Close': True
                 }),
                 self.skill('JPDrive', 'jp_drive', specify={
                     'Heron': self.params['Heron'].value,
                     'TargetLocation': target
                 })
             ),
-            self.skill('DoorOpened', 'door_opened')
+            self.skill('DoorClosed', 'door_closed')
         )
     
     def infer_target(self):

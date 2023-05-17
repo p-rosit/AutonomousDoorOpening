@@ -1,4 +1,4 @@
-from skiros2_skill.core.skill import SkillBase, SkillDescription, Sequential
+from skiros2_skill.core.skill import SkillBase, SkillDescription, Sequential, RetryOnFail, InferInvalid, ParallelFf
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 
@@ -46,23 +46,44 @@ class jp_pass_elevator(SkillBase):
         if target_region.type == 'scalable:Region':
             skill(
                 self.skill('JPArm', 'jp_arm_home'),
+                self.skill(RetryOnFail(Sequential()))(
+                    self.skill('DetectDoorState', 'watch_for_door', specify={
+                        'Region Transition': self.params['Elevator'].value,
+                        'Time Limit (s)': 3600.0,
+                        'Fail On Close': False
+                    }),
+                    self.skill('DetectDoorState', 'wait_for_door', specify={
+                        'Region Transition': self.params['Elevator'].value,
+                        'Time Limit (s)': 3600.0
+                    })
+                    # detect what floor we are on and if it is the correct floor
+                ),
+                # switch map
                 self.skill('JPDrive', 'jp_move_heron', specify={
                     'Heron': self.params['Heron'].value,
                     'TargetLocation': target
-                }),
-                self.skill('SuccessSkill', 'success_skill', specify={
-                    'msg': 'Go from room to elevator'
                 })
             )
         elif target_region.type == 'scalable:ElevatorRegion':
             skill(
-                self.skill('JPDrive', 'jp_move_heron', specify={
-                    'Heron': self.params['Heron'].value,
-                    'TargetLocation': target
+                self.skill('JPArm', 'jp_arm_home'),
+                self.skill('DetectDoorState', 'wait_for_door', specify={
+                    'Region Transition': self.params['Elevator'].value,
+                    'Time Limit (s)': 3600.0
                 }),
-                self.skill('SuccessSkill', 'success_skill', specify={
-                    'msg': 'Go from elevator to room'
-                })
+                self.skill('DoorOpened', 'door_opened'),
+                self.skill(ParallelFf())(
+                    self.skill('DetectDoorState', 'watch_for_door', specify={
+                        'Region Transition': self.params['Elevator'].value,
+                        'Time Limit (s)': 3600.0,
+                        'Fail On Close': True
+                    }),
+                    self.skill('JPDrive', 'jp_move_heron', specify={
+                        'Heron': self.params['Heron'].value,
+                        'TargetLocation': target
+                    })
+                ),
+                self.skill('DoorClosed', 'door_closed')
             )
         else:
             raise RuntimeError('Cannot handle region type.')

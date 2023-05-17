@@ -1,7 +1,6 @@
 import sys
 from copy import deepcopy
 from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential
-from skiros2_common.core.primitive import PrimitiveBase
 from skiros2_common.core.primitive_thread import PrimitiveThreadBase
 from skiros2_std_skills.action_client_primitive import PrimitiveActionClient
 from skiros2_common.core.params import ParamTypes

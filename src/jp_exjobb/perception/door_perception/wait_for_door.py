@@ -8,7 +8,7 @@ from jp_exjobb.perception.door_perception.door_state_classification import DoorS
 class wait_for_door(PrimitiveThreadBase):
     def createDescription(self):
         self.setDescription(DetectDoorState(), self.__class__.__name__)
-    
+
     def onInit(self):
         self.hz = 50
         self.rate = rospy.Rate(self.hz)

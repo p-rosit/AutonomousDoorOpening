@@ -1,4 +1,5 @@
 from skiros2_common.core.primitive_thread import PrimitiveThreadBase
+from skiros2_common.core.params import ParamTypes
 
 import rospy
 
@@ -9,6 +10,9 @@ class watch_for_door(PrimitiveThreadBase):
     def createDescription(self):
         self.setDescription(DetectDoorState(), self.__class__.__name__)
     
+    def modifyDescription(self, skill):
+        self.addParam('Fail On Close', True, ParamTypes.Required)
+
     def onInit(self):
         self.hz = 50
         self.rate = rospy.Rate(self.hz)
@@ -33,6 +37,7 @@ class watch_for_door(PrimitiveThreadBase):
         amount = self.hz * self.params['Time'].value
         time_limit = self.params['Time Limit (s)'].value
         state_changed = self.params['door_state_changed'].value
+        fail_on_close = self.params['Fail On Close'].value
 
         ind = 0
         while ind < self.hz * time_limit and not self.preempted:
@@ -52,7 +57,10 @@ class watch_for_door(PrimitiveThreadBase):
             if amount < count:
                 state_changed.setProperty('skiros:Value', True)
                 self.setOutput('door_state_changed', state_changed)
-                return self.fail('Door closed.', -1)
+                if fail_on_close:
+                    return self.fail('Door closed.', -1)
+                else:
+                    return self.success('Door closed.')
         
             ind +=1
             self.rate.sleep()

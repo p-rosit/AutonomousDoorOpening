@@ -40,15 +40,15 @@ class navigate_building(SkillBase):
             print(sk.label)
 
         skill(*skill_list)
-        #skill(self.skill('FailSkill', 'fail_skill', specify={'msg': 'no'}))
+        # skill(self.skill('FailSkill', 'fail_skill', specify={'msg': 'no'}))
 
     def build_skill_list(self, path):
         arm = self.params['Arm'].value
         skill_list = []
 
-        for ii in path:
-            (_, b), (_, d), sm = ii
-            print((b, d, sm))
+        # for ii in path:
+        #     (_, b), (_, d), sm = ii
+        #     print((b, d, sm))
 
         for node in path:
             (button_waypoint, dom), (door_waypoint, door), region = node
@@ -61,25 +61,27 @@ class navigate_building(SkillBase):
                 }
             ))
 
-            # Detect door operating mechanism
-            skill_list.append(self.skill('JPDetectDOM', 'jp_detect_dom', specify={
-                'Arm': arm,
-                'Mechanism': dom
-            }))
-
             # Operate door button
             if dom.type == 'scalable:DoorButton':
+                # Detect door operating mechanism
+                skill_list.append(self.skill('JPDetectDOM', 'jp_detect_dom', specify={
+                    'Arm': arm,
+                    'Mechanism': dom
+                }))
                 # press button
                 skill_list.append(self.skill('ButtonPress', 'button_press', specify={
                     'Arm': arm,
                     'Button': dom
                 }))
             elif dom.type == 'scalable:DoorHandle':
-                butt = dom
+                # butt = dom
                 # handle door handle
-                skill_list.append(self.skill('OperateHandle', 'operate_handle', specify={
-                    'Arm': arm,
-                    'Handle': butt, # with great enthusiasm
+                # skill_list.append(self.skill('OperateHandle', 'operate_handle', specify={
+                #     'Arm': arm,
+                #     'Handle': butt, # with great enthusiasm
+                # }))
+                skill_list.append(self.skill('SuccessSkill', 'success_skill', specify={
+                    'msg': 'Door not opened, drive and pray.'
                 }))
             else:
                 raise RuntimeError('Cannot handle this type of door operating mechanism.')
@@ -155,7 +157,7 @@ class navigate_building(SkillBase):
             # Get door from WM
             for door_relation in door.getRelations(subj='-1', pred='skiros:hasA'):
                 loc = self.wmi.get_element(door_relation['dst'])
-                if self.wmi.get_super_class(loc.type) != 'scalable:Location':
+                if loc.type == 'scalable:RegionBB' or self.wmi.get_super_class(loc.type) != 'scalable:Location':
                     continue
                 
                 temp = loc.getRelations(subj=region.id, pred='skiros:contain', obj='-1')
@@ -192,7 +194,7 @@ class navigate_building(SkillBase):
                 # Check if button is in the correct region
                 for dom_relation in temp:
                     sub = self.wmi.get_element(dom_relation['dst'])
-                    if self.wmi.get_super_class(sub.type) != 'scalable:Location':
+                    if sub.type == 'scalable:RegionBB' or self.wmi.get_super_class(sub.type) != 'scalable:Location':
                         continue
 
                     tmp = sub.getRelations(subj=region.id, pred='skiros:contain', obj='-1')

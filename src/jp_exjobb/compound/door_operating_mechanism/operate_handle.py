@@ -28,8 +28,8 @@ class operate_handle(SkillBase):
 
         if gstring == 'Push':
             skill(
-                self.skill('SuccessSkill', 'success_skill', specify={
-                    'msg': 'Door not opened, drive and pray.'
+                self.skill('FailSkill', 'fail_skill', specify={
+                    'msg': 'This gripper cannot open this type of door.'
                 })
             )
         elif gstring == 'Grasp':
