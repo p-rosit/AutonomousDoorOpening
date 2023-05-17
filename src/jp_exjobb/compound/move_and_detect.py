@@ -14,10 +14,6 @@ class JPDetectAndMoveArm(SkillDescription):
         self.addParam('Mode', Element('scalable:ControllerState'), ParamTypes.Required)
         self.addParam('Target', Element('skiros:TransformationPose'), ParamTypes.Required)
 
-        self.addParam('x', 0.04, ParamTypes.Required)
-        self.addParam('y', 0.0, ParamTypes.Required)
-        self.addParam('z', 0.0, ParamTypes.Required)
-
 class jp_detect_and_move_arm(SkillBase):
     def createDescription(self):
         self.setDescription(JPDetectAndMoveArm(), self.__class__.__name__)
@@ -34,7 +30,8 @@ class jp_detect_and_move_arm(SkillBase):
                 }),
                 self.skill('JPMoveArm', 'jp_move_arm', specify={
                     'Arm': self.params['Arm'].value,
-                    'Target': self.params['Target'].value
+                    'Target': self.params['Target'].value,
+                    'Mode': self.params['Mode'].value
                 })
             )
         )

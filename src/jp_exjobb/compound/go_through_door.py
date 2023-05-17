@@ -54,7 +54,7 @@ class go_through_door(SkillBase):
                     'Mode': self.params['Compliant'].value,
                     'Button': self.params['Button'].value,
                     'Offset': self.params['Offset'].value,
-                    'Force': 60
+                    'Force': 60.0
                 }
             ),
             self.skill('JPMoveArm','jp_move_arm',
