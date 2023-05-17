@@ -13,7 +13,7 @@ class StartHandEyeCalibration(SkillDescription):
         self.addParam('EE has Camera',  True,                           ParamTypes.Required)
 
         self.addParam('started',        Element('skiros:Parameter'),    ParamTypes.SharedOutput)
-        self.addParam('hand',           Element('sumo:Object'),         ParamTypes.LinkedOutput)
+        self.addParam('hand',           Element('rparts:EndEffector'),  ParamTypes.LinkedOutput)
         self.addParam('camera',         Element('skiros:DepthCamera'),  ParamTypes.LinkedOutput)
         self.addParam('marker',         Element('sumo:Object'),         ParamTypes.LinkedOutput)
         self.addParam('base',           Element('sumo:Object'),         ParamTypes.LinkedOutput)

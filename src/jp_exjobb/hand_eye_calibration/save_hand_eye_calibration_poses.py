@@ -10,11 +10,8 @@ class SaveHandEyeCalibrationPoses(SkillDescription):
     def createDescription(self):
         self.addParam(('start_hand_eye_calibration', 'started'), Element('skiros:Parameter'), ParamTypes.SharedInput)
         self.addParam(('start_hand_eye_calibration', 'camera'), Element('skiros:DepthCamera'), ParamTypes.LinkedInput)
-        self.addParam(('start_hand_eye_calibration', 'hand'), Element('sumo:Object'), ParamTypes.LinkedInput)
+        self.addParam(('start_hand_eye_calibration', 'hand'), Element('scalable:Ur5EndEffector'), ParamTypes.LinkedInput)
         self.addParam(('start_hand_eye_calibration', 'marker'), Element('sumo:Object'), ParamTypes.LinkedInput)
-
-        self.addParam('View Frame', Element('skiros:TransformationPose'), ParamTypes.Inferred)
-        self.addPreCondition(self.getRelationCond('CameraHasViewFrame', 'skiros:hasA', 'camera', 'View Frame', True))
 
         self.addParam('hand_poses', Element('skiros:Parameter'), ParamTypes.SharedOutput)
         self.addParam('marker_poses', Element('skiros:Parameter'), ParamTypes.SharedOutput)
@@ -92,11 +89,6 @@ def setPose(element, pose):
     element.setProperty('skiros:PositionY', pose.pose.position.y)
     element.setProperty('skiros:PositionZ', pose.pose.position.z)
 
-    if pose.pose.orientation.w < 0:
-        pose.pose.orientation.x = -pose.pose.orientation.x
-        pose.pose.orientation.y = -pose.pose.orientation.y
-        pose.pose.orientation.z = -pose.pose.orientation.z
-        pose.pose.orientation.w = -pose.pose.orientation.w
     element.setProperty('skiros:OrientationX', pose.pose.orientation.x)
     element.setProperty('skiros:OrientationY', pose.pose.orientation.y)
     element.setProperty('skiros:OrientationZ', pose.pose.orientation.z)

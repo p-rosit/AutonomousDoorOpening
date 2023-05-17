@@ -1,3 +1,4 @@
+from skiros2_common.core.primitive import PrimitiveBase
 from skiros2_common.core.primitive_thread import PrimitiveThreadBase
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
@@ -14,6 +15,13 @@ class WaitForVelocity(SkillDescription):
         self.addParam('Position Threshold', 5e-4, ParamTypes.Optional)
         self.addParam('Orientation Threshold', 5e-4, ParamTypes.Optional)
 
+        self.addParam('timed_out', Element('skiros:Parameter'), ParamTypes.SharedOutput)
+
+class CheckWaitVelocity(SkillDescription):
+    def createDescription(self):
+        self.addParam('Fail on timeout', True, ParamTypes.Required)
+        self.addParam(('wait_for_velocity', 'timed_out'), Element('skiros:Parameter'), ParamTypes.SharedInput)
+
 class wait_for_velocity(PrimitiveThreadBase):
     def createDescription(self):
         self.setDescription(WaitForVelocity(), self.__class__.__name__)
@@ -28,9 +36,13 @@ class wait_for_velocity(PrimitiveThreadBase):
         return True
 
     def run(self):
+        timed_out = self.params['timed_out'].value
         time_limit = self.params['Time Limit (s)'].value
         pos_th = self.params['Position Threshold'].value
         quat_th = self.params['Orientation Threshold'].value
+
+        timed_out.setProperty('skiros:Value', False)
+        self.setOutput('timed_out', timed_out)
 
         ind = 0
         self.rate.sleep()
@@ -47,6 +59,9 @@ class wait_for_velocity(PrimitiveThreadBase):
             
             self.rate.sleep()
         
+        timed_out.setProperty('skiros:Value', True)
+        self.setOutput('timed_out', timed_out)
+
         return self.fail('Time limit reached.', -1)
 
     def approx_velocity(self):
@@ -74,3 +89,18 @@ class wait_for_velocity(PrimitiveThreadBase):
 
         return pos, quat
         
+class check_wait_velocity(PrimitiveBase):
+    def createDescription(self):
+        self.setDescription(CheckWaitVelocity(), self.__class__.__name__)
+    
+    def execute(self):
+        timed_out = self.params['velocity_timed_out'].value.getProperty('skiros:Value').value
+        fail_on_timeout = self.params['Fail on timeout'].value
+
+        if not timed_out:
+            return self.success('Timer did not time out.')
+
+        if not fail_on_timeout:
+            return self.success('Timed out.')
+        else:
+            return self.fail('Timed out.', -1)
