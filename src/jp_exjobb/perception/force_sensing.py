@@ -1,6 +1,7 @@
 from skiros2_common.core.primitive_thread import PrimitiveThreadBase
 from skiros2_skill.core.skill import SkillDescription
 from skiros2_common.core.params import ParamTypes
+from skiros2_common.core.world_element import Element
 
 from geometry_msgs.msg import WrenchStamped
 from std_msgs.msg import Empty, Bool
@@ -12,6 +13,7 @@ class WaitForForce(SkillDescription):
     def createDescription(self):
         self.addParam('Time limit', 10.0, ParamTypes.Required)
         self.addParam('Force', 10.0, ParamTypes.Required)
+        self.addParam('force_goal_met', Element('skiros:Parameter'), ParamTypes.SharedOutput)
         
 class wait_for_force(PrimitiveThreadBase):
     def createDescription(self):
@@ -22,8 +24,7 @@ class wait_for_force(PrimitiveThreadBase):
         self.hz = 50
         self.rate = rospy.Rate(self.hz)
         self.forcesub = rospy.Subscriber('/wrench_filter/filtered_wrench', WrenchStamped, callback=self.earing)
-        self.reset_pub = rospy.Publisher('/wait_for_force/reset', Empty, queue_size=1)
-        self.status_pub = rospy.Publisher('/wait_for_force/status', Bool, queue_size=1)
+        return True
     
     def earing(self, msg):
         if self.running:
@@ -46,7 +47,7 @@ class wait_for_force(PrimitiveThreadBase):
         return self.fail('Pushing preempted',-1)
 
     def run(self):
-        self.reset_pub.publish(Empty())
+        force_goal_met = self.params['force_goal_met'].value
 
         ind = 0
         wait_period = True
@@ -63,49 +64,31 @@ class wait_for_force(PrimitiveThreadBase):
             if not wait_period:
                 self.force_limit = k * (rospy.Time.now().to_sec() - force_time) + m
 
-            print(self.force_limit)
-
         self.running = False
         self.status_pub.publish(Bool(self.force_goal_met))
 
         if not self.force_goal_met:
+            force_goal_met.setProperty('skiros:Value', False)
+            self.setOutput('force_goal_met', force_goal_met)
             return self.fail('Did not reach force goal.', -1)
+        
+        force_goal_met.setProperty('skiros:Value', True)
+        self.setOutput('force_goal_met', force_goal_met)
         return self.success('Force goal met.')
 
 class ForceCheck(SkillDescription):
     def createDescription(self):
-        pass
+        self.addParam(('wait_for_force', 'force_goal_met'), Element('skiros:Parameter'), ParamTypes.SharedInput)
 
 class force_check(PrimitiveThreadBase):
     def createDescription(self):
         self.setDescription(ForceCheck(), self.__class__.__name__)
     
-    def onInit(self):
-        self.hz = 20
-        self.time_limit = 1
-        self.rate = rospy.Rate(self.hz)
-
-        self.reply_received = False
-        self.force_goal_met = False
-        self.reset_sub = rospy.Subscriber('/wait_for_force/reset', Empty, callback=self.reset_callback)
-        self.status_sub = rospy.Subscriber('/wait_for_force/status', Bool, callback=self.status_callback)
-        return True
-    
-    def status_callback(self, msg):
-        self.reply_received = True
-        self.force_goal_met = msg.data
-
-    def reset_callback(self, _):
-        self.reply_received = False
-        self.force_goal_met = False
-
     def run(self):
-        ind = 0
-        while not self.reply_received and ind < self.time_limit * self.hz:
-            ind += 1
-            self.rate.sleep()
-        
-        if not self.force_goal_met:
+        force_goal_met = self.params['force_goal_met'].value
+        goal_met = force_goal_met.getProperty('skiros:Value').value
+
+        if not goal_met:
             return self.fail('Force goal not met.', -1)
         
         return self.success('Force goal met.')

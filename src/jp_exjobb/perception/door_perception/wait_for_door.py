@@ -32,6 +32,7 @@ class wait_for_door(PrimitiveThreadBase):
         count = 0
         amount = self.hz * self.params['Time'].value
         time_limit = self.params['Time Limit (s)'].value
+        state_changed = self.params['door_state_changed'].value
 
         ind = 0
         while ind < self.hz * time_limit and not self.preempted:
@@ -49,10 +50,14 @@ class wait_for_door(PrimitiveThreadBase):
                 self.status = 'Door sexuality unknown, %.2f.' % self.door_fill
             
             if amount < count:
+                state_changed.setProperty('skiros:Value', True)
+                self.setOutput('door_state_changed', state_changed)
                 return self.success('Door opened.')
             ind +=1
             self.rate.sleep()
         
+        state_changed.setProperty('skiros:Value', False)
+        self.setOutput('door_state_changed', state_changed)
         return self.fail('Door peeping concluded, door did not open.', -1)
 
     def onEnd(self):

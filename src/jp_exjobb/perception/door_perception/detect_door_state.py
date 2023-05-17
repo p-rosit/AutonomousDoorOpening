@@ -18,6 +18,8 @@ class DetectDoorState(SkillDescription):
 
         self.addPreCondition(self.getRelationCond('DoorHasBB', 'skiros:hasA', 'Region Transition', 'Region Bounding Box', True))
 
+        self.addParam('door_state_changed', Element('skiros:Value'), ParamTypes.SharedOutput)
+
 class detect_door_state(PrimitiveThreadBase):
     def createDescription(self):
         self.setDescription(DetectDoorState(), self.__class__.__name__)

@@ -66,7 +66,6 @@ class jp_pass_door(SkillBase):
                     'TargetLocation': target
                 })
             )
-            # check if door closed during drive
         )
     
     def infer_target(self):
