@@ -58,7 +58,8 @@ class jp_pass_door(SkillBase):
             }),
             self.skill(ParallelFf())(
                 self.skill('DetectDoorState', 'watch_for_door', specify={
-                    'time_limit': 3600.0
+                    'Region Transition': self.params['Door'].value,
+                    'Time Limit (s)': 3600.0
                 }),
                 self.skill('JPDrive', 'jp_drive', specify={
                     'Heron': self.params['Heron'].value,
