@@ -44,7 +44,6 @@ class DoorStateClassifier:
         x_by_door = (-self.bb_sizex - self.bb_size < x) & (x < self.bb_sizex + self.bb_size)
 
         door_frame_pts = pts[:, (x_by_door & y_in_door) & ~(x_in_door & y_in_door)]
-        print(door_frame_pts[0])
         left_pts = (door_frame_pts[0] < 0).sum()
         right_pts = (door_frame_pts[0] > 0).sum()
         door_pts = pts[:, x_in_door & y_in_door]
