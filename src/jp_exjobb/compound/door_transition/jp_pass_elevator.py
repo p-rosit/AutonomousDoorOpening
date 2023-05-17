@@ -2,26 +2,6 @@ from skiros2_skill.core.skill import SkillBase, SkillDescription, Sequential
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 
-# class JPPassElevatorTemp(SkillDescription):
-#     def createDescription(self):
-#         self.addParam('Heron', Element('cora:Robot'), ParamTypes.Required)
-#         self.addParam('Elevator', Element('scalable:Elevator'), ParamTypes.Required)
-#         self.addParam('Source', Element('scalable:Location'), ParamTypes.Inferred)
-#         self.addParam('Target', Element('scalable:Location'), ParamTypes.Inferred)
-#         self.addParam('SourceRegion', Element('scalable:Region'), ParamTypes.Inferred)
-#         self.addParam('TargetRegion', Element('scalable:Region'), ParamTypes.Inferred)
-
-#         self.addPreCondition(self.getRelationCond('HeronAtSource', 'skiros:at', 'Heron', 'Source', True))
-#         self.addPreCondition(self.getRelationCond('HeronNotAtTarget', 'skiros:at', 'Heron', 'Target', False))
-#         self.addPreCondition(self.getRelationCond('SourceInRegion', 'skiros:contain', 'SourceRegion', 'Source', True))
-#         self.addPreCondition(self.getRelationCond('TargetInRegion', 'skiros:contain', 'TargetRegion', 'Target', True))
-#         self.addPreCondition(self.getRelationCond('SourceInRegion', 'skiros:contain', 'SourceRegion', 'Target', False))
-#         self.addPreCondition(self.getRelationCond('TargetInRegion', 'skiros:contain', 'TargetRegion', 'Source', False))
-
-#         self.addPreCondition(self.getRelationCond('SourceRegionHasDoor', 'scalable:hasDoor', 'SourceRegion', 'Elevator', True))
-#         self.addPreCondition(self.getRelationCond('TargetRegionHasDoor', 'scalable:hasDoor', 'TargetRegion', 'Elevator', True))
-#         self.addPreCondition(self.getRelationCond('DoorHasWaypoint', 'skiros:hasA', 'Elevator', 'Target', True))
-
 class JPPassElevator(SkillDescription):
     def createDescription(self):
         self.addParam('Heron', Element('cora:Robot'), ParamTypes.Required)
