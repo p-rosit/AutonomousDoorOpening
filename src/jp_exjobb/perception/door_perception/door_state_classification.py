@@ -51,7 +51,6 @@ class DoorStateClassifier:
         # TODO: RanSaC inside bounding box to detect line and throw away points not on door
         # Problem with that kind of outlier rejection: doors that are not straight, elevator door...
 
-        print('pts:', left_pts, right_pts)
         if door_frame_pts.shape[1] < 2 or left_pts == 0 or right_pts == 0:
             return
 
