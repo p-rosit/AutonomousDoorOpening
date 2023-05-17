@@ -81,7 +81,7 @@ class jp_pass_door(SkillBase):
 
             obj_type = self.wmi.get_super_class(obj.type)
             obj_region = obj.getRelations(subj=region.id, pred='skiros:contain', obj='-1')
-            if obj_type != 'scalable:Location' or len(obj_region) > 0:
+            if obj.type == 'scalable:RegionBB' or obj_type != 'scalable:Location' or len(obj_region) > 0:
                 continue
 
             if target is not None:
