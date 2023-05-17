@@ -57,7 +57,7 @@ class jp_pass_door(SkillBase):
                 'Arm': self.params['Arm'].value
             }),
             self.skill(ParallelFf())(
-                self.skill('WatchForDoor', 'watch_for_door', specify={
+                self.skill('DetectDoorState', 'watch_for_door', specify={
                     'time_limit': 3600.0
                 }),
                 self.skill('JPDrive', 'jp_drive', specify={
