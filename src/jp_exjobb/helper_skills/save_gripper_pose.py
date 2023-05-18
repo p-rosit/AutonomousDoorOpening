@@ -20,22 +20,28 @@ class save_gripper_pose(PrimitiveBase):
         pose = self.params['GripperPose'].value
 
         msg = gripper.getData(':PoseStampedMsg')
-        sqrt_2 = 1 / np.sqrt(2)
-        q = np.array([
-            msg.pose.orientation.x,
-            msg.pose.orientation.y,
-            msg.pose.orientation.z,
-            msg.pose.orientation.w
-        ])
-        q = (
-            rot.from_quat(q) * rot.from_quat(np.array([0.0, sqrt_2, 0.0, sqrt_2]))
-        ).as_quat()
-
-        msg.pose.orientation.x = q[0]
-        msg.pose.orientation.y = q[1]
-        msg.pose.orientation.z = q[2]
-        msg.pose.orientation.w = q[3]
+        # Fix the rotation of the published gripper, because for some reason it is rotated...
+        msg = fix_rotation(msg)
 
         pose.setData(':PoseStampedMsg',msg)
         self.wmi.update_element_properties(pose)
         return self.success('Gripper pose saved to %s.' % pose.label)
+
+def fix_rotation(msg):
+    sqrt_2 = 1 / np.sqrt(2)
+    q = np.array([
+        msg.pose.orientation.x,
+        msg.pose.orientation.y,
+        msg.pose.orientation.z,
+        msg.pose.orientation.w
+    ])
+    q = (
+        rot.from_quat(q) * rot.from_quat(np.array([0.0, sqrt_2, 0.0, sqrt_2]))
+    ).as_quat()
+
+    msg.pose.orientation.x = q[0]
+    msg.pose.orientation.y = q[1]
+    msg.pose.orientation.z = q[2]
+    msg.pose.orientation.w = q[3]
+
+    return msg
