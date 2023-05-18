@@ -16,6 +16,9 @@ class save_gripper_pose(PrimitiveBase):
         gripper = self.params['Gripper'].value
         pose = self.params['GripperPose'].value
 
-        pose.setData(':Pose', gripper.getData(':Pose'))
+        # print(pose.getData(':PoseStampedMsg'))
+        # print(gripper.getData(':PoseStampedMSg'))
+        pose.setData(':PoseStampedMsg', gripper.getData(':PoseStampedMsg'))
+        # print(pose.getData(':PoseStampedMsg'))
         self.wmi.update_element_properties(pose)
         return self.success('Gripper pose saved to %s.' % pose.label)
