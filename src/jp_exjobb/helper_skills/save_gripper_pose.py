@@ -20,6 +20,7 @@ class save_gripper_pose(PrimitiveBase):
         pose = self.params['GripperPose'].value
 
         msg = gripper.getData(':PoseStampedMsg')
+        sqrt_2 = 1 / np.sqrt(2)
         q = np.array([
             msg.pose.orientation.x,
             msg.pose.orientation.y,
@@ -27,7 +28,7 @@ class save_gripper_pose(PrimitiveBase):
             msg.pose.orientation.w
         ])
         q = (
-            rot.from_quat(q) * rot.from_quat(np.array([0.0, 1.0, 0.0, 0.0]))
+            rot.from_quat(q) * rot.from_quat(np.array([0.0, sqrt_2, 0.0, sqrt_2]))
         ).as_quat()
 
         msg.pose.orientation.x = q[0]
