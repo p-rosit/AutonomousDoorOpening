@@ -14,6 +14,7 @@ class ButtonPress(SkillDescription):
 
         self.addParam('Button', Element('scalable:DoorButton'), ParamTypes.Required)
         self.addParam('Offset', 0.05, ParamTypes.Optional)
+        self.addParam('Final Offset', 0.1, ParamTypes.Optional)
         self.addParam('Force', 100.0, ParamTypes.Optional)
         self.addParam('Sensitivity', 0.5, ParamTypes.Optional)
 
@@ -78,7 +79,7 @@ class button_press(SkillBase):
                     specify={'Scale': 1.0}
                 ),
                 self.skill('GeneratePressPose','generate_press_pose',
-                    specify={'Offset': -0.1}
+                    specify={'Offset': -self.params['Final Offset'].value}
                 )
             ),
             # Move back to pre press pose
