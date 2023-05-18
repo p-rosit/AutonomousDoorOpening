@@ -1,4 +1,4 @@
-from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential, Loop
+from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential, Loop, InferInvalid
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 
@@ -23,7 +23,7 @@ class evaluate_button_pressing(SkillBase):
     def expand(self, skill):
         self.setProcessor(Sequential())
         skill(
-            self.skill(Loop())(
+            self.skill(InferInvalid(Loop(self.params['Loop Times'].value)))(
                 self.skill('JPDrive', 'jp_drive', specify={
                     'Heron': self.params['Heron'].value,
                     'TargetLocation': self.params['ButtonLocation'].value
