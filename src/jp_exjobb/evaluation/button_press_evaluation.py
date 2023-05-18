@@ -36,6 +36,9 @@ class evaluate_button_pressing(SkillBase):
                     'Arm': self.params['Arm'].value,
                     'Button': self.params['Button'].value
                 }),
+                self.skill('JPArm', 'jp_arm_home', specify={
+                    'Arm': self.params['Arm'].value
+                })
                 self.skill('JPDrive', 'jp_drive', specify={
                     'Heron': self.params['Heron'].value,
                     'TargetLocation': self.params['StartLocation'].value
