@@ -61,8 +61,7 @@ class evaluate_door_pass(SkillBase):
                 }),
                 self.skill('ButtonPress', 'button_press', specify={
                     'Arm': self.params['Arm'].value,
-                    'Button': self.params['Button2'].value,
-                    'Final Offset': 0.19
+                    'Button': self.params['Button2'].value
                 }),
                 self.skill('JPArm', 'jp_arm_home', specify={
                     'Arm': self.params['Arm'].value

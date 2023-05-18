@@ -8,19 +8,21 @@ class ButtonPress(SkillDescription):
         self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Required)
         self.addParam('EE', Element('scalable:Ur5EndEffector'), ParamTypes.Inferred)
         self.addParam('Gripper', Element('scalable:WsgGripper'), ParamTypes.Inferred)
+        self.addParam('LookoutPose', Element('skiros:TransformationPose'), ParamTypes.Inferred)
         self.addParam('Pose', Element('skiros:TransformationPose'), ParamTypes.Inferred)
         self.addParam('Compliant', Element('scalable:ControllerState'), ParamTypes.Inferred)
         self.addPreCondition(self.getPropCond('CompliantController', 'skiros:Value', 'Compliant', '=', 'compliant', True))
 
         self.addParam('Button', Element('scalable:DoorButton'), ParamTypes.Required)
         self.addParam('Offset', 0.05, ParamTypes.Optional)
-        self.addParam('Final Offset', 0.1, ParamTypes.Optional)
+        self.addParam('Pre Push Offset', 0.1, ParamTypes.Optional)
         self.addParam('Force', 100.0, ParamTypes.Optional)
         self.addParam('Sensitivity', 0.5, ParamTypes.Optional)
 
         self.addPreCondition(self.getRelationCond('ArmHasEE', 'skiros:hasA', 'Arm', 'EE', True))
         self.addPreCondition(self.getRelationCond('EEHasGripper', 'skiros:hasA', 'EE', 'Gripper', True))
         self.addPreCondition(self.getPropCond('ScenePose', 'skiros:Value', 'Pose', '=', 'scene_point', True))
+        self.addPreCondition(self.getPropCond('LookoutPose', 'skiros:Value', 'LookoutPose', '=', 'other_scene_point', True))
 
 class button_press(SkillBase):
     def createDescription(self):
@@ -31,13 +33,19 @@ class button_press(SkillBase):
 
         self.setProcessor(Sequential())
         skill(
+            # Save current gripper pose so we can return to it
+            self.skill('SaveGripperPose', 'save_gripper_pose',
+                remap={'GripperPose': 'LookoutPose'},
+                specify={'Gripper': self.params['Gripper'].value}
+            ),
+
             # Generate pre press pose
             self.skill(ParallelFf())(
                 self.skill('ForceSensingOn', 'force_sensing_on',
                     specify={'Compliant': True}
                 ),
                 self.skill('GeneratePressPose','generate_press_pose',
-                    specify={'Offset': -0.1}
+                    specify={'Offset': -self.params['Pre Push Offset'].value}
                 )
             ),
             # Move to pre press pose
@@ -79,7 +87,7 @@ class button_press(SkillBase):
                     specify={'Scale': 1.0}
                 ),
                 self.skill('GeneratePressPose','generate_press_pose',
-                    specify={'Offset': -self.params['Final Offset'].value}
+                    specify={'Offset': -self.params['Pre Push Offset'].value}
                 )
             ),
             # Move back to pre press pose
@@ -89,6 +97,17 @@ class button_press(SkillBase):
                 }),
                 self.skill('JPMoveArm','jp_move_arm',
                     remap={'Target': 'Pose'},
+                    specify={'Mode': compliant}
+                )
+            ),
+
+            # Move back to lookout pose
+            self.skill(ParallelFs())(
+                self.skill('TimerSkill', 'timer_skill', specify={
+                    'Max Time (s)': 20.0
+                }),
+                self.skill('JPMoveArm','jp_move_arm',
+                    remap={'Target': 'LookoutPose'},
                     specify={'Mode': compliant}
                 )
             )
