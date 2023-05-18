@@ -15,6 +15,9 @@ class EvaluateDoorPass(SkillDescription):
         self.addParam('Button2Location', Element('scalable:Location'), ParamTypes.Inferred)
         self.addPreCondition(self.getRelationCond('Button2HasLocation', 'skiros:hasA', 'Button2', 'Button2Location', True))
 
+        self.addParam('DoorPoint1', Element('scalable:Location'), ParamTypes.Required)
+        self.addParam('DoorPoint2', Element('scalable:Location'), ParamTypes.Required)
+
         self.addParam('Loop Times', 30, ParamTypes.Required)
 
 class evaluate_door_pass(SkillBase):
@@ -25,6 +28,10 @@ class evaluate_door_pass(SkillBase):
         self.setProcessor(Sequential())
         skill(
             self.skill(InferInvalid(Loop(self.params['Loop Times'].value)))(
+                self.skill('JPDrive', 'jp_drive', specify={
+                    'Heron': self.params['Heron'].value,
+                    'TargetLocation': self.params['DoorPoint1'].value
+                }),
                 self.skill('JPDrive', 'jp_drive', specify={
                     'Heron': self.params['Heron'].value,
                     'TargetLocation': self.params['Button1Location'].value
@@ -39,6 +46,10 @@ class evaluate_door_pass(SkillBase):
                 }),
                 self.skill('JPArm', 'jp_arm_home', specify={
                     'Arm': self.params['Arm'].value
+                }),
+                self.skill('JPDrive', 'jp_drive', specify={
+                    'Heron': self.params['Heron'].value,
+                    'TargetLocation': self.params['DoorPoint2'].value
                 }),
                 self.skill('JPDrive', 'jp_drive', specify={
                     'Heron': self.params['Heron'].value,
