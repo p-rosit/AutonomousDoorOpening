@@ -23,7 +23,7 @@ class evaluate_button_pressing(SkillBase):
     def expand(self, skill):
         self.setProcessor(Sequential())
         skill(
-            self.skill(Loop())(,
+            self.skill(Loop())(
                 self.skill('JPDrive', 'jp_drive', specify={
                     'Heron': self.params['Heron'].value,
                     'TargetLocation': self.params['ButtonLocation'].value
