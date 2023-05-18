@@ -4,6 +4,7 @@ from skiros2_common.core.params import ParamTypes
 from skiros2_skill.core.skill import SkillDescription
 
 from scipy.spatial.transform import Rotation as rot
+import numpy as np
 
 class SaveGripperPose(SkillDescription):
     def createDescription(self):
@@ -18,11 +19,22 @@ class save_gripper_pose(PrimitiveBase):
         gripper = self.params['Gripper'].value
         pose = self.params['GripperPose'].value
 
-        p, q = gripper.getData(':PoseStampedMsg')
+        msg = gripper.getData(':PoseStampedMsg')
+        q = np.array([
+            msg.pose.orientation.x,
+            msg.pose.orientation.y,
+            msg.pose.orientation.z,
+            msg.pose.orientation.w
+        ])
         q = (
-            rot.from_quat(q) * rot.from_quat([0.0, 1.0, 0.0, 0.0])
+            rot.from_quat(q) * rot.from_quat(np.array([0.0, 1.0, 0.0, 0.0]))
         ).as_quat()
 
-        pose.setData(':PoseStampedMsg', (p, q))
+        msg.pose.orientation.x = q[0]
+        msg.pose.orientation.y = q[1]
+        msg.pose.orientation.z = q[2]
+        msg.pose.orientation.w = q[3]
+
+        pose.setData(':PoseStampedMsg',msg)
         self.wmi.update_element_properties(pose)
         return self.success('Gripper pose saved to %s.' % pose.label)
