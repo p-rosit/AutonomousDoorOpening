@@ -14,7 +14,7 @@ class ButtonPress(SkillDescription):
 
         self.addParam('Button', Element('scalable:DoorButton'), ParamTypes.Required)
         self.addParam('Offset', 0.05, ParamTypes.Optional)
-        self.addParam('Force', 60.0, ParamTypes.Optional)
+        self.addParam('Force', 100.0, ParamTypes.Optional)
         self.addParam('Sensitivity', 0.5, ParamTypes.Optional)
 
         self.addPreCondition(self.getRelationCond('ArmHasEE', 'skiros:hasA', 'Arm', 'EE', True))
