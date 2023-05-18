@@ -2,7 +2,7 @@ from skiros2_skill.core.skill import SkillDescription, SkillBase, Sequential, Lo
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 
-class EvaluateButtonPressing(SkillDescription):
+class EvaluateDoorPass(SkillDescription):
     def createDescription(self):
         self.addParam('Heron', Element('cora:Robot'), ParamTypes.Required)
         self.addParam('Arm', Element('scalable:Ur5'), ParamTypes.Inferred)
@@ -15,11 +15,11 @@ class EvaluateButtonPressing(SkillDescription):
         self.addParam('Button2Location', Element('scalable:Location'), ParamTypes.Inferred)
         self.addPreCondition(self.getRelationCond('Button2HasLocation', 'skiros:hasA', 'Button2', 'Button2Location', True))
 
-        self.addParam('Loop Times', 10, ParamTypes.Required)
+        self.addParam('Loop Times', 30, ParamTypes.Required)
 
-class evaluate_button_pressing(SkillBase):
+class evaluate_door_pass(SkillBase):
     def createDescription(self):
-        self.setDescription(EvaluateButtonPressing(), self.__class__.__name__)
+        self.setDescription(EvaluateDoorPass(), self.__class__.__name__)
     
     def expand(self, skill):
         self.setProcessor(Sequential())
