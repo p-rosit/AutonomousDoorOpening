@@ -65,7 +65,6 @@ class wait_for_force(PrimitiveThreadBase):
                 self.force_limit = k * (rospy.Time.now().to_sec() - force_time) + m
 
         self.running = False
-        self.status_pub.publish(Bool(self.force_goal_met))
 
         if not self.force_goal_met:
             force_goal_met.setProperty('skiros:Value', False)
