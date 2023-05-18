@@ -40,9 +40,9 @@ class button_press(SkillBase):
                 )
             ),
             # Move to pre press pose
-            self.skill(ParallelFf())(
+            self.skill(ParallelFs())(
                 self.skill('TimerSkill', 'timer_skill', specify={
-                    'Time Limit (s)': 20.0
+                    'Max Time (s)': 20.0
                 }),
                 self.skill('JPMoveArm','jp_move_arm',
                     remap={'Target': 'Pose'},
@@ -82,9 +82,9 @@ class button_press(SkillBase):
                 )
             ),
             # Move back to pre press pose
-            self.skill(ParallelFf())(
+            self.skill(ParallelFs())(
                 self.skill('TimerSkill', 'timer_skill', specify={
-                    'Time Limit (s)': 20.0
+                    'Max Time (s)': 20.0
                 }),
                 self.skill('JPMoveArm','jp_move_arm',
                     remap={'Target': 'Pose'},
