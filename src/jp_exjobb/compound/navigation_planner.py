@@ -1,4 +1,4 @@
-from skiros2_skill.core.skill import SkillBase, SkillDescription, Sequential
+from skiros2_skill.core.skill import SkillBase, SkillDescription, Sequential, InferInvalid
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 
@@ -39,7 +39,7 @@ class navigate_building(SkillBase):
         for sk in skill_list:
             print(sk.label)
 
-        skill(*skill_list)
+        skill(InferInvalid()(*skill_list))
         # skill(self.skill('FailSkill', 'fail_skill', specify={'msg': 'no'}))
 
     def build_skill_list(self, path):
