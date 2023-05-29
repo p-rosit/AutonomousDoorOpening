@@ -39,7 +39,7 @@ class navigate_building(SkillBase):
         for sk in skill_list:
             print(sk.label)
 
-        skill(self.skill(InferInvalid())(*skill_list))
+        skill(self.skill(InferInvalid(Sequential()))(*skill_list))
         # skill(self.skill('FailSkill', 'fail_skill', specify={'msg': 'no'}))
 
     def build_skill_list(self, path):
