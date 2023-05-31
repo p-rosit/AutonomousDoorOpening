@@ -1,4 +1,4 @@
-from skiros2_skill.core.skill import SkillBase, SkillDescription, Sequential, ParallelFf
+from skiros2_skill.core.skill import SkillBase, SkillDescription, Sequential, ParallelFs
 from skiros2_common.core.world_element import Element
 from skiros2_common.core.params import ParamTypes
 
@@ -36,7 +36,7 @@ class jp_pass_door(SkillBase):
             self.skill('JPArm', 'jp_arm_home', specify={
                 'Arm': self.params['Arm'].value
             }),
-            self.skill(ParallelFf())(
+            self.skill(ParallelFs())(
                 self.skill('DetectDoorState', 'watch_for_door', specify={
                     'Region Transition': self.params['Door'].value,
                     'Time Limit (s)': 3600.0,
