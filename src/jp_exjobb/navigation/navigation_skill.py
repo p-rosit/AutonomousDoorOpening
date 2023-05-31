@@ -160,7 +160,10 @@ class jp_drive(PrimitiveBase):
             source = self.params['SourceLocation'].value
             target = self.params['TargetLocation'].value
             
-            heron.removeRelation({'src': '-1', 'type': 'skiros:at', 'dst': source.id, 'state': True, 'abstract': False})
+            # heron.removeRelation({'src': '-1', 'type': 'skiros:at', 'dst': source.id, 'state': True, 'abstract': False})
+            for relation in heron.getRelations(subj='-1', pred='skiros:at'):
+                if relation['dst'].type == 'skiros:Location':
+                    heron.removeRelation(relation)
             heron.addRelation('-1', 'skiros:at', target.id)
             self.wmi.update_element(heron)
             return self.success('Done')
@@ -176,7 +179,10 @@ class jp_move_heron(PrimitiveBase):
         source = self.params['SourceLocation'].value
         target = self.params['TargetLocation'].value
         
-        heron.removeRelation({'src': '-1', 'type': 'skiros:at', 'dst': source.id, 'state': True, 'abstract': False})
+        # heron.removeRelation({'src': '-1', 'type': 'skiros:at', 'dst': source.id, 'state': True, 'abstract': False})
+        for relation in heron.getRelations(subj='-1', pred='skiros:at'):
+            if relation['dst'].type == 'skiros:Location':
+                heron.removeRelation(relation)
         heron.addRelation('-1', 'skiros:at', target.id)
         self.wmi.update_element(heron)
         return self.success(
