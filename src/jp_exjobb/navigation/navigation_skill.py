@@ -181,6 +181,8 @@ class jp_move_heron(PrimitiveBase):
         
         # heron.removeRelation({'src': '-1', 'type': 'skiros:at', 'dst': source.id, 'state': True, 'abstract': False})
         for relation in heron.getRelations(subj='-1', pred='skiros:at'):
+            print(self.wmi.get_element(relation['dst']))
+            print(self.wmi.get_element(relation['dst']).type)
             if self.wmi.get_element(relation['dst']).type == 'skiros:Location':
                 heron.removeRelation(relation)
         heron.addRelation('-1', 'skiros:at', target.id)
