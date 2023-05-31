@@ -162,7 +162,7 @@ class jp_drive(PrimitiveBase):
             
             # heron.removeRelation({'src': '-1', 'type': 'skiros:at', 'dst': source.id, 'state': True, 'abstract': False})
             for relation in heron.getRelations(subj='-1', pred='skiros:at'):
-                if self.wmi.get_element(relation['dst']).type == 'skiros:Waypoint':
+                if self.wmi.get_element(relation['dst']).type == 'scalable:Waypoint':
                     heron.removeRelation(relation)
             heron.addRelation('-1', 'skiros:at', target.id)
             self.wmi.update_element(heron)
@@ -183,7 +183,7 @@ class jp_move_heron(PrimitiveBase):
         for relation in heron.getRelations(subj='-1', pred='skiros:at'):
             # print(self.wmi.get_element(relation['dst']))
             # print(self.wmi.get_element(relation['dst']).type)
-            if self.wmi.get_element(relation['dst']).type == 'skiros:Waypoint':
+            if self.wmi.get_element(relation['dst']).type == 'scalable:Waypoint':
                 heron.removeRelation(relation)
         heron.addRelation('-1', 'skiros:at', target.id)
         self.wmi.update_element(heron)
