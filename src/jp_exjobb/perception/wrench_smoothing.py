@@ -5,11 +5,31 @@ from skiros2_common.core.primitive_thread import PrimitiveThreadBase
 import rospy
 from std_msgs.msg import Empty, Bool, Int32, Float64
 
+"""
+Note that all the skills in this script send and recieve messages to the node
+/wrench_relay which performs the necessary filtering of the force. This node
+can be found under
+
+    robots/heron_robot/heron_control/src/wrench_intercept.py
+"""
+
 class ForceSensingOn(SkillDescription):
     def createDescription(self):
         self.addParam('Compliant', False, ParamTypes.Required)
 
 class force_sensing_on(PrimitiveThreadBase):
+    """
+    Summary:
+        Turns on the force sensing for Heron.
+
+    Required Input:
+        Compliant: A boolean denoting if the force sensing should be on or off.
+
+    Behaviour:
+        Publishes a boolean which decides if the force sensing should be on or off.
+        Expect the wrench relay to reply to make sure that the message was recieved
+        and handled correctly.
+    """
     def createDescription(self):
         self.setDescription(ForceSensingOn(), self.__class__.__name__)
 
@@ -56,6 +76,37 @@ class AdjustForce(SkillDescription):
         self.addParam('Adjust', False, ParamTypes.Required)
 
 class adjust_force(PrimitiveThreadBase):
+    """
+    Summary:
+        Adjusts the force sensing by offseting the estimated force and torque.
+
+    Required Input:
+        Adjust: A boolean denoting if the force should be adjusted or if the
+                previous adjustement should be removed.
+
+    Behaviour:
+        Publishes a boolean which decides if the force should be adjusted or if
+        the previous adjustement should be removed.
+
+        If the boolean is true the wrench relay does the following:
+
+            - Records the current force for 5 seconds.
+            - Computes the average of the force during the recorded time.
+            - For any measurements after this the estimated mean is subtracted
+              from the measured force.
+        
+        If the boolean is false the wrench relay does the following:
+
+            - Removes the previously estimated force offset.
+            - No offset is then used for future measurements.
+    
+    Notes and Pitfalls:
+        This skill is meant to be used to remove any bias in the force-torque
+        sensor. The gripper should be stationary when using the skill which ensures
+        that the force the gripper experiences at its current pose is estimated
+        correctly. I.e. we expect the current force the gripper is feeling to
+        be zero.
+    """
     def createDescription(self):
         self.setDescription(AdjustForce(), self.__class__.__name__)
 
@@ -109,6 +160,22 @@ class EnableSmoothing(SkillDescription):
         self.addParam('Smooth signal', True, ParamTypes.Required)
 
 class enable_smoothing(PrimitiveThreadBase):
+    """
+    Summary:
+        Enables or disables smoothing.
+
+    Required Input:
+        Smooth signal: A boolean denoting if smoothing should be on or off.
+
+    Behaviour:
+        A boolean is published which tells the wrench relay whether the
+        force-torque should be smoothed or not. By default the last 20
+        measurements are used to compute the filtered result.
+
+    Notes and Pitfalls:
+        The amount of measurements used to smooth the signal can be
+        changed with the size_update skill.
+    """
     def createDescription(self):
         self.setDescription(EnableSmoothing(), self.__class__.__name__)
 
@@ -162,6 +229,23 @@ class ExpSmooth(SkillDescription):
         self.addParam('Exponential smoothing', False, ParamTypes.Required)
     
 class exp_smooth(PrimitiveThreadBase):
+    """
+    Summary:
+        Enables or disables exponential smoothing.
+
+    Required Input:
+        Exponential smoothing:  A boolean denoting if exponential smoothing
+                                should be on or off.
+
+    Behaviour:
+        A boolean is published which tells the wrench relay whether the
+        smoothing should be exponential or a moving average.
+
+        The smoothing is not turned on or off, it's only what type the
+        smoothing will be if used which is controlled by this skill.
+
+        By default a moving average is used.
+    """
     def createDescription(self):
         self.setDescription(ExpSmooth(), self.__class__.__name__)
 
@@ -215,6 +299,24 @@ class WeightUpdate(SkillDescription):
         self.addParam('Last weight', 0.1, ParamTypes.Required)
     
 class weight_update(PrimitiveThreadBase):
+    """
+    Summary:
+        Updates the relative weight of the last measurement for the
+        exponential smoothing.
+
+    Required Input:
+        Last weight: A positive float which is the weight the last measurement
+                     will have.
+
+    Behaviour:
+        The relative weight the last measurement should have is published
+        to the wrench relay.
+
+        The first measurement (most recent) has a weight of 1 while the
+        last measurement (oldest) has the specified weight. The rest of
+        the measurements' weights are interpolated with an exponential
+        curve and then normalized before computing the weighted average.
+    """
     def createDescription(self):
         self.setDescription(WeightUpdate(), self.__class__.__name__)
 
@@ -262,6 +364,17 @@ class SizeUpdate(SkillDescription):
         self.addParam('New size', 20, ParamTypes.Required)
 
 class size_update(PrimitiveThreadBase):
+    """
+    Summary:
+        Updates the amount of samples used in smoothing the signal.
+
+    Required Input:
+        New size: A positive integer
+
+    Behaviour:
+        Updates the amount of samples used in smoothing the
+        force-torque signal in the wrench relay.
+    """
     def createDescription(self):
         self.setDescription(SizeUpdate(), self.__class__.__name__)
 
@@ -309,6 +422,21 @@ class ScaleUpdate(SkillDescription):
         self.addParam('Scale', 1.0, ParamTypes.Required)
 
 class scale_update(PrimitiveThreadBase):
+    """
+    Summary:
+        Updates the scaling of the force-torque signal
+
+    Required Input:
+        Scale: A positive float which the force-torque signal is scaled by.
+
+    Behaviour:
+        Both the force and the torque is scaled by the specified scale
+        after the force-torque offset has been applied.
+
+        To make the compliant controller more reactive to forces the
+        scale can be increased and to make it less reactive to forces
+        the scale can be decreased.
+    """
     def createDescription(self):
         self.setDescription(ScaleUpdate(), self.__class__.__name__)
 

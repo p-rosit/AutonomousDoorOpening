@@ -12,6 +12,18 @@ class SaveGripperPose(SkillDescription):
         self.addParam('GripperPose', Element('skiros:TransformationPose'), ParamTypes.Required)
 
 class save_gripper_pose(PrimitiveBase):
+    """
+    Summary:
+        Saves the current gripper pose.
+
+    Required Input:
+        Gripper:        The gripper
+        GripperPose:    Where to save the pose
+
+    Behaviour:
+        Reads the current pose of the gripper and updates the GripperPose
+        transformation pose to contain the saved pose.
+    """
     def createDescription(self):
         self.setDescription(SaveGripperPose(), self.__class__.__name__)
     

@@ -15,6 +15,26 @@ class JPDetectAndMoveArm(SkillDescription):
         self.addParam('Target', Element('skiros:TransformationPose'), ParamTypes.Required)
 
 class jp_detect_and_move_arm(SkillBase):
+    """
+    Summary:
+        Move arm while detecting an object.
+
+    Required Input:
+        Arm:    The arm to move.
+        Object: The object to detect.
+        Mode:   The controller.
+        Target: The target pose or joint state.
+
+    Behaviour:
+        Moves the robot arm to a pose or joint state while continuously
+        detecting the object.
+
+    Notes and Pitfalls:
+        This skill works as expected but is a bit problematic. The ArUco detector
+        gets a noisy estimate of where the object is if the camera is moving while
+        the image is being captured. Additionally if the hand-eye calibration is
+        not perfect the estimate might be even worse.
+    """
     def createDescription(self):
         self.setDescription(JPDetectAndMoveArm(), self.__class__.__name__)
     

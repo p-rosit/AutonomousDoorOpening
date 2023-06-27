@@ -15,6 +15,14 @@ class JPSwitchController(SkillDescription):
         self.addParam("Controller", Element('scalable:ControllerState'), ParamTypes.Required)
 
 class jp_switch_controller(PrimitiveBase):
+    """
+    Summary:
+        Switch the controller for a robot arm.
+    
+    Required Input:
+        Arm: The arm.
+        Controller: The controller to switch to.
+    """
     def createDescription(self):
         self.setDescription(JPSwitchController(), self.__class__.__name__)
 

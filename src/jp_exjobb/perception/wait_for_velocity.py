@@ -9,6 +9,31 @@ import numpy as np
 from scipy.spatial.transform import Rotation as rot
 
 class WaitForVelocity(SkillDescription):
+    """
+    Summary:
+        Waits until an object has stopped moving.
+
+    Required Input:
+        Thing:          The thing which needs to be stationary
+        Time Limit (s): The maximal time limit
+
+    Optional input:
+        Position Threshold:     The smallest magnitude of the velocity before
+                                the thing is considered stationary.
+        Orientation Threshold:  The smallest magnitude of the rotational velocity
+                                before the thing is considered stationary.
+
+    Behaviour:
+        Continually checks the pose of the input object and succeeds when the
+        object is determined to be stationary. If the object does not become
+        stationary within the given time the skill succeeds anyway but notes
+        that it was timed out in the shared output 'timed_out'.
+
+    Notes and Pitfalls:
+        Currently the estimate of the velocity and rotational velocity is not
+        strictly correct, one should use the time between the previous and current
+        pose as the delta time. Currently a fixed delta time is used.
+    """
     def createDescription(self):
         self.addParam('Thing', Element('sumo:Object'), ParamTypes.Required)
         self.addParam('Time Limit (s)', 3.0, ParamTypes.Required)
@@ -85,11 +110,20 @@ class wait_for_velocity(PrimitiveThreadBase):
 
         pos = np.array(thing.getData(':Position'))
         quat = np.array(thing.getData(':Orientation'))
+        # TODO: extract current time from thing's stamped pose
+        # to correctly measure velocity
         quat = rot.from_quat(quat)
 
         return pos, quat
         
 class check_wait_velocity(PrimitiveBase):
+    """
+    Summary:
+        Checks if the previous wait for velocity succeded.
+
+    Behaviour:
+        Fails if the previous wait for velocity timed out, succeeds otherwise.
+    """
     def createDescription(self):
         self.setDescription(CheckWaitVelocity(), self.__class__.__name__)
     

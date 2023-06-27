@@ -21,6 +21,18 @@ class JPDetectDOM(SkillDescription):
 
 
 class jp_detect_dom(SkillBase):
+    """
+    Summary:
+        Move to a detection arm pose and detect some door operating mechanism.
+
+    Required Input:
+        Arm:        The arm to move.
+        Mechanism:  The door operating mechanism to detect.
+    
+    Behaviour:
+        The mechanism needs to have some set of joint states related to it. The arm
+        is then moved to that set of joint states with the joint state controller.
+    """
     def createDescription(self):
         self.setDescription(JPDetectDOM(), self.__class__.__name__)
     

@@ -16,6 +16,29 @@ class WaitForForce(SkillDescription):
         self.addParam('force_goal_met', Element('skiros:Parameter'), ParamTypes.SharedOutput)
         
 class wait_for_force(PrimitiveThreadBase):
+    """
+    Summary:
+        Waits for a the gripper to feel a sufficient force.
+
+    Required Input:
+        Time limit: The time limit the force needs to be felt in.
+        Force:      The initial force limit
+
+    Behaviour:
+        Monitors the /wrench_filter/filtered for the specified time limit and
+        exits when the limit is met. The force initially set to the input force.
+        It is then decreased linearly over time. The magnitude of the force is
+        compared to the force goal.
+        
+        An output parameter, 'force_goal_met', is used which keeps track of if
+        the force goal was met or not.
+
+    Notes and Pitfalls:
+        Note that the force goal is linearly decreased to zero over the time
+        limit. I.e. the force goal will always be met. If this is a problem add
+        an input parameter which specifies the minimal force that we can
+        accept.
+    """
     def createDescription(self):
         self.setDescription(WaitForForce(), self.__class__.__name__)
 
@@ -76,6 +99,13 @@ class wait_for_force(PrimitiveThreadBase):
         return self.success('Force goal met.')
 
 class ForceCheck(SkillDescription):
+    """
+    Summary:
+        Checks if the previous wait for force succeded.
+
+    Behaviour:
+        Fails if the previous force goal was not met, succeeds otherwise.
+    """
     def createDescription(self):
         self.addParam(('wait_for_force', 'force_goal_met'), Element('skiros:Parameter'), ParamTypes.SharedInput)
 

@@ -16,6 +16,17 @@ class JPPassElevator(SkillDescription):
         self.addPreCondition(self.getRelationCond('RegionHasElevator', 'scalable:hasDoor', 'SourceRegion', 'Elevator', True))
 
 class jp_pass_elevator(SkillBase):
+    """
+    Summary:
+        Pass an elevator door with a mobile robot.
+
+    Required Input:
+        Heron:      The robot.
+        Elevator:   The elevator door to pass.
+
+    Behaviour:
+        Unused so far. You figure it out.
+    """
     def createDescription(self):
         self.setDescription(JPPassElevator(), self.__class__.__name__)
     

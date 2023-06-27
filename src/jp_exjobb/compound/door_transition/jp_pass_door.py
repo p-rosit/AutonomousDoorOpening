@@ -16,6 +16,18 @@ class JPPassDoor(SkillDescription):
         self.addPreCondition(self.getRelationCond('RegionHasDoor', 'scalable:hasDoor', 'SourceRegion', 'Door', True))
 
 class jp_pass_door(SkillBase):
+    """
+    Summary:
+        Pass a door with a mobile robot.
+
+    Required Input:
+        Heron:  The robot.
+        Door:   The door to pass.
+
+    Behaviour:
+        Moves the robot from the initial location to the target location just
+        past the door while continuously making sure that the door stays open.
+    """
     def createDescription(self):
         self.setDescription(JPPassDoor(), self.__class__.__name__)
     

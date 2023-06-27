@@ -12,6 +12,18 @@ class JPArm(SkillDescription):
         self.addPreCondition(self.getPropCond('Controller', 'skiros:Value', 'JointController', '=', 'joint_config', True))
 
 class jp_arm_home(SkillBase):
+    """
+    Summary:
+        Move arm to a set of home joint states.
+
+    Required Input:
+        Arm: The arm to control.
+
+    Notes and Pitfalls:
+        The arm is sent to the home state with the joint state controller.
+        Self collisions are taken into account but collisions with the
+        environment are not taken into account.
+    """
     def createDescription(self):
         self.setDescription(JPArm(), self.__class__.__name__)
     

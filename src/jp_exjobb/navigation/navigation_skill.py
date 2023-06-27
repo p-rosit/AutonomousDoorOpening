@@ -117,6 +117,19 @@ class JPDrive(SkillDescription):
         self.addPreCondition(self.getRelationCond('HeronAtLocation', 'skiros:at', 'Heron', 'SourceLocation', True))
 
 class jp_drive(PrimitiveBase):
+    """
+    Summary:
+        Drives Heron to a location.
+
+    Required Input:
+        Heron:              The robot, heron
+        TargetLocation:     The location in the map Heron should reach
+
+    Behaviour:
+        A path is planned to the target location. A path is assumed
+        to exist which does not require opening doors or going up
+        or down stairs.
+    """
     def createDescription(self):
         self.setDescription(JPDrive(), self.__class__.__name__)
 
@@ -160,7 +173,6 @@ class jp_drive(PrimitiveBase):
             source = self.params['SourceLocation'].value
             target = self.params['TargetLocation'].value
             
-            # heron.removeRelation({'src': '-1', 'type': 'skiros:at', 'dst': source.id, 'state': True, 'abstract': False})
             for relation in heron.getRelations(subj='-1', pred='skiros:at'):
                 if self.wmi.get_element(relation['dst']).type == 'scalable:Waypoint':
                     heron.removeRelation(relation)
@@ -171,6 +183,16 @@ class jp_drive(PrimitiveBase):
             return self.fail('Failed', -1)
 
 class jp_move_heron(PrimitiveBase):
+    """
+    Summary:
+        Moves Heron in the world model.
+
+    Required Input:
+        Heron: The robot, Heron.
+
+    Behaviour:
+        Updates the world model to reflect where Heron is.
+    """
     def createDescription(self):
         self.setDescription(JPDrive(), self.__class__.__name__)
     
@@ -179,10 +201,7 @@ class jp_move_heron(PrimitiveBase):
         source = self.params['SourceLocation'].value
         target = self.params['TargetLocation'].value
         
-        # heron.removeRelation({'src': '-1', 'type': 'skiros:at', 'dst': source.id, 'state': True, 'abstract': False})
         for relation in heron.getRelations(subj='-1', pred='skiros:at'):
-            # print(self.wmi.get_element(relation['dst']))
-            # print(self.wmi.get_element(relation['dst']).type)
             if self.wmi.get_element(relation['dst']).type == 'scalable:Waypoint':
                 heron.removeRelation(relation)
         heron.addRelation('-1', 'skiros:at', target.id)

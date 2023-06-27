@@ -25,11 +25,56 @@ class JPPoseEstimation(SkillDescription):
 
         self.addParam('Detection Time (s)', 0.4, ParamTypes.Required)
         self.addParam('Image Capture Rate (hz)', 15, ParamTypes.Optional)
-        self.addParam('x', 0.0, ParamTypes.Required)
-        self.addParam('y', 0.0, ParamTypes.Required)
-        self.addParam('z', 0.0, ParamTypes.Required)
+        self.addParam('x', 0.0, ParamTypes.Optional)
+        self.addParam('y', 0.0, ParamTypes.Optional)
+        self.addParam('z', 0.0, ParamTypes.Optional)
 
 class jp_pose_estimation(PrimitiveThreadBase):
+    """
+    Summary:
+        A skill which estimates the pose of an object in the world.
+
+    Required Input:
+        Camera:                 The camera which captures the images
+        Object:                 The object to be found. Has to be related to
+                                ArUco markers
+        Detection Time (s):     The length of time to detect in seconds
+
+    Optional Input:
+        Image Capture Rate (hz):    The rate at which the skill tries to detect
+                                    the markers.
+        x: Value subtracted in the x-axis of the camera frame
+        y: Value subtracted in the y-axis of the camera frame
+        z: Value subtracted in the z-axis of the camera frame
+
+    Behaviour:
+        This skill estimates the pose of an object using ArUco markers
+        which have some known relation to the object in the world model.
+        The object needs to be related to its markers with any relation
+        of the form:
+
+            (object, _, marker)
+
+        For example one could choose (object, hasA, marker), reasonably
+        you should be consistent...
+
+        This skill tries to find the markers related to the object in every
+        frame from the camera for the specified length of time. The pose
+        of the object is then determined by computing the average of the
+        determined pose for each image.
+
+        The pose of the object is finally updated in the world model.
+    
+    Notes and Pitfalls:
+        The ArUco marker detection is sensitive to noise which means that if the
+        camera moves while the images are captured the pose estimate of the
+        ArUco markers will be worse.
+
+        OpenCVs ArUco marker detection can flip the z-axis of the ArUco markers
+        if they are very skewed in the image, this could severly impact the pose
+        estimation. (Implement outlier rejection if this turns out to be a major
+        problem)
+    """
     def createDescription(self):
         self.setDescription(JPPoseEstimation(), self.__class__.__name__)
     

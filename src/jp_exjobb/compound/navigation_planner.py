@@ -21,6 +21,19 @@ class NavigateBuilding(SkillDescription):
         self.addPreCondition(self.getRelationCond('DestinationInRegion', 'skiros:contain', 'DestinationRegion', 'Destination', True))
 
 class navigate_building(SkillBase):
+    """
+    Summary:
+        Plan a path in a building.
+
+    Required Input:
+        Heron:          The robot.
+        Destination:    The destination in the building.
+
+    Behaviour:
+        A path is planned from the source location to the final location.
+        The doors which the robot needs to pass are found and then a skill
+        list is built which will move the robot to that location.
+    """
     def createDescription(self):
         self.setDescription(NavigateBuilding(), self.__class__.__name__)
     
@@ -40,7 +53,6 @@ class navigate_building(SkillBase):
             print(sk.label)
 
         skill(self.skill(InferInvalid(Sequential()))(*skill_list))
-        # skill(self.skill('FailSkill', 'fail_skill', specify={'msg': 'no'}))
 
     def build_skill_list(self, path):
         arm = self.params['Arm'].value

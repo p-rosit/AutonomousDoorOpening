@@ -17,6 +17,22 @@ class CheckTimer(SkillDescription):
         self.addParam(('timer_skill', 'timed_out'), Element('skiros:Parameter'), ParamTypes.SharedInput)
 
 class timer_skill(PrimitiveThreadBase):
+    """
+    Summary:
+        A timer.
+
+    Required Input:
+        Max Time (s): A positive float, the maximal time the timer counts to.
+
+    Behaviour:
+        If the maximal time limit is reached the skill succeeds. A boolean is
+        set which keeps track of if the timer timed out.
+
+    Notes and Pitfalls:
+        This skill can be used in parallel with, for example, the compliant
+        controller, if the goal is not reached within the time limit the
+        skill will progress anyway due to this time limit.
+    """
     def createDescription(self):
         self.setDescription(TimerSkill(), self.__class__.__name__)
     
@@ -52,6 +68,18 @@ class timer_skill(PrimitiveThreadBase):
         return self.success('Timer timed %.2f seconds.' % time_limit)
 
 class check_timer(PrimitiveBase):
+    """
+    Summary:
+        Checks if the timer timed out.
+
+    Required Input:
+        Fail on timeout:    A boolean which determines if the skill should
+                            fail or not if the timer times out.
+
+    Behaviour:
+        If the previous timer timed out the skill will fail, or not.
+        Depending on what the input is set to.
+    """
     def createDescription(self):
         self.setDescription(CheckTimer(), self.__class__.__name__)
     

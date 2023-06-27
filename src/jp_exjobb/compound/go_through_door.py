@@ -29,6 +29,19 @@ class GoThroughDoor(SkillDescription):
         self.addParam('Offset', 0.05, ParamTypes.Required)
 
 class go_through_door(SkillBase):
+    """
+    Summary:
+        Open a door and go through it.
+
+    Required Input:
+        Heron:          The robot.
+        Button:         The button which opens the door.
+        TargetLocation: The target location just past the door.
+
+    Behaviour:
+        Finds the button, presses it. Moves the arm to the home position.
+        Goes through the door.
+    """
     def createDescription(self):
         self.setDescription(GoThroughDoor(), self.__class__.__name__)
     

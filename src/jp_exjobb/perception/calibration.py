@@ -20,8 +20,7 @@ def calibrate_camera(images, square_size, checkerboard_dimension):
 
         # Find the chess board corners
         ret, corners = cv.findChessboardCorners(gray, (h, w), cv.CALIB_CB_ADAPTIVE_THRESH + cv.CALIB_CB_EXHAUSTIVE + cv.CALIB_CB_NORMALIZE_IMAGE)
-        # ret, corners = cv.findChessboardCorners(gray, (h, w), None)
-
+        
         # If found, add object points, image points (after refining them)
         if ret:
             objpoints.append(objp)

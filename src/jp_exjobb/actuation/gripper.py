@@ -16,6 +16,14 @@ class JPGripper(SkillDescription):
 
 
 class jp_gripper(PrimitiveThreadBase):
+    """
+    Summary:
+        Toggle gripper.
+
+    Required Input:
+        Gripper: The gripper to toggle.
+        Open: Boolean, open gripper or close gripper.
+    """
     def createDescription(self):
         self.setDescription(JPGripper(), self.__class__.__name__)
     

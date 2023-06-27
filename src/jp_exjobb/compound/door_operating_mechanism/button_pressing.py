@@ -25,6 +25,55 @@ class ButtonPress(SkillDescription):
         self.addPreCondition(self.getPropCond('LookoutPose', 'skiros:Value', 'LookoutPose', '=', 'other_scene_point', True))
 
 class button_press(SkillBase):
+    """
+    Summary:
+        Press a door button.
+
+    Required Input:
+        Arm:    The arm which presses the button.
+        Button: The button to be pressed.
+
+    Optional input:
+        Offset:             The distance into the wall the arm tries to press in meters.
+        Pre Push Offset:    The distance of the gripper from the wall before pressing.
+        Force:              The magnitude of the force the gripper should feel when the
+                            button is considered pressed.
+        Sensitivity:        A number the force is scaled by while pressing.
+
+    Behaviour:
+        The pose of the button should be known and the button should be reachable by the
+        arm when running this skill. When pressing the button the gripper is moved in the
+        following way:
+
+            Current pose saved.
+            Move to pre-press pose.
+            Move to press pose.
+            Move to pre-press pose.
+            Move to saved pose.
+        
+        The pre-press pose is generated from the pose of the button and is offset by the
+        pre push offset in the negative z direction of the buttons frame. The press pose
+        is generated in the same way but the offset is into the wall.
+
+        The Cartesian compliant controller is used for all movements and the scalind of
+        the force sensing is updated to the sensitivity right before pressing and reset
+        to 1 after pressing.
+
+    Notes and Pitfalls:
+        The sensitivity should be quite small, otherwise the button pressing will make
+        the gripper oscillate. The smaller the sensitivity is the smaller the offset into
+        the wall can be but if the offset is too small the arm might not be able to press
+        the button since detection and control is not exact.
+
+        The sensitivity should not be zero, then the controller will be stiff and things
+        might break.
+
+        The force magnitude should be large to ensure that the button press is not stopped
+        before the button actually has been pressed.
+
+        If using Heron and the WSG gripper the gripper should be closed before executing
+        this skill.
+    """
     def createDescription(self):
         self.setDescription(ButtonPress(), self.__class__.__name__)
 

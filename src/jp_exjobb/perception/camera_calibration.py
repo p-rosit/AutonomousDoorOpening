@@ -22,6 +22,13 @@ clearing_status = 'Clearing'
 nodim_status = 'NoDim'
 nosize_status = 'NoSize'
 
+"""
+    WARNING:
+    
+    These cannot be put into a compound skill due to SkiROS...
+    Reimplement to use blackboard or shared parameters if you want a compound skill.
+"""
+
 class RGBListener:
     def __init__(self, topic='/realsense/rgb/image_raw'):
         self.time_limit = 2.0
